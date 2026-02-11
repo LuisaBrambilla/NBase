@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin - Login</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body class="admin-auth">
+    <div class="auth-card">
+      <div class="auth-header">
+        <div class="auth-logos">
+          <img src="./Gen360.png" alt="Gen360" class="auth-logo" />
+          <img
+            src="./Gen360 - Monocromatico.png"
+            alt="Gen360"
+            class="auth-logo secondary"
+          />
+        </div>
+        <div class="auth-subtitle">Gestão de estoque normativo</div>
+        <div class="auth-title-row">
+          <h1>Bem-vindo ao GEN360</h1>
+        </div>
+      </div>
+
+      <form id="loginForm" class="auth-form">
+        <label>
+          Email
+          <input type="email" name="email" required />
+        </label>
+        <label>
+          Senha
+          <input type="password" name="senha" required />
+        </label>
+        <div id="mfaField" class="hidden">
+          <label>
+            Código MFA
+            <input type="text" name="mfa_code" placeholder="000000" />
+          </label>
+        </div>
+        <div id="loginMsg" class="auth-message"></div>
+        <button type="submit" class="auth-button">Entrar</button>
+      </form>
+
+      <div class="auth-footer">
+        <span>Acesso restrito para administradores.</span>
+      </div>
+      <div class="auth-note-card">
+        <p class="auth-note-text">
+          A plataforma GEN 360 - Gestão do Estoque Normativo para o setor
+          público, é reconhecida pela sua capacidade de integrar tecnologia cloud
+          de ponta com as exigências regulatórias, estabelecendo um novo padrão
+          de eficiência, controle e acessibilidade 360 graus na gestão de
+          recursos governamentais.
+        </p>
+      </div>
+    </div>
+
+    <script src="./theme.js"></script>
+    <script>
+      window.API_BASE_URL = "/api";
+    </script>
+    <script src="./admin_auth.js"></script>
+  </body>
+</html>

@@ -1,0 +1,32 @@
+# Ambiente e segredos
+.env
+.env.*
+!.env.example
+venv/
+.venv/
+env/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.eggs/
+dist/
+build/
+
+# Logs
+logs/
+*.log
+
+# IDE / SO
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
+
+# Opcional: descomente se a pasta data tiver muitos HTML gerados
+# data/*.html

@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin - Cadastro</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body class="admin-auth">
+    <div class="auth-card">
+      <div class="auth-header">
+        <img
+          src="./Gen360.png"
+          alt="Gen360"
+          class="auth-logo"
+        />
+        <div class="auth-title-row">
+          <a class="auth-back-link" href="./index.html">←</a>
+          <h1>Cadastro do Admin</h1>
+        </div>
+        <p>Ao concluir, configure o MFA no seu app autenticador.</p>
+      </div>
+
+      <form id="registerForm" class="auth-form">
+        <label>
+          Nome
+          <input type="text" name="nome" />
+        </label>
+        <label>
+          Email
+          <input type="email" name="email" required />
+        </label>
+        <label>
+          Senha
+          <input type="password" name="senha" id="senha" required />
+        </label>
+        <label>
+          Confirmar senha
+          <input type="password" name="senha_confirm" id="senhaConfirm" required />
+        </label>
+        <div class="password-rules">
+          <span>Requisitos mínimos:</span>
+          <ul>
+            <li>Letra maiúscula e minúscula</li>
+            <li>Um número</li>
+            <li>Um caractere especial</li>
+          </ul>
+        </div>
+        <div class="password-strength">
+          <div class="strength-bar">
+            <span id="strengthFill"></span>
+          </div>
+          <span id="strengthLabel">Força: —</span>
+        </div>
+        <div id="mfaRegisterField" class="hidden">
+          <label>
+            Código MFA
+            <input type="text" name="mfa_code" placeholder="000000" />
+          </label>
+        </div>
+        <button type="submit" class="auth-button">Cadastrar</button>
+      </form>
+
+      <div class="auth-footer">
+        <span>Já possui Login? </span>
+        <a href="./admin_login.html">Entrar</a>
+      </div>
+      <div id="registerMsg" class="auth-message"></div>
+      <div id="mfaBox" class="mfa-box hidden"></div>
+      <div id="mfaQr" class="mfa-qr hidden">
+        <canvas id="mfaQrCanvas" width="180" height="180"></canvas>
+        <span>Escaneie no app autenticador</span>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/qrious@4.0.2/dist/qrious.min.js"></script>
+    <script src="./theme.js"></script>
+    <script src="./admin_auth.js"></script>
+  </body>
+</html>

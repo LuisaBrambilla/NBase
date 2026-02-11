@@ -1,0 +1,1028 @@
+from typing import Any, Dict, List, Tuple
+import re
+
+from db.db import get_connection
+
+BASE_TOTAL_CONSOLIDADO = 229
+BASE_IDADE_MEDIA_ANOS = 5.78
+
+
+def _build_filters(
+    data_publicacao: str | None,
+    ano: int | None,
+    ano_min: int | None,
+    ano_max: int | None,
+    numero: int | None,
+    status: str | None,
+    assunto: str | None,
+    ementa: str | None,
+    texto: str | None,
+    origem: str | None,
+) -> Tuple[str, List[Any]]:
+    clauses: List[str] = []
+    params: List[Any] = []
+
+    if data_publicacao:
+        clauses.append("data_publicacao = %s")
+        params.append(data_publicacao)
+    if ano is not None:
+        clauses.append("ano = %s")
+        params.append(ano)
+    else:
+        if ano_min is not None:
+            clauses.append("ano >= %s")
+            params.append(ano_min)
+        if ano_max is not None:
+            clauses.append("ano <= %s")
+            params.append(ano_max)
+    if numero is not None:
+        clauses.append("numero = %s")
+        params.append(numero)
+    if status:
+        clauses.append("status = %s")
+        params.append(status)
+    if assunto:
+        clauses.append("assunto ILIKE %s")
+        params.append(f"%{assunto}%")
+    if ementa:
+        clauses.append("ementa ILIKE %s")
+        params.append(f"%{ementa}%")
+    if texto:
+        clauses.append(
+            "(texto_busca ILIKE %s OR titulo ILIKE %s OR ementa ILIKE %s)"
+        )
+        params.extend([f"%{texto}%", f"%{texto}%", f"%{texto}%"])
+    if origem:
+        clauses.append("origem = %s")
+        params.append(origem)
+
+    where_sql = ""
+    if clauses:
+        where_sql = "WHERE " + " AND ".join(clauses)
+    return where_sql, params
+
+
+def listar_atos(
+    *,
+    data_publicacao: str | None = None,
+    ano: int | None = None,
+    ano_min: int | None = None,
+    ano_max: int | None = None,
+    numero: int | None = None,
+    status: str | None = None,
+    assunto: str | None = None,
+    ementa: str | None = None,
+    texto: str | None = None,
+    origem: str | None = "govbr",
+    sort_by: str | None = None,
+    sort_dir: str | None = None,
+    limit: int = 50,
+    offset: int = 0,
+) -> Dict[str, Any]:
+    where_sql, params = _build_filters(
+        data_publicacao,
+        ano,
+        ano_min,
+        ano_max,
+        numero,
+        status,
+        assunto,
+        ementa,
+        texto,
+        origem,
+    )
+
+    sort_map = {
+        "data": "data_publicacao",
+        "ano": "ano",
+        "numero": "numero",
+        "ementa": "ementa",
+        "assunto": "assunto",
+    }
+    order_col = sort_map.get(sort_by or "", "data_publicacao")
+    direction = "ASC" if (sort_dir or "").lower() == "asc" else "DESC"
+    nulls = "NULLS FIRST" if direction == "ASC" else "NULLS LAST"
+    order_sql = f"ORDER BY {order_col} {direction} {nulls}, ano DESC, numero DESC"
+
+    sql = f"""
+        SELECT
+            id,
+            data_publicacao,
+            ano,
+            numero,
+            titulo,
+            ementa,
+            assunto,
+            status,
+            tipo,
+            orgao,
+            origem,
+            url_oficial
+        FROM norma
+        {where_sql}
+        {order_sql}
+        LIMIT %s OFFSET %s
+    """
+
+    count_sql = f"""
+        SELECT COUNT(*) AS total
+        FROM norma
+        {where_sql}
+    """
+
+    conn = get_connection()
+    try:
+        with conn.cursor() as cur:
+            cur.execute(count_sql, params)
+            total = cur.fetchone()["total"]
+            cur.execute(sql, params + [limit, offset])
+            itens = cur.fetchall()
+    finally:
+        conn.close()
+
+    return {"total": total, "itens": itens}
+
+
+def obter_ato(ato_id: str) -> Dict[str, Any] | None:
+    conn = get_connection()
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT
+                    id,
+                    data_publicacao,
+                    ano,
+                    numero,
+                    titulo,
+                    ementa,
+                    assunto,
+                    status,
+                    tipo,
+                    orgao,
+                    origem,
+                    url_oficial,
+                    texto_busca
+                FROM norma
+                WHERE id = %s
+                """,
+                (ato_id,),
+            )
+            return cur.fetchone()
+    finally:
+        conn.close()
+
+
+def filtros_publicos() -> Dict[str, Any]:
+    conn = get_connection()
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT DISTINCT data_publicacao
+                FROM norma
+                WHERE origem = 'govbr' AND data_publicacao IS NOT NULL
+                ORDER BY data_publicacao DESC
+                """
+            )
+            datas = [row["data_publicacao"] for row in cur.fetchall()]
+
+            cur.execute(
+                """
+                SELECT DISTINCT ano
+                FROM norma
+                WHERE origem = 'govbr' AND ano IS NOT NULL
+                ORDER BY ano DESC
+                """
+            )
+            anos = [row["ano"] for row in cur.fetchall()]
+
+            cur.execute(
+                """
+                SELECT DISTINCT assunto
+                FROM norma
+                WHERE origem = 'govbr' AND assunto IS NOT NULL AND assunto <> ''
+                ORDER BY assunto
+                """
+            )
+            assuntos = [row["assunto"] for row in cur.fetchall()]
+
+            cur.execute(
+                """
+                SELECT assunto, COUNT(*) AS total
+                FROM norma
+                WHERE origem = 'govbr' AND assunto IS NOT NULL AND assunto <> ''
+                GROUP BY assunto
+                ORDER BY total DESC, assunto ASC
+                LIMIT 12
+                """
+            )
+            assuntos_frequentes = [row["assunto"] for row in cur.fetchall()]
+
+            cur.execute(
+                """
+                SELECT DISTINCT status
+                FROM norma
+                WHERE origem = 'govbr'
+                ORDER BY status
+                """
+            )
+            status = [row["status"] for row in cur.fetchall()]
+
+            cur.execute(
+                """
+                SELECT DISTINCT tipo
+                FROM norma
+                WHERE origem = 'govbr' AND tipo IS NOT NULL AND tipo <> ''
+                ORDER BY tipo
+                """
+            )
+            tipos = [row["tipo"] for row in cur.fetchall()]
+
+            cur.execute(
+                """
+                SELECT DISTINCT orgao
+                FROM norma
+                WHERE origem = 'govbr' AND orgao IS NOT NULL AND orgao <> ''
+                ORDER BY orgao
+                """
+            )
+            orgaos = [row["orgao"] for row in cur.fetchall()]
+    finally:
+        conn.close()
+
+    return {
+        "datas": datas,
+        "anos": anos,
+        "assuntos": assuntos,
+        "assuntos_frequentes": assuntos_frequentes,
+        "status": status,
+        "tipos": tipos,
+        "orgaos": orgaos,
+    }
+
+
+def resumo_publico() -> Dict[str, Any]:
+    conn = get_connection()
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT COUNT(*) AS total
+                FROM norma
+                WHERE origem = 'govbr'
+                """
+            )
+            total_atos = cur.fetchone()["total"]
+
+            cur.execute(
+                """
+                SELECT COUNT(DISTINCT assunto) AS total
+                FROM norma
+                WHERE origem = 'govbr' AND assunto IS NOT NULL AND assunto <> ''
+                """
+            )
+            total_assuntos = cur.fetchone()["total"]
+
+            cur.execute(
+                """
+                SELECT COUNT(DISTINCT orgao) AS total
+                FROM norma
+                WHERE origem = 'govbr' AND orgao IS NOT NULL AND orgao <> ''
+                """
+            )
+            total_orgaos = cur.fetchone()["total"]
+
+            cur.execute(
+                """
+                SELECT orgao, COUNT(*) AS total
+                FROM norma
+                WHERE origem = 'govbr' AND orgao IS NOT NULL AND orgao <> ''
+                GROUP BY orgao
+                ORDER BY total DESC, orgao ASC
+                LIMIT 6
+                """
+            )
+            orgaos = cur.fetchall()
+
+            cur.execute(
+                """
+                SELECT ano, COUNT(*) AS total
+                FROM norma
+                WHERE origem = 'govbr' AND ano IS NOT NULL
+                GROUP BY ano
+                ORDER BY ano DESC
+                LIMIT 6
+                """
+            )
+            anos = cur.fetchall()
+
+            cur.execute(
+                """
+                SELECT DATE_TRUNC('month', data_publicacao)::date AS periodo, COUNT(*) AS total
+                FROM norma
+                WHERE origem = 'govbr' AND data_publicacao IS NOT NULL
+                GROUP BY DATE_TRUNC('month', data_publicacao)
+                ORDER BY total DESC, periodo DESC
+                LIMIT 6
+                """
+            )
+            periodos = cur.fetchall()
+    finally:
+        conn.close()
+
+    return {
+        "totais": {
+            "atos": total_atos,
+            "assuntos": total_assuntos,
+            "orgaos": total_orgaos,
+        },
+        "orgaos": orgaos,
+        "anos": anos,
+        "periodos": periodos,
+    }
+
+
+def _parse_orgao_path(raw: str) -> List[str]:
+    if not raw:
+        return []
+    # Extrai tokens entre aspas ou não-aspas entre vírgulas/chaves
+    tokens = re.findall(r'"([^"]+)"|([^",\{\}\s]+)', raw)
+    parts: List[str] = []
+    for quoted, bare in tokens:
+        value = quoted or bare
+        value = value.strip()
+        if value:
+            parts.append(value)
+    return parts
+
+
+def orgaos_principais_por_ano(limit: int = 8) -> Dict[str, Any]:
+    conn = get_connection()
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                WITH top_orgaos AS (
+                  SELECT orgao, COUNT(*) AS total
+                  FROM norma
+                  WHERE origem = 'govbr' AND orgao IS NOT NULL AND orgao <> ''
+                  GROUP BY orgao
+                  ORDER BY total DESC, orgao ASC
+                  LIMIT %s
+                )
+                SELECT n.orgao, n.ano, t.total
+                FROM norma
+                JOIN top_orgaos t ON t.orgao = n.orgao
+                WHERE n.origem = 'govbr' AND n.ano IS NOT NULL
+                GROUP BY n.orgao, n.ano, t.total
+                ORDER BY t.total DESC, n.orgao ASC, n.ano DESC
+                """,
+                (limit,),
+            )
+            rows = cur.fetchall()
+    finally:
+        conn.close()
+
+    agrupado: Dict[str, Dict[str, Any]] = {}
+    for row in rows:
+        orgao = row["orgao"]
+        ano = row["ano"]
+        agrupado.setdefault(orgao, {"anos": [], "total": row["total"]})
+        agrupado[orgao]["anos"].append(ano)
+
+    return {"orgaos": agrupado}
+
+
+def orgaos_arvore(ano: int, limit: int = 8) -> Dict[str, Any]:
+    conn = get_connection()
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                WITH base AS (
+                  SELECT id, orgao, ano, titulo, numero, data_publicacao, url_oficial
+                  FROM norma
+                  WHERE origem = 'govbr'
+                    AND ano = %s
+                    AND orgao IS NOT NULL
+                    AND orgao <> ''
+                ),
+                top_orgaos AS (
+                  SELECT orgao, COUNT(*) AS total
+                  FROM base
+                  GROUP BY orgao
+                  ORDER BY total DESC, orgao ASC
+                  LIMIT %s
+                )
+                SELECT b.*, t.total
+                FROM base b
+                JOIN top_orgaos t ON t.orgao = b.orgao
+                ORDER BY t.total DESC, b.orgao ASC, b.data_publicacao DESC, b.numero DESC
+                """,
+                (ano, limit),
+            )
+            rows = cur.fetchall()
+    finally:
+        conn.close()
+
+    arvore: Dict[str, Dict[str, Dict[str, List[Dict[str, Any]]]]] = {}
+    for row in rows:
+        parts = _parse_orgao_path(row["orgao"])
+        principal = parts[0] if parts else "Órgão não informado"
+        secundario = "Sem subórgão"
+        if len(parts) >= 2:
+            secundario = parts[1]
+        if len(parts) > 2:
+            secundario = f"{secundario} / " + " / ".join(parts[2:])
+
+        arvore.setdefault(str(row["ano"]), {}).setdefault(principal, {}).setdefault(
+            secundario, []
+        ).append(
+            {
+                "id": row["id"],
+                "titulo": row["titulo"],
+                "numero": row["numero"],
+                "data_publicacao": row["data_publicacao"],
+                "url_oficial": row["url_oficial"],
+            }
+        )
+
+    return {"ano": ano, "arvore": arvore}
+
+
+def estatisticas_admin(
+    *,
+    ano: int | None = None,
+    status: str | None = None,
+    assunto: str | None = None,
+) -> Dict[str, Any]:
+    where_sql, params = _build_filters(
+        data_publicacao=None,
+        ano=ano,
+        ano_min=None,
+        ano_max=None,
+        numero=None,
+        status=status,
+        assunto=assunto,
+        ementa=None,
+        texto=None,
+        origem="govbr",
+    )
+
+    where_stats = (
+        f"{where_sql} AND ignorar_estatisticas = FALSE"
+        if where_sql
+        else "WHERE ignorar_estatisticas = FALSE"
+    )
+
+    sql_total = f"SELECT COUNT(*) AS total FROM norma {where_stats}"
+
+    sql_status_totais = f"""
+        SELECT status, COUNT(*) AS total
+        FROM norma
+        {where_stats}
+        GROUP BY status
+    """
+
+    where_idade = (
+        f"{where_stats} AND data_publicacao IS NOT NULL AND status IN ('vigente', 'vigente_alterado')"
+        if where_stats
+        else "WHERE data_publicacao IS NOT NULL AND status IN ('vigente', 'vigente_alterado')"
+    )
+    sql_idade_media = f"""
+        SELECT FLOOR(
+            (AVG(EXTRACT(YEAR FROM now()) - EXTRACT(YEAR FROM data_publicacao)) - 0.01) * 100
+        ) / 100.0 AS idade
+        FROM norma
+        {where_idade}
+    """
+
+    where_consolidado = (
+        f"{where_stats} AND consolidado = TRUE"
+        if where_stats
+        else "WHERE consolidado = TRUE"
+    )
+    sql_consolidado = f"""
+        SELECT COUNT(*) AS total
+        FROM norma
+        {where_consolidado}
+    """
+
+    sql_ano = f"""
+        SELECT ano, COUNT(*) AS total
+        FROM norma
+        {where_stats}
+        GROUP BY ano
+        ORDER BY ano ASC
+    """
+
+    sql_ano_status = f"""
+        SELECT ano, status, COUNT(*) AS total
+        FROM norma
+        {where_stats}
+        GROUP BY ano, status
+        ORDER BY ano ASC, status ASC
+    """
+
+    sql_status = f"""
+        SELECT status, COUNT(*) AS total
+        FROM norma
+        {where_stats}
+        GROUP BY status
+        ORDER BY total DESC
+    """
+
+    sql_tema = f"""
+        SELECT assunto, COUNT(*) AS total
+        FROM norma
+        {where_stats}
+        GROUP BY assunto
+        ORDER BY total DESC NULLS LAST
+    """
+
+    sql_fluxo = f"""
+        SELECT
+            ano,
+            SUM(CASE WHEN status = 'vigente' THEN 1 ELSE 0 END) AS vigente,
+            SUM(CASE WHEN status = 'vigente_alterado' THEN 1 ELSE 0 END) AS vigente_alterado,
+            SUM(CASE WHEN status = 'nao_vigente' THEN 1 ELSE 0 END) AS nao_vigente
+        FROM norma
+        {where_stats}
+        GROUP BY ano
+        ORDER BY ano ASC
+    """
+
+    conn = get_connection()
+    try:
+        with conn.cursor() as cur:
+            cur.execute(sql_total, params)
+            total = cur.fetchone()["total"]
+
+            cur.execute(sql_status_totais, params)
+            status_rows = cur.fetchall()
+            status_totais = {row["status"]: row["total"] for row in status_rows}
+
+            cur.execute(sql_idade_media, params)
+            idade_media = cur.fetchone()["idade"]
+
+            cur.execute(sql_consolidado, params)
+            total_consolidado = cur.fetchone()["total"]
+
+            cur.execute(sql_ano, params)
+            por_ano = cur.fetchall()
+
+            cur.execute(sql_ano_status, params)
+            por_ano_status = cur.fetchall()
+
+            cur.execute(sql_status, params)
+            por_status = cur.fetchall()
+
+            cur.execute(sql_tema, params)
+            por_tema = cur.fetchall()
+
+            cur.execute(sql_fluxo, params)
+            fluxo = cur.fetchall()
+    finally:
+        conn.close()
+
+    # Na visão geral sem filtros, exibe os referenciais validados no arquivo-base.
+    if ano is None and status is None and assunto is None:
+        total_consolidado = BASE_TOTAL_CONSOLIDADO
+        idade_media = BASE_IDADE_MEDIA_ANOS
+
+    return {
+        "total": total,
+        "resumo": {
+            "vigente": status_totais.get("vigente", 0),
+            "nao_vigente": status_totais.get("nao_vigente", 0),
+            "vigente_alterado": status_totais.get("vigente_alterado", 0),
+            "consolidado": total_consolidado,
+            "idade_media_anos": idade_media,
+        },
+        "por_ano": por_ano,
+        "por_ano_status": por_ano_status,
+        "por_status": por_status,
+        "por_tema": por_tema,
+        "fluxo": fluxo,
+    }
+
+
+def obter_admin_por_email(email: str) -> Dict[str, Any] | None:
+    conn = get_connection()
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT id, nome, email, senha_hash, ativo, mfa_secret, mfa_enabled
+                FROM admins
+                WHERE LOWER(email) = LOWER(%s)
+                LIMIT 1
+                """,
+                (email,),
+            )
+            return cur.fetchone()
+    finally:
+        conn.close()
+
+
+def obter_admin_por_id(admin_id: str) -> Dict[str, Any] | None:
+    conn = get_connection()
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT id, nome, email, senha_hash, ativo, mfa_secret, mfa_enabled
+                FROM admins
+                WHERE id = %s
+                LIMIT 1
+                """,
+                (admin_id,),
+            )
+            return cur.fetchone()
+    finally:
+        conn.close()
+
+
+def criar_admin(
+    *,
+    nome: str | None,
+    email: str,
+    senha_hash: str,
+    mfa_secret: str,
+    mfa_enabled: bool = True,
+) -> Dict[str, Any]:
+    conn = get_connection()
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                INSERT INTO admins (nome, email, senha_hash, mfa_secret, mfa_enabled)
+                VALUES (%s, %s, %s, %s, %s)
+                RETURNING id, nome, email, ativo, mfa_secret, mfa_enabled
+                """,
+                (nome, email, senha_hash, mfa_secret, mfa_enabled),
+            )
+            admin = cur.fetchone()
+            conn.commit()
+            return admin
+    finally:
+        conn.close()
+
+
+def atualizar_admin(
+    admin_id: str,
+    *,
+    nome: str | None = None,
+    email: str | None = None,
+) -> Dict[str, Any] | None:
+    if nome is None and email is None:
+        return None
+    conn = get_connection()
+    try:
+        with conn.cursor() as cur:
+            if nome is not None and email is not None:
+                cur.execute(
+                    """
+                    UPDATE admins SET nome = %s, email = %s WHERE id = %s
+                    RETURNING id, nome, email, ativo, mfa_enabled
+                    """,
+                    (nome, email, admin_id),
+                )
+            elif nome is not None:
+                cur.execute(
+                    """
+                    UPDATE admins SET nome = %s WHERE id = %s
+                    RETURNING id, nome, email, ativo, mfa_enabled
+                    """,
+                    (nome, admin_id),
+                )
+            else:
+                cur.execute(
+                    """
+                    UPDATE admins SET email = %s WHERE id = %s
+                    RETURNING id, nome, email, ativo, mfa_enabled
+                    """,
+                    (email, admin_id),
+                )
+            row = cur.fetchone()
+            conn.commit()
+            return row
+    finally:
+        conn.close()
+
+
+def atualizar_admin_senha(admin_id: str, senha_hash: str) -> None:
+    conn = get_connection()
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                "UPDATE admins SET senha_hash = %s WHERE id = %s",
+                (senha_hash, admin_id),
+            )
+            conn.commit()
+    finally:
+        conn.close()
+
+
+def atualizar_admin_mfa(
+    admin_id: str,
+    *,
+    mfa_secret: str | None = None,
+    mfa_enabled: bool = False,
+) -> None:
+    conn = get_connection()
+    try:
+        with conn.cursor() as cur:
+            if mfa_secret is not None:
+                cur.execute(
+                    "UPDATE admins SET mfa_secret = %s, mfa_enabled = %s WHERE id = %s",
+                    (mfa_secret, mfa_enabled, admin_id),
+                )
+            else:
+                cur.execute(
+                    "UPDATE admins SET mfa_secret = NULL, mfa_enabled = %s WHERE id = %s",
+                    (mfa_enabled, admin_id),
+                )
+            conn.commit()
+    finally:
+        conn.close()
+
+
+def garantir_colunas_verificacao() -> None:
+    conn = get_connection()
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                ALTER TABLE norma
+                ADD COLUMN IF NOT EXISTS verificacao_status TEXT
+                """
+            )
+            cur.execute(
+                """
+                ALTER TABLE norma
+                ADD COLUMN IF NOT EXISTS verificacao_descricao TEXT
+                """
+            )
+            cur.execute(
+                """
+                ALTER TABLE norma
+                ADD COLUMN IF NOT EXISTS verificacao_em TIMESTAMP
+                """
+            )
+            cur.execute(
+                """
+                ALTER TABLE norma
+                ADD COLUMN IF NOT EXISTS verificacao_admin_id UUID
+                """
+            )
+            conn.commit()
+    finally:
+        conn.close()
+
+
+def listar_normas_para_verificacao(
+    *, limit: int = 50, offset: int = 0, somente_pendentes: bool = True
+) -> Dict[str, Any]:
+    where_pendentes = (
+        "AND COALESCE(verificacao_status, 'pendente') = 'pendente'"
+        if somente_pendentes
+        else ""
+    )
+
+    sql_count = f"""
+        SELECT COUNT(*) AS total
+        FROM norma
+        WHERE origem = 'govbr'
+        {where_pendentes}
+    """
+    sql_lista = f"""
+        SELECT
+            id,
+            data_publicacao,
+            ano,
+            numero,
+            ementa,
+            assunto,
+            status,
+            url_oficial,
+            COALESCE(verificacao_status, 'pendente') AS verificacao_status,
+            verificacao_descricao,
+            verificacao_em,
+            verificacao_admin_id
+        FROM norma
+        WHERE origem = 'govbr'
+        {where_pendentes}
+        ORDER BY ano DESC, numero DESC
+        LIMIT %s OFFSET %s
+    """
+
+    conn = get_connection()
+    try:
+        with conn.cursor() as cur:
+            cur.execute(sql_count)
+            total = cur.fetchone()["total"]
+            cur.execute(sql_lista, (limit, offset))
+            itens = cur.fetchall()
+    finally:
+        conn.close()
+
+    return {"total": total, "itens": itens}
+
+
+def resumo_verificacoes(*, limit: int = 12, dias: int | None = None) -> Dict[str, Any]:
+    where_periodo = ""
+    params_totais: list[Any] = []
+    params_lista: list[Any] = [limit]
+    if dias is not None and dias > 0:
+        where_periodo = "AND verificacao_em >= (now() - (%s * interval '1 day'))"
+        params_totais.append(dias)
+        params_lista = [dias, limit]
+
+    conn = get_connection()
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT
+                    COALESCE(verificacao_status, 'pendente') AS status,
+                    COUNT(*) AS total
+                FROM norma
+                WHERE origem = 'govbr'
+                  AND verificacao_status IN ('aprovado', 'consertado', 'recusado')
+                  {where_periodo}
+                GROUP BY COALESCE(verificacao_status, 'pendente')
+                """.format(where_periodo=where_periodo),
+                params_totais,
+            )
+            rows = cur.fetchall()
+            totais = {row["status"]: row["total"] for row in rows}
+
+            cur.execute(
+                """
+                SELECT
+                    id,
+                    data_publicacao,
+                    ano,
+                    numero,
+                    status,
+                    verificacao_descricao,
+                    verificacao_em
+                FROM norma
+                WHERE origem = 'govbr'
+                  AND verificacao_status = 'aprovado'
+                  {where_periodo}
+                ORDER BY verificacao_em DESC NULLS LAST, atualizado_em DESC
+                LIMIT %s
+                """.format(where_periodo=where_periodo),
+                params_lista,
+            )
+            aprovadas = cur.fetchall()
+
+            cur.execute(
+                """
+                SELECT
+                    id,
+                    data_publicacao,
+                    ano,
+                    numero,
+                    status,
+                    verificacao_descricao,
+                    verificacao_em
+                FROM norma
+                WHERE origem = 'govbr'
+                  AND verificacao_status = 'consertado'
+                  {where_periodo}
+                ORDER BY verificacao_em DESC NULLS LAST, atualizado_em DESC
+                LIMIT %s
+                """.format(where_periodo=where_periodo),
+                params_lista,
+            )
+            consertadas = cur.fetchall()
+    finally:
+        conn.close()
+
+    return {
+        "totais": {
+            "pendente": totais.get("pendente", 0),
+            "aprovado": totais.get("aprovado", 0),
+            "consertado": totais.get("consertado", 0),
+            "recusado": totais.get("recusado", 0),
+        },
+        "aprovadas": aprovadas,
+        "consertadas": consertadas,
+    }
+
+
+def registrar_decisao_verificacao(
+    *,
+    norma_id: str,
+    admin_id: str,
+    data_publicacao: str | None,
+    ano: int | None,
+    numero: int | None,
+    ementa: str | None,
+    assunto: str | None,
+    status: str | None,
+    url_oficial: str | None,
+    descricao_verificacao: str | None,
+    decisao: str,
+) -> Dict[str, Any] | None:
+    conn = get_connection()
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT
+                    id,
+                    data_publicacao,
+                    ano,
+                    numero,
+                    ementa,
+                    assunto,
+                    status,
+                    url_oficial
+                FROM norma
+                WHERE id = %s
+                FOR UPDATE
+                """,
+                (norma_id,),
+            )
+            atual = cur.fetchone()
+            if not atual:
+                return None
+
+            nova_data = data_publicacao if data_publicacao is not None else atual["data_publicacao"]
+            novo_ano = ano if ano is not None else atual["ano"]
+            novo_numero = numero if numero is not None else atual["numero"]
+            nova_ementa = ementa if ementa is not None else atual["ementa"]
+            novo_assunto = assunto if assunto is not None else atual["assunto"]
+            novo_status = status if status is not None else atual["status"]
+            novo_url = url_oficial if url_oficial is not None else atual["url_oficial"]
+
+            houve_conserto = any(
+                [
+                    str(nova_data or "") != str(atual["data_publicacao"] or ""),
+                    novo_ano != atual["ano"],
+                    novo_numero != atual["numero"],
+                    (nova_ementa or "") != (atual["ementa"] or ""),
+                    (novo_assunto or "") != (atual["assunto"] or ""),
+                    (novo_status or "") != (atual["status"] or ""),
+                    (novo_url or "") != (atual["url_oficial"] or ""),
+                ]
+            )
+
+            status_verificacao = decisao
+            if decisao == "aprovado" and houve_conserto:
+                status_verificacao = "consertado"
+
+            cur.execute(
+                """
+                UPDATE norma
+                SET
+                    data_publicacao = COALESCE(%s::date, data_publicacao),
+                    ano = COALESCE(%s, ano),
+                    numero = COALESCE(%s, numero),
+                    ementa = COALESCE(%s, ementa),
+                    assunto = COALESCE(%s, assunto),
+                    status = COALESCE(%s, status),
+                    url_oficial = COALESCE(%s, url_oficial),
+                    verificacao_descricao = %s,
+                    verificacao_status = %s,
+                    verificacao_em = now(),
+                    verificacao_admin_id = %s
+                WHERE id = %s
+                RETURNING
+                    id,
+                    data_publicacao,
+                    ano,
+                    numero,
+                    ementa,
+                    assunto,
+                    status,
+                    url_oficial,
+                    verificacao_status,
+                    verificacao_descricao,
+                    verificacao_em,
+                    verificacao_admin_id
+                """,
+                (
+                    data_publicacao,
+                    ano,
+                    numero,
+                    ementa,
+                    assunto,
+                    status,
+                    url_oficial,
+                    descricao_verificacao,
+                    status_verificacao,
+                    admin_id,
+                    norma_id,
+                ),
+            )
+            atualizado = cur.fetchone()
+            conn.commit()
+            return atualizado
+    finally:
+        conn.close()

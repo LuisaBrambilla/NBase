@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Órgãos por Ano - DODF</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body class="no-sidebar">
+    <header class="gov-header">
+      <div class="gov-header-top">
+        <img
+          class="gov-logo"
+          src="./Gen360.png"
+          alt="Gen360"
+        />
+        <div class="gov-nav"></div>
+        <div class="gov-actions">
+          <span class="login-avatar"></span>
+          <button id="themeToggle" class="icon-btn header-toggle" type="button">
+            ⏾
+          </button>
+          <a class="btn btn-secondary btn-login" href="./admin_login.html">Login</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="container dashboard-shell">
+      <section class="dashboard">
+        <div class="dashboard-top">
+          <div>
+            <h1>Arquivos</h1>
+            <p class="subtitle">Anos organizados por órgão (top principais)</p>
+          </div>
+          <div class="top-actions">
+            <label class="year-filter">
+              <span>Ano</span>
+              <select id="orgaoAnoSelect"></select>
+            </label>
+            <a class="btn btn-secondary" href="./index.html">Voltar</a>
+          </div>
+        </div>
+
+        <div class="dashboard-grid">
+          <div class="panel panel-wide">
+            <div class="panel-header">
+              <span class="panel-title">Órgãos por Ano</span>
+              <span class="panel-tag">Pastas por órgão</span>
+            </div>
+            <div class="panel-body">
+              <div id="orgaosAnosList" class="orgaos-list"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script src="./theme.js"></script>
+    <script src="./orgaos.js"></script>
+  </body>
+</html>

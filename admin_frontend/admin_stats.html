@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin - Estatísticas</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body class="no-sidebar">
+    <header class="gov-header">
+      <div class="gov-header-top">
+        <img
+          class="gov-logo"
+          src="./Gen360.png"
+          alt="Gen360"
+        />
+        <div class="gov-nav">
+          <a class="top-nav-link" href="./admin_home.html">Consulta de Normas</a>
+          <a class="top-nav-link active" href="./admin_stats.html">Estatísticas</a>
+          <a class="top-nav-link" href="./admin_resolucao.html">Verificação de Normas</a>
+        </div>
+        <div class="gov-actions">
+          <div class="profile-menu-wrapper">
+            <button
+              id="profileMenuToggle"
+              class="avatar-menu-toggle"
+              type="button"
+              aria-haspopup="true"
+              aria-expanded="false"
+              aria-controls="profileMenu"
+            >
+              <span class="login-avatar"></span>
+            </button>
+            <div id="profileMenu" class="profile-menu" hidden>
+              <a class="profile-menu-link" href="./admin_profile.html?v=2">⚙️ Configurações de Perfil</a>
+            </div>
+          </div>
+          <button id="adminLogoutTop" class="btn btn-secondary" type="button">
+            Sair
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main class="container dashboard-shell">
+      <section class="dashboard">
+        <div class="dashboard-top">
+          <div>
+            <h1>Estatísticas</h1>
+            <p class="subtitle">
+              Visualização dos atos da ANA com filtros interativos.
+            </p>
+          </div>
+          <div class="top-actions">
+            <button id="clearStatsFilters" class="btn btn-secondary" type="button">
+              Limpar filtros
+            </button>
+          </div>
+        </div>
+
+        <div id="statsSummary" class="stats-summary">
+          <div class="stats-cards">
+            <div class="stats-card">
+              <span class="stats-card-value" id="statVigentes">—</span>
+              <span class="stats-card-label">Atos Vigentes</span>
+            </div>
+            <div class="stats-card">
+              <span class="stats-card-value" id="statVigenteAlterado">—</span>
+              <span class="stats-card-label">Vigentes com alterações</span>
+            </div>
+            <div class="stats-card">
+              <span class="stats-card-value" id="statRevogados">—</span>
+              <span class="stats-card-label">Atos Revogados</span>
+            </div>
+            <div class="stats-card">
+              <span class="stats-card-value" id="statConsolidados">—</span>
+              <span class="stats-card-label">Atos Consolidados</span>
+            </div>
+            <div class="stats-card">
+              <span class="stats-card-value" id="statIdadeMedia">—</span>
+              <span class="stats-card-label">
+                Idade média do Estoque Regulatório (em anos)
+              </span>
+            </div>
+          </div>
+          <div class="stats-summary-note" id="statsSummaryNote"></div>
+        </div>
+
+        <div class="stats-grid">
+          <div class="panel panel-chart">
+            <div class="panel-header">
+              <span class="panel-title">Atos publicados por ano</span>
+            </div>
+            <div class="panel-body">
+              <canvas id="chartAno"></canvas>
+            </div>
+          </div>
+
+          <div class="panel panel-chart">
+            <div class="panel-header">
+              <span class="panel-title">Status dos atos</span>
+            </div>
+            <div class="panel-body">
+              <canvas id="chartStatus"></canvas>
+            </div>
+          </div>
+
+          <div class="panel panel-chart">
+            <div class="panel-header">
+              <span class="panel-title">Fluxo de normas</span>
+            </div>
+            <div class="panel-body">
+              <canvas id="chartFluxo"></canvas>
+            </div>
+          </div>
+
+          <div class="panel panel-chart">
+            <div class="panel-header">
+              <span class="panel-title">Atos por temas</span>
+            </div>
+            <div class="panel-body">
+              <canvas id="chartTemas"></canvas>
+            </div>
+          </div>
+
+          <div class="panel panel-chart">
+            <div class="panel-header">
+              <span class="panel-title">Evolução do estoque regulatório</span>
+            </div>
+            <div class="panel-body">
+              <canvas id="chartEstoque"></canvas>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
+    <script src="./theme.js"></script>
+    <script>
+      window.API_BASE_URL = "/api";
+    </script>
+    <script src="./admin_header.js"></script>
+    <script src="./admin_session.js"></script>
+    <script src="./admin_stats.js?v=20260211a"></script>
+  </body>
+</html>
