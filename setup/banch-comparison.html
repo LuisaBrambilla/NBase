@@ -1,0 +1,900 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Gen360 — Branch Comparison: azure vs main</title>
+		<style>
+			:root {
+				--bg: #0d1117;
+				--surface: #161b22;
+				--border: #30363d;
+				--text: #e6edf3;
+				--muted: #8b949e;
+				--accent: #58a6ff;
+				--green: #3fb950;
+				--red: #f85149;
+				--yellow: #d29922;
+				--code-bg: #1c2128;
+			}
+			* {
+				box-sizing: border-box;
+				margin: 0;
+				padding: 0;
+			}
+			body {
+				font-family:
+					-apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial,
+					sans-serif;
+				background: var(--bg);
+				color: var(--text);
+				line-height: 1.6;
+				padding: 2rem;
+			}
+			.container {
+				max-width: 1100px;
+				margin: 0 auto;
+			}
+			h1 {
+				font-size: 1.75rem;
+				margin-bottom: 0.25rem;
+			}
+			h2 {
+				font-size: 1.35rem;
+				margin: 2rem 0 0.75rem;
+				color: var(--accent);
+				border-bottom: 1px solid var(--border);
+				padding-bottom: 0.4rem;
+			}
+			h3 {
+				font-size: 1.1rem;
+				margin: 1.25rem 0 0.5rem;
+			}
+			.meta {
+				color: var(--muted);
+				font-size: 0.9rem;
+				margin-bottom: 1.5rem;
+			}
+			.badge {
+				display: inline-block;
+				padding: 2px 8px;
+				border-radius: 12px;
+				font-size: 0.75rem;
+				font-weight: 600;
+			}
+			.badge-add {
+				background: rgba(63, 185, 80, 0.15);
+				color: var(--green);
+			}
+			.badge-mod {
+				background: rgba(210, 153, 34, 0.15);
+				color: var(--yellow);
+			}
+			.badge-del {
+				background: rgba(248, 81, 73, 0.15);
+				color: var(--red);
+			}
+			table {
+				width: 100%;
+				border-collapse: collapse;
+				margin: 0.75rem 0 1.5rem;
+			}
+			th,
+			td {
+				text-align: left;
+				padding: 0.5rem 0.75rem;
+				border: 1px solid var(--border);
+				font-size: 0.9rem;
+			}
+			th {
+				background: var(--surface);
+				color: var(--muted);
+				font-weight: 600;
+			}
+			td {
+				background: var(--bg);
+			}
+			code,
+			pre {
+				font-family: "Cascadia Code", "Fira Mono", "Consolas", monospace;
+				font-size: 0.85rem;
+			}
+			pre {
+				background: var(--code-bg);
+				border: 1px solid var(--border);
+				border-radius: 6px;
+				padding: 1rem;
+				overflow-x: auto;
+				margin: 0.5rem 0 1rem;
+				white-space: pre;
+			}
+			.diff-add {
+				color: var(--green);
+			}
+			.diff-del {
+				color: var(--red);
+			}
+			.diff-hdr {
+				color: var(--accent);
+			}
+			.card {
+				background: var(--surface);
+				border: 1px solid var(--border);
+				border-radius: 8px;
+				padding: 1.25rem;
+				margin: 0.75rem 0;
+			}
+			.card h3 {
+				margin-top: 0;
+			}
+			.impact {
+				display: flex;
+				gap: 0.5rem;
+				flex-wrap: wrap;
+				margin: 0.5rem 0;
+			}
+			.impact-tag {
+				padding: 3px 10px;
+				border-radius: 4px;
+				font-size: 0.8rem;
+			}
+			.impact-high {
+				background: rgba(248, 81, 73, 0.12);
+				color: var(--red);
+				border: 1px solid rgba(248, 81, 73, 0.3);
+			}
+			.impact-medium {
+				background: rgba(210, 153, 34, 0.12);
+				color: var(--yellow);
+				border: 1px solid rgba(210, 153, 34, 0.3);
+			}
+			.impact-low {
+				background: rgba(63, 185, 80, 0.12);
+				color: var(--green);
+				border: 1px solid rgba(63, 185, 80, 0.3);
+			}
+			ul {
+				margin: 0.5rem 0 0.5rem 1.5rem;
+			}
+			li {
+				margin: 0.25rem 0;
+			}
+			a {
+				color: var(--accent);
+				text-decoration: none;
+			}
+			a:hover {
+				text-decoration: underline;
+			}
+			.toc {
+				background: var(--surface);
+				border: 1px solid var(--border);
+				border-radius: 6px;
+				padding: 1rem 1.5rem;
+				margin: 1rem 0;
+			}
+			.toc ol {
+				margin: 0.5rem 0 0 1.25rem;
+			}
+			.toc li {
+				margin: 0.2rem 0;
+				font-size: 0.9rem;
+			}
+			.summary-grid {
+				display: grid;
+				grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+				gap: 1rem;
+				margin: 1rem 0;
+			}
+			.summary-box {
+				background: var(--surface);
+				border: 1px solid var(--border);
+				border-radius: 8px;
+				padding: 1rem;
+				text-align: center;
+			}
+			.summary-box .num {
+				font-size: 2rem;
+				font-weight: 700;
+			}
+			.summary-box .label {
+				font-size: 0.85rem;
+				color: var(--muted);
+			}
+			footer {
+				margin-top: 3rem;
+				padding-top: 1rem;
+				border-top: 1px solid var(--border);
+				color: var(--muted);
+				font-size: 0.8rem;
+				text-align: center;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="container">
+			<h1>Branch Comparison: <code>azure</code> vs <code>main</code></h1>
+			<p class="meta">
+				Repository: <strong>LuisaBrambilla/Gen360</strong> &nbsp;|&nbsp;
+				Generated: <strong>2026-02-13</strong> &nbsp;|&nbsp; Commits ahead:
+				<strong>7</strong>
+			</p>
+
+			<!-- ───── Quick Summary ───── -->
+			<div class="summary-grid">
+				<div class="summary-box">
+					<div class="num" style="color: var(--accent)">41</div>
+					<div class="label">Files Changed</div>
+				</div>
+				<div class="summary-box">
+					<div class="num" style="color: var(--green)">+4 372</div>
+					<div class="label">Lines Added</div>
+				</div>
+				<div class="summary-box">
+					<div class="num" style="color: var(--red)">&minus;21</div>
+					<div class="label">Lines Removed</div>
+				</div>
+				<div class="summary-box">
+					<div class="num" style="color: var(--yellow)">7</div>
+					<div class="label">Commits</div>
+				</div>
+			</div>
+
+			<!-- ───── TOC ───── -->
+			<div class="toc">
+				<strong>Contents</strong>
+				<ol>
+					<li><a href="#commits">Commit Log</a></li>
+					<li><a href="#file-summary">Full File Change Summary</a></li>
+					<li>
+						<a href="#app-changes"
+							>Modified Application Files (Usability Impact)</a
+						>
+					</li>
+					<li>
+						<a href="#detail-config"
+							>config.js — New Centralized API Configuration</a
+						>
+					</li>
+					<li><a href="#detail-api-url">Frontend API URL Changes</a></li>
+					<li><a href="#detail-html">HTML Script Loading Changes</a></li>
+					<li><a href="#detail-main-py">api/main.py — Backend Changes</a></li>
+					<li>
+						<a href="#detail-reqs">requirements.txt — New Dependencies</a>
+					</li>
+					<li><a href="#detail-gitignore">.gitignore Updates</a></li>
+				</ol>
+			</div>
+
+			<!-- ───── 1. Commits ───── -->
+			<h2 id="commits">1. Commit Log (azure ahead of main)</h2>
+			<table>
+				<thead>
+					<tr>
+						<th>SHA</th>
+						<th>Message</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr>
+						<td><code>d80a540</code></td>
+						<td>
+							Add setup/summary.html — comprehensive project documentation
+						</td>
+					</tr>
+					<tr>
+						<td><code>acbd0ed</code></td>
+						<td>Add app_logs.zip to .gitignore</td>
+					</tr>
+					<tr>
+						<td><code>1944378</code></td>
+						<td>Remove deploy-logs from tracking, add to .gitignore</td>
+					</tr>
+					<tr>
+						<td><code>2fee040</code></td>
+						<td>Remove app_logs from tracking (already in .gitignore)</td>
+					</tr>
+					<tr>
+						<td><code>6207b2c</code></td>
+						<td>
+							Add Dockerfile and .dockerignore for Container Apps deployment,
+							update .gitignore
+						</td>
+					</tr>
+					<tr>
+						<td><code>462e7a0</code></td>
+						<td>
+							fix: update API_BASE_URL to production endpoint and add health/db
+							check
+						</td>
+					</tr>
+					<tr>
+						<td><code>e658490</code></td>
+						<td>Add Azure deployment configuration and guides</td>
+					</tr>
+				</tbody>
+			</table>
+
+			<!-- ───── 2. File Summary ───── -->
+			<h2 id="file-summary">2. Full File Change Summary</h2>
+			<table>
+				<thead>
+					<tr>
+						<th>File</th>
+						<th>Status</th>
+						<th>Changes</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr>
+						<td>.deployment</td>
+						<td><span class="badge badge-add">added</span></td>
+						<td>+2</td>
+					</tr>
+					<tr>
+						<td>.dockerignore</td>
+						<td><span class="badge badge-add">added</span></td>
+						<td>+18</td>
+					</tr>
+					<tr>
+						<td>.env.example</td>
+						<td><span class="badge badge-add">added</span></td>
+						<td>+17</td>
+					</tr>
+					<tr>
+						<td>.gitignore</td>
+						<td><span class="badge badge-mod">modified</span></td>
+						<td>+6</td>
+					</tr>
+					<tr>
+						<td>Dockerfile</td>
+						<td><span class="badge badge-add">added</span></td>
+						<td>+26</td>
+					</tr>
+					<tr>
+						<td>admin_frontend/admin_auth.js</td>
+						<td><span class="badge badge-mod">modified</span></td>
+						<td>&plusmn;1</td>
+					</tr>
+					<tr>
+						<td>admin_frontend/admin_dashboard.js</td>
+						<td><span class="badge badge-mod">modified</span></td>
+						<td>&plusmn;1</td>
+					</tr>
+					<tr>
+						<td>admin_frontend/admin_home.html</td>
+						<td><span class="badge badge-mod">modified</span></td>
+						<td>&plusmn;3</td>
+					</tr>
+					<tr>
+						<td>admin_frontend/admin_login.html</td>
+						<td><span class="badge badge-mod">modified</span></td>
+						<td>&plusmn;3</td>
+					</tr>
+					<tr>
+						<td>admin_frontend/admin_profile.html</td>
+						<td><span class="badge badge-mod">modified</span></td>
+						<td>&plusmn;2</td>
+					</tr>
+					<tr>
+						<td>admin_frontend/admin_profile.js</td>
+						<td><span class="badge badge-mod">modified</span></td>
+						<td>&plusmn;1</td>
+					</tr>
+					<tr>
+						<td>admin_frontend/admin_resolucao.html</td>
+						<td><span class="badge badge-mod">modified</span></td>
+						<td>&plusmn;3</td>
+					</tr>
+					<tr>
+						<td>admin_frontend/admin_resolucao.js</td>
+						<td><span class="badge badge-mod">modified</span></td>
+						<td>&plusmn;1</td>
+					</tr>
+					<tr>
+						<td>admin_frontend/admin_stats.html</td>
+						<td><span class="badge badge-mod">modified</span></td>
+						<td>&plusmn;3</td>
+					</tr>
+					<tr>
+						<td>admin_frontend/admin_stats.js</td>
+						<td><span class="badge badge-mod">modified</span></td>
+						<td>&plusmn;1</td>
+					</tr>
+					<tr>
+						<td>admin_frontend/app.js</td>
+						<td><span class="badge badge-mod">modified</span></td>
+						<td>&plusmn;1</td>
+					</tr>
+					<tr>
+						<td>admin_frontend/config.js</td>
+						<td><span class="badge badge-add">added</span></td>
+						<td>+28</td>
+					</tr>
+					<tr>
+						<td>admin_frontend/orgaos.js</td>
+						<td><span class="badge badge-mod">modified</span></td>
+						<td>&plusmn;1</td>
+					</tr>
+					<tr>
+						<td>api/main.py</td>
+						<td><span class="badge badge-mod">modified</span></td>
+						<td>+84 &minus;4</td>
+					</tr>
+					<tr>
+						<td>requirements.txt</td>
+						<td><span class="badge badge-mod">modified</span></td>
+						<td>+2</td>
+					</tr>
+					<tr>
+						<td>runtime.txt</td>
+						<td><span class="badge badge-add">added</span></td>
+						<td>+1</td>
+					</tr>
+					<tr>
+						<td>setup/ (14 files)</td>
+						<td><span class="badge badge-add">added</span></td>
+						<td>+4 180</td>
+					</tr>
+				</tbody>
+			</table>
+
+			<!-- ═══════════════════════════════════════════════════════════════════
+       3. MODIFIED APPLICATION FILES — USABILITY IMPACT
+       ═══════════════════════════════════════════════════════════════════ -->
+			<h2 id="app-changes">3. Modified Application Files — Usability Impact</h2>
+			<p>
+				Below are the changes that directly affect how the application behaves
+				for end-users and admins.
+			</p>
+
+			<!-- ─── 3a. config.js ─── -->
+			<div class="card" id="detail-config">
+				<h3>
+					3a. <code>admin_frontend/config.js</code> — NEW Centralized API
+					Configuration
+				</h3>
+				<div class="impact">
+					<span class="impact-tag impact-high">High Impact</span>
+					<span class="impact-tag impact-medium">All Pages</span>
+				</div>
+				<p>
+					A new file that <strong>auto-detects the environment</strong> and sets
+					the correct API URL. Replaces all scattered inline
+					<code>&lt;script&gt;</code> blocks and hard-coded URLs.
+				</p>
+				<ul>
+					<li>
+						<strong>Localhost / file://</strong> &rarr;
+						<code>http://localhost:8000</code>
+					</li>
+					<li>
+						<strong>Azure Static Web App</strong>
+						(<code>*.web.core.windows.net</code>) &rarr;
+						<code>https://app-gen360-api.azurewebsites.net</code>
+					</li>
+					<li>
+						<strong>Any other host</strong> &rarr;
+						<code>https://app-gen360-api.azurewebsites.net</code>
+					</li>
+				</ul>
+				<p>
+					<strong>Why it matters:</strong> Without this, the app breaks when
+					deployed to Azure because the frontend would try to call
+					<code>/api</code> or <code>localhost:8000</code> instead of the real
+					API.
+				</p>
+				<pre><span class="diff-add">+  (function () {
++    const DEFAULT_REMOTE_API = "https://app-gen360-api.azurewebsites.net";
++    const host = window.location.hostname || "";
++    const protocol = window.location.protocol || "";
++    const isLocalHost = ["localhost", "127.0.0.1", "::1"].includes(host);
++    const isFileProtocol = protocol === "file:";
++    const isAzureStatic = /\.web\.core\.windows\.net$/i.test(host);
++
++    let configured = (window.API_BASE_URL || "").trim();
++
++    if (!configured) {
++      configured = isLocalHost || isFileProtocol
++        ? "http://localhost:8000"
++        : DEFAULT_REMOTE_API;
++    }
++
++    if (configured.startsWith("/")) {
++      if (isLocalHost &amp;&amp; window.location.origin) {
++        configured = `${window.location.origin}${configured}`;
++      } else {
++        configured = DEFAULT_REMOTE_API;
++      }
++    }
++
++    if (isAzureStatic &amp;&amp; !isLocalHost) {
++      configured = DEFAULT_REMOTE_API;
++    }
++
++    window.API_BASE_URL = configured.replace(/\/+$/, "");
++  })();</span></pre>
+			</div>
+
+			<!-- ─── 3b. Frontend API URL ─── -->
+			<div class="card" id="detail-api-url">
+				<h3>3b. Frontend JS — API URL Fallback Changed to Production</h3>
+				<div class="impact">
+					<span class="impact-tag impact-high">High Impact</span>
+					<span class="impact-tag impact-medium">6 Files</span>
+				</div>
+				<p>
+					Every JS module now defaults to the Azure production API instead of
+					<code>localhost</code> or <code>/api</code>. This ensures the app
+					works immediately in production even if <code>config.js</code> hasn't
+					run yet.
+				</p>
+				<table>
+					<thead>
+						<tr>
+							<th>File</th>
+							<th>Before (main)</th>
+							<th>After (azure)</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<td>admin_auth.js</td>
+							<td><code class="diff-del">"/api"</code></td>
+							<td>
+								<code class="diff-add"
+									>"https://app-gen360-api.azurewebsites.net"</code
+								>
+							</td>
+						</tr>
+						<tr>
+							<td>admin_dashboard.js</td>
+							<td><code class="diff-del">"http://localhost:8000"</code></td>
+							<td>
+								<code class="diff-add"
+									>"https://app-gen360-api.azurewebsites.net"</code
+								>
+							</td>
+						</tr>
+						<tr>
+							<td>admin_profile.js</td>
+							<td><code class="diff-del">"/api"</code></td>
+							<td>
+								<code class="diff-add"
+									>"https://app-gen360-api.azurewebsites.net"</code
+								>
+							</td>
+						</tr>
+						<tr>
+							<td>admin_resolucao.js</td>
+							<td><code class="diff-del">"/api"</code></td>
+							<td>
+								<code class="diff-add"
+									>"https://app-gen360-api.azurewebsites.net"</code
+								>
+							</td>
+						</tr>
+						<tr>
+							<td>admin_stats.js</td>
+							<td><code class="diff-del">"/api"</code></td>
+							<td>
+								<code class="diff-add"
+									>"https://app-gen360-api.azurewebsites.net"</code
+								>
+							</td>
+						</tr>
+						<tr>
+							<td>app.js</td>
+							<td><code class="diff-del">"http://localhost:8000"</code></td>
+							<td>
+								<code class="diff-add"
+									>"https://app-gen360-api.azurewebsites.net"</code
+								>
+							</td>
+						</tr>
+						<tr>
+							<td>orgaos.js</td>
+							<td><code class="diff-del">"http://localhost:8000"</code></td>
+							<td>
+								<code class="diff-add"
+									>"https://app-gen360-api.azurewebsites.net"</code
+								>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+
+			<!-- ─── 3c. HTML ─── -->
+			<div class="card" id="detail-html">
+				<h3>
+					3c. HTML Pages — Inline Script Replaced with <code>config.js</code>
+				</h3>
+				<div class="impact">
+					<span class="impact-tag impact-medium">Medium Impact</span>
+					<span class="impact-tag impact-low">5 Files</span>
+				</div>
+				<p>
+					All HTML pages that previously had an inline script setting
+					<code>window.API_BASE_URL = "/api"</code> now load the centralized
+					<code>config.js</code> instead.
+				</p>
+				<table>
+					<thead>
+						<tr>
+							<th>File</th>
+							<th>Before (main)</th>
+							<th>After (azure)</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<td>admin_home.html</td>
+							<td>
+								<code class="diff-del"
+									>&lt;script&gt; window.API_BASE_URL = "/api";
+									&lt;/script&gt;</code
+								>
+							</td>
+							<td>
+								<code class="diff-add"
+									>&lt;script src="./config.js"&gt;&lt;/script&gt;</code
+								>
+							</td>
+						</tr>
+						<tr>
+							<td>admin_login.html</td>
+							<td>
+								<code class="diff-del"
+									>&lt;script&gt; window.API_BASE_URL = "/api";
+									&lt;/script&gt;</code
+								>
+							</td>
+							<td>
+								<code class="diff-add"
+									>&lt;script src="./config.js"&gt;&lt;/script&gt;</code
+								>
+							</td>
+						</tr>
+						<tr>
+							<td>admin_profile.html</td>
+							<td>
+								<code class="diff-del"
+									>&lt;script&gt;window.API_BASE_URL = window.API_BASE_URL ||
+									"/api";&lt;/script&gt;</code
+								>
+							</td>
+							<td>
+								<code class="diff-add"
+									>&lt;script src="./config.js"&gt;&lt;/script&gt;</code
+								>
+							</td>
+						</tr>
+						<tr>
+							<td>admin_resolucao.html</td>
+							<td>
+								<code class="diff-del"
+									>&lt;script&gt; window.API_BASE_URL = "/api";
+									&lt;/script&gt;</code
+								>
+							</td>
+							<td>
+								<code class="diff-add"
+									>&lt;script src="./config.js"&gt;&lt;/script&gt;</code
+								>
+							</td>
+						</tr>
+						<tr>
+							<td>admin_stats.html</td>
+							<td>
+								<code class="diff-del"
+									>&lt;script&gt; window.API_BASE_URL = "/api";
+									&lt;/script&gt;</code
+								>
+							</td>
+							<td>
+								<code class="diff-add"
+									>&lt;script src="./config.js"&gt;&lt;/script&gt;</code
+								>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+
+			<!-- ─── 3d. api/main.py ─── -->
+			<div class="card" id="detail-main-py">
+				<h3>3d. <code>api/main.py</code> — Backend API Changes</h3>
+				<div class="impact">
+					<span class="impact-tag impact-high">High Impact</span>
+					<span class="impact-tag impact-medium">Backend</span>
+				</div>
+				<p>
+					Three major additions that improve reliability and debuggability in
+					production:
+				</p>
+
+				<h3>3d-i. Logging Infrastructure</h3>
+				<p>
+					Added <code>import logging</code> and a named logger
+					(<code>gen360.api</code>) for structured log output.
+				</p>
+				<pre><span class="diff-add">+ import logging</span>
+  import os
+  ...
+<span class="diff-add">+ logger = logging.getLogger("gen360.api")</span></pre>
+
+				<h3>3d-ii. Startup Task — Auto-create Verification Columns</h3>
+				<p>
+					On application boot, the API now ensures the required database
+					verification columns exist. If it fails, it logs a warning instead of
+					crashing.
+				</p>
+				<pre><span class="diff-add">+ @app.on_event("startup")
++ def _startup_tasks() -&gt; None:
++     try:
++         queries.garantir_colunas_verificacao()
++     except Exception as exc:
++         logger.warning("Falha ao garantir colunas de verificação: %s", exc)</span></pre>
+				<p>
+					<strong>Why it matters:</strong> Prevents runtime errors when the
+					database schema is missing expected columns.
+				</p>
+
+				<h3>3d-iii. New Endpoint: <code>GET /health/db</code></h3>
+				<p>
+					A diagnostic endpoint that checks database connectivity, confirms
+					table existence (<code>admins</code>, <code>norma</code>), and returns
+					admin count.
+				</p>
+				<pre><span class="diff-add">+ @app.get("/health/db")
++ def health_db() -&gt; Dict[str, Any]:
++     """Check database connectivity and table existence"""
++     conn = get_connection()
++     # Tests: SELECT 1, admins table exists, norma table exists, admin count
++     # Returns JSON: { status, database_connected, tables: {...} }
++     # On error: { status: "error", error, traceback }</span></pre>
+				<p>
+					<strong>Why it matters:</strong> Allows operators and monitoring to
+					quickly verify the database is reachable and tables are intact.
+				</p>
+
+				<h3>
+					3d-iv. Improved Error Handling in <code>POST /admin/register</code>
+				</h3>
+				<p>
+					The registration endpoint now catches database errors, logs the full
+					traceback, and returns a clear 500 response instead of an unhandled
+					exception.
+				</p>
+				<pre>  @app.post("/admin/register")
+  def admin_register(payload):
+<span class="diff-add">+     try:
++         existente = queries.obter_admin_por_email(payload.email)
++     except Exception as exc:
++         import traceback
++         print(f"Database error in admin_register: {exc}")
++         print(traceback.format_exc())
++         raise HTTPException(
++             status_code=500,
++             detail=f"Erro ao acessar banco de dados: {str(exc)}",
++         ) from exc</span>
+<span class="diff-del">-     existente = queries.obter_admin_por_email(payload.email)</span></pre>
+				<p>
+					<strong>Why it matters:</strong> Admins previously saw an opaque error
+					on registration failures. Now they get a meaningful message and the
+					server logs the root cause.
+				</p>
+			</div>
+
+			<!-- ─── 3e. requirements.txt ─── -->
+			<div class="card" id="detail-reqs">
+				<h3>3e. <code>requirements.txt</code> — New Dependencies</h3>
+				<div class="impact">
+					<span class="impact-tag impact-medium">Medium Impact</span>
+					<span class="impact-tag impact-low">Deployment</span>
+				</div>
+				<p>Two packages added for production readiness:</p>
+				<pre>  fastapi
+  uvicorn
+  pydantic
+  psycopg2-binary
+<span class="diff-add">+ gunicorn
++ python-dotenv</span></pre>
+				<ul>
+					<li>
+						<strong>gunicorn</strong> — Production-grade WSGI/ASGI server
+						(replaces uvicorn direct invocation in deployment)
+					</li>
+					<li>
+						<strong>python-dotenv</strong> — Loads <code>.env</code> file for
+						local development convenience
+					</li>
+				</ul>
+			</div>
+
+			<!-- ─── 3f. .gitignore ─── -->
+			<div class="card" id="detail-gitignore">
+				<h3>3f. <code>.gitignore</code> — Cleanup Rules</h3>
+				<div class="impact">
+					<span class="impact-tag impact-low">Low Impact</span>
+				</div>
+				<p>
+					Added rules to prevent log archives and deployment artifacts from
+					being committed:
+				</p>
+				<pre><span class="diff-add">+ *.zip
++ *applogs*
++ *webapp*
++ app_logs/
++ deploy-logs/
++ app_logs.zip</span></pre>
+			</div>
+
+			<!-- ───── Conclusion ───── -->
+			<h2>Summary of Usability Impact</h2>
+			<table>
+				<thead>
+					<tr>
+						<th>Area</th>
+						<th>Impact</th>
+						<th>What Changed</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr>
+						<td><strong>API Connectivity</strong></td>
+						<td><span class="impact-tag impact-high">High</span></td>
+						<td>
+							Frontend now correctly targets the Azure API in production;
+							previously would fail with <code>/api</code> or
+							<code>localhost</code> URLs
+						</td>
+					</tr>
+					<tr>
+						<td><strong>Admin Registration</strong></td>
+						<td><span class="impact-tag impact-high">High</span></td>
+						<td>
+							Database errors during registration now return clear error
+							messages instead of generic 500 errors
+						</td>
+					</tr>
+					<tr>
+						<td><strong>Database Health Check</strong></td>
+						<td><span class="impact-tag impact-medium">Medium</span></td>
+						<td>
+							New <code>/health/db</code> endpoint enables monitoring and fast
+							diagnosis of database issues
+						</td>
+					</tr>
+					<tr>
+						<td><strong>Schema Auto-Setup</strong></td>
+						<td><span class="impact-tag impact-medium">Medium</span></td>
+						<td>
+							Verification columns are auto-created on startup, preventing
+							runtime errors from missing schema
+						</td>
+					</tr>
+					<tr>
+						<td><strong>Environment Detection</strong></td>
+						<td><span class="impact-tag impact-medium">Medium</span></td>
+						<td>
+							Centralized <code>config.js</code> auto-detects local vs Azure vs
+							static host — no manual config needed
+						</td>
+					</tr>
+					<tr>
+						<td><strong>Production Server</strong></td>
+						<td><span class="impact-tag impact-low">Low</span></td>
+						<td>gunicorn replaces direct uvicorn for production stability</td>
+					</tr>
+				</tbody>
+			</table>
+
+			<footer>
+				Generated from <code>git diff origin/main..origin/azure</code> &mdash;
+				Gen360 Branch Comparison Report
+			</footer>
+		</div>
+	</body>
+</html>
