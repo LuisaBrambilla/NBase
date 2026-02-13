@@ -5,6 +5,10 @@
 venv/
 .venv/
 env/
+*.zip
+*applogs*
+*webapp*
+app_logs*
 
 # Python
 __pycache__/
