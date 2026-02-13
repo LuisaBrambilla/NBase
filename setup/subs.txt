@@ -1,0 +1,19 @@
+MCPP Subscription
+618a82e3-0571-4142-b50d-c8d2c34060ae
+
+Name
+TECBIS
+Tenant ID
+6b1db0da-c53f-48bf-b271-9297590ad872
+Primary domain
+tecbis.com.br
+License
+Microsoft Entra ID P2
+
+
+thiago@thebeier.com
+dar<Ball51!
+
+
+Resource group: DemoGoverno
+there's a vm with PostgreSQL installed already

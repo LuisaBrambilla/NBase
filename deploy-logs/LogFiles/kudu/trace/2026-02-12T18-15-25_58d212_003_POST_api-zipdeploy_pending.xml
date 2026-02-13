@@ -1,0 +1,19 @@
+<step title="Incoming Request" date="2026-02-12T18:15:25.993" instance="58d212" url="/api/zipdeploy?isAsync=true" method="POST" type="request" pid="772,1,3" Accept="*/*" Host="app-gen360-api.scm.azurewebsites.net" User-Agent="AZURECLI/2.83.0 (MSI)" Accept-Encoding="gzip, deflate" Authorization="Bea..." Cache-Control="no-cache" Content-Type="application/octet-stream" Content-Length="12719" x-ms-client-request-id="ca42bab8-083e-11f1-8232-010101010000" x-ms-artifact-checksum="dd07f7a19275b102b5dee0b3098133523d9847a53124c9c41c76be6cd636d687" X-ARR-LOG-ID="ca42bab8-083e-11f1-8232-010101010000" CLIENT-IP="207.219.91.78:63330" X-SITE-DEPLOYMENT-ID="app-gen360-api" WAS-DEFAULT-HOSTNAME="app-gen360-api.scm.azurewebsites.net" X-Forwarded-Proto="https" X-AppService-Proto="https" X-Forwarded-TlsVersion="1.3" X-WAWS-Unencoded-URL="/api/zipdeploy?isAsync=true" X-Client-IP="207.219.91.78" X-Client-Port="63330" >
+  <step title="Cleanup Xml Logs" date="2026-02-12T18:15:26.004" /><!-- duration: 20ms -->
+  <step title="ZipPushDeploy" date="2026-02-12T18:15:26.133" >
+    <step title="ZipDeploy. Extract zip. Remote build." date="2026-02-12T18:15:26.162" /><!-- duration: 1ms -->
+    <step title="None repository commit" date="2026-02-12T18:15:26.178" >
+      <step title="Commit id: eb641725-969a-4733-8b58-53636c94ca2f" date="2026-02-12T18:15:26.180" Message="N/A" AuthorName="N/A" AuthorEmail="N/A" /><!-- duration: 1ms -->
+    </step><!-- duration: 5ms -->
+    <step title="Starting PushDeployAsync" date="2026-02-12T18:15:26.184" /><!-- duration: 1ms -->
+    <step title="Writing artifact to /tmp/zipdeploy/efb9c868-eb4a-49d5-a18c-a4e5dc0e262c.zip" date="2026-02-12T18:15:26.204" >
+      <step title="Writing multipart request body to /tmp/zipdeploy/efb9c868-eb4a-49d5-a18c-a4e5dc0e262c.zip" date="2026-02-12T18:15:26.212" /><!-- duration: 9ms -->
+    </step><!-- duration: 114ms -->
+    <step title="Removing previous build artifact&apos;s manifest file" date="2026-02-12T18:15:26.322" >
+      <step title="Start deployment in the background" date="2026-02-12T18:15:26.341" >
+        <step title="Acquiring Deployment Lock" date="2026-02-12T18:15:26.362" /><!-- duration: 9ms -->
+        <step title="Acquired Deployment Lock" date="2026-02-12T18:15:26.492" /><!-- duration: 1ms -->
+      </step><!-- duration: 246ms -->
+    </step><!-- duration: 271ms -->
+    <step title="Outgoing response" date="2026-02-12T18:15:26.604" type="response" statusCode="202" statusText="Accepted" /><!-- duration: 9ms -->
+  </step><!-- duration: 480ms -->

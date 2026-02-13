@@ -1,4 +1,4 @@
-const API_BASE = window.API_BASE_URL || "/api";
+const API_BASE = window.API_BASE_URL || "https://app-gen360-api.azurewebsites.net";
 
 const loginForm = document.getElementById("loginForm");
 const registerForm = document.getElementById("registerForm");

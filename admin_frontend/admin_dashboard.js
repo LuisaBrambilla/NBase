@@ -1,4 +1,4 @@
-const API_BASE = "http://localhost:8000";
+const API_BASE = "https://app-gen360-api.azurewebsites.net";
 
 const adminWelcome = document.getElementById("adminWelcome");
 const adminMsg = document.getElementById("adminMsg");

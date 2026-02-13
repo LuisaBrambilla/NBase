@@ -1,3 +1,4 @@
+import logging
 import os
 from typing import Any, Dict, Optional
 
@@ -18,6 +19,8 @@ from api.auth import (
 )
 
 
+logger = logging.getLogger("gen360.api")
+
 app = FastAPI(title="Consulta de Atos")
 
 origins_env = os.getenv("CORS_ORIGINS", "*")
@@ -30,6 +33,14 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.on_event("startup")
+def _startup_tasks() -> None:
+    try:
+        queries.garantir_colunas_verificacao()
+    except Exception as exc:  # pragma: no cover
+        logger.warning("Falha ao garantir colunas de verificação: %s", exc)
 
 _ADMIN_PUBLIC_PATHS = {"/admin/login", "/admin/register", "/admin/register/confirm"}
 
@@ -140,6 +151,66 @@ def health() -> Dict[str, str]:
     return {"status": "ok"}
 
 
+@app.get("/health/db")
+def health_db() -> Dict[str, Any]:
+    """Check database connectivity and table existence"""
+    try:
+        import psycopg2
+        from db.db import get_connection
+        
+        # Test connection
+        conn = get_connection()
+        try:
+            with conn.cursor() as cur:
+                # Check if we can query
+                cur.execute("SELECT 1 as test")
+                result = cur.fetchone()
+                
+                # Check if admins table exists
+                cur.execute("""
+                    SELECT EXISTS (
+                        SELECT FROM information_schema.tables 
+                        WHERE table_name = 'admins'
+                    );
+                """)
+                admins_exists = cur.fetchone()[0]
+                
+                # Check if norma table exists
+                cur.execute("""
+                    SELECT EXISTS (
+                        SELECT FROM information_schema.tables 
+                        WHERE table_name = 'norma'
+                    );
+                """)
+                norma_exists = cur.fetchone()[0]
+                
+                # Count admins
+                admin_count = None
+                if admins_exists:
+                    cur.execute("SELECT COUNT(*) FROM admins")
+                    admin_count = cur.fetchone()[0]
+                
+                return {
+                    "status": "ok",
+                    "database_connected": True,
+                    "tables": {
+                        "admins_exists": admins_exists,
+                        "norma_exists": norma_exists,
+                        "admin_count": admin_count
+                    }
+                }
+        finally:
+            conn.close()
+    except Exception as exc:
+        import traceback
+        return {
+            "status": "error",
+            "database_connected": False,
+            "error": str(exc),
+            "traceback": traceback.format_exc()
+        }
+
+
 @app.get("/public/atos")
 def listar_atos(
     data: Optional[str] = None,
@@ -220,7 +291,18 @@ def orgaos_arvore(ano: int, limit: int = 8) -> Dict[str, Any]:
 
 @app.post("/admin/register")
 def admin_register(payload: AdminRegisterPayload) -> Dict[str, Any]:
-    existente = queries.obter_admin_por_email(payload.email)
+    try:
+        existente = queries.obter_admin_por_email(payload.email)
+    except Exception as exc:
+        # Log the actual database error for debugging
+        import traceback
+        print(f"Database error in admin_register: {exc}")
+        print(traceback.format_exc())
+        raise HTTPException(
+            status_code=500,
+            detail=f"Erro ao acessar banco de dados: {str(exc)}",
+        ) from exc
+    
     if existente:
         raise HTTPException(status_code=409, detail="Email já cadastrado.")
     if not _senha_atende_regras(payload.senha):

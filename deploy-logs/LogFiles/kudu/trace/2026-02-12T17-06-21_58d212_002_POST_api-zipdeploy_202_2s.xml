@@ -1,0 +1,17 @@
+<step title="Incoming Request" date="2026-02-12T17:06:21.314" instance="58d212" url="/api/zipdeploy?isAsync=true" method="POST" type="request" pid="770,1,5" Accept="*/*" Host="app-gen360-api.scm.azurewebsites.net" User-Agent="AZURECLI/2.83.0 (MSI)" Accept-Encoding="gzip, deflate" Authorization="Bea..." Cache-Control="no-cache" Content-Type="application/octet-stream" Content-Length="12832" x-ms-client-request-id="10f14bd8-0835-11f1-b02b-010101010000" x-ms-artifact-checksum="e886c262b4ffebd8521fa00c7b814b0dea689e6433743e56171e89ec0e2659c7" X-ARR-LOG-ID="10f14bd8-0835-11f1-b02b-010101010000" CLIENT-IP="207.219.91.78:50273" X-SITE-DEPLOYMENT-ID="app-gen360-api" WAS-DEFAULT-HOSTNAME="app-gen360-api.scm.azurewebsites.net" X-Forwarded-Proto="https" X-AppService-Proto="https" X-Forwarded-TlsVersion="1.3" X-WAWS-Unencoded-URL="/api/zipdeploy?isAsync=true" X-Client-IP="207.219.91.78" X-Client-Port="50273" >
+  <step title="ZipPushDeploy" date="2026-02-12T17:06:22.190" >
+    <step title="ZipDeploy. Extract zip. Remote build." date="2026-02-12T17:06:22.194" /><!-- duration: 1ms -->
+    <step title="None repository commit" date="2026-02-12T17:06:22.201" >
+      <step title="Commit id: ee4bdff6-634f-4c04-b5bd-20f7b60142aa" date="2026-02-12T17:06:22.202" Message="N/A" AuthorName="N/A" AuthorEmail="N/A" /><!-- duration: 1ms -->
+    </step><!-- duration: 4ms -->
+    <step title="Starting PushDeployAsync" date="2026-02-12T17:06:22.206" /><!-- duration: 3ms -->
+    <step title="Writing artifact to /tmp/zipdeploy/95f347c4-e0e3-40fe-9f34-4d626225e53f.zip" date="2026-02-12T17:06:22.222" >
+      <step title="Writing multipart request body to /tmp/zipdeploy/95f347c4-e0e3-40fe-9f34-4d626225e53f.zip" date="2026-02-12T17:06:22.231" /><!-- duration: 19ms -->
+    </step><!-- duration: 100ms -->
+    <step title="Start deployment in the background" date="2026-02-12T17:06:22.370" >
+      <step title="Acquiring Deployment Lock" date="2026-02-12T17:06:22.421" /><!-- duration: 10ms -->
+      <step title="Acquired Deployment Lock" date="2026-02-12T17:06:22.871" /><!-- duration: 9ms -->
+    </step><!-- duration: 631ms -->
+  </step><!-- duration: 831ms -->
+  <step title="Outgoing response" date="2026-02-12T17:06:23.111" type="response" statusCode="202" statusText="Accepted" /><!-- duration: 10ms -->
+</step><!-- duration: 1817ms -->

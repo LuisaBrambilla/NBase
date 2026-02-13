@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Azure Deployment - Gen360 (Resoluções ANA)</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        
+        header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .content {
+            padding: 40px;
+        }
+        
+        h2 {
+            color: #667eea;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+        }
+        
+        h3 {
+            color: #764ba2;
+            margin-top: 25px;
+            margin-bottom: 10px;
+        }
+        
+        h4 {
+            color: #555;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+        
+        .info-box {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        
+        .warning-box {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        
+        .success-box {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        
+        pre {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+        
+        code {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+        
+        ul, ol {
+            margin-left: 30px;
+            margin-bottom: 15px;
+        }
+        
+        li {
+            margin-bottom: 8px;
+        }
+        
+        .step {
+            background: #f8f9fa;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+        }
+        
+        .step-number {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            background: #667eea;
+            color: white;
+            text-align: center;
+            line-height: 30px;
+            border-radius: 50%;
+            margin-right: 10px;
+            font-weight: bold;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        
+        table th, table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        table th {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            margin: 10px 5px;
+            transition: background 0.3s;
+        }
+        
+        .btn:hover {
+            background: #5568d3;
+        }
+        
+        .resource-card {
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 10px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .resource-card h4 {
+            color: #667eea;
+            margin-top: 0;
+        }
+        
+        footer {
+            background: #2d2d2d;
+            color: white;
+            text-align: center;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🚀 Azure Deployment Guide</h1>
+            <p>Gen360 - Resoluções ANA</p>
+        </header>
+        
+        <div class="content">
+            <div class="info-box">
+                <h3>📋 Prerequisites</h3>
+                <ul>
+                    <li><strong>Azure Subscription:</strong> <code>618a82e3-0571-4142-b50d-c8d2c34060ae</code></li>
+                    <li><strong>Azure CLI:</strong> Installed and working</li>
+                    <li><strong>PostgreSQL VM Credentials:</strong>
+                        <ul>
+                            <li>User: <code>linuxuser</code></li>
+                            <li>Password: <code>r!(hFarm96g5Ayb3INF6</code></li>
+                            <li>Database: <code>normas</code></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <h2>🎯 Quick Deployment</h2>
+            
+            <div class="success-box">
+                <h3>Option 1: Automated Deployment (Recommended)</h3>
+                <p>Run the deployment script:</p>
+                <pre><code>.\deploy_azure.ps1 -PostgreSQLHost "YOUR_POSTGRESQL_VM_IP"</code></pre>
+                <p><strong>Note:</strong> Replace <code>YOUR_POSTGRESQL_VM_IP</code> with your actual PostgreSQL VM IP address or hostname.</p>
+            </div>
+
+            <h2>📝 Manual Step-by-Step Deployment</h2>
+
+            <div class="step">
+                <h4><span class="step-number">1</span>Login to Azure</h4>
+                <pre><code>az login --tenant 6b1db0da-c53f-48bf-b271-9297590ad872
+az account set --subscription "618a82e3-0571-4142-b50d-c8d2c34060ae"</code></pre>
+            </div>
+
+            <div class="step">
+                <h4><span class="step-number">2</span>Set Variables</h4>
+                <pre><code>$rg = "rg-gen360"
+$location = "brazilsouth"
+$plan = "asp-gen360"
+$webapp = "app-gen360-api"
+$storage = "stgen360frontend"
+$dbHost = "YOUR_POSTGRESQL_VM_IP"  # Replace with your PostgreSQL VM IP</code></pre>
+            </div>
+
+            <div class="step">
+                <h4><span class="step-number">3</span>Create Resource Group</h4>
+                <pre><code>az group create --name $rg --location $location</code></pre>
+            </div>
+
+            <div class="step">
+                <h4><span class="step-number">4</span>Create App Service Plan (Linux + Python)</h4>
+                <pre><code>az appservice plan create `
+    --name $plan `
+    --resource-group $rg `
+    --location $location `
+    --is-linux `
+    --sku B1</code></pre>
+            </div>
+
+            <div class="step">
+                <h4><span class="step-number">5</span>Create Web App</h4>
+                <pre><code>az webapp create `
+    --name $webapp `
+    --resource-group $rg `
+    --plan $plan `
+    --runtime "PYTHON:3.12"</code></pre>
+            </div>
+
+            <div class="step">
+                <h4><span class="step-number">6</span>Configure Environment Variables</h4>
+                <pre><code># Generate a random JWT secret
+$jwtSecret = -join ((65..90) + (97..122) + (48..57) | Get-Random -Count 64 | ForEach-Object {[char]$_})
+
+az webapp config appsettings set `
+    --name $webapp `
+    --resource-group $rg `
+    --settings `
+        DB_HOST="$dbHost" `
+        DB_PORT="5432" `
+        DB_NAME="normas" `
+        DB_USER="linuxuser" `
+        DB_PASSWORD="r!(hFarm96g5Ayb3INF6" `
+        JWT_SECRET="$jwtSecret" `
+        JWT_ALGORITHM="HS256" `
+        JWT_EXPIRE_MINUTES="60" `
+        MFA_ISSUER="Gen360Admin" `
+        CORS_ORIGINS="*" `
+        SCM_DO_BUILD_DURING_DEPLOYMENT="true"</code></pre>
+            </div>
+
+            <div class="step">
+                <h4><span class="step-number">7</span>Configure Startup Command</h4>
+                <pre><code>az webapp config set `
+    --name $webapp `
+    --resource-group $rg `
+    --startup-file "gunicorn -w 4 -k uvicorn.workers.UvicornWorker api.main:app --bind=0.0.0.0:8000 --timeout 600"</code></pre>
+            </div>
+
+            <div class="step">
+                <h4><span class="step-number">8</span>Deploy API Code (Zip Deployment)</h4>
+                <pre><code># Create deployment package
+$tempDir = "C:\temp\gen360_deploy"
+New-Item -ItemType Directory -Path $tempDir -Force
+
+# Copy files
+Copy-Item -Path ".\api" -Destination $tempDir -Recurse -Force
+Copy-Item -Path ".\db" -Destination $tempDir -Recurse -Force
+Copy-Item -Path ".\requirements.txt" -Destination $tempDir -Force
+
+# Create zip
+$zipPath = "C:\temp\gen360_deploy.zip"
+Compress-Archive -Path "$tempDir\*" -DestinationPath $zipPath -Force
+
+# Deploy
+az webapp deployment source config-zip `
+    --resource-group $rg `
+    --name $webapp `
+    --src $zipPath
+
+# Clean up
+Remove-Item $tempDir -Recurse -Force
+Remove-Item $zipPath -Force</code></pre>
+            </div>
+
+            <div class="step">
+                <h4><span class="step-number">9</span>Setup PostgreSQL Database</h4>
+                <p>Connect to your PostgreSQL VM and run:</p>
+                <pre><code>-- Connect to PostgreSQL
+psql -U linuxuser -d postgres
+
+-- Create database
+CREATE DATABASE normas;
+
+-- Connect to the database
+\c normas
+
+-- Run the schema (copy content from db/models.sql)
+-- Or run: psql -U linuxuser -d normas -f db/models.sql</code></pre>
+            </div>
+
+            <div class="step">
+                <h4><span class="step-number">10</span>Configure PostgreSQL Firewall</h4>
+                <p>Allow Azure services to connect to your PostgreSQL VM:</p>
+                <pre><code># On your PostgreSQL VM, edit pg_hba.conf
+sudo nano /etc/postgresql/*/main/pg_hba.conf
+
+# Add this line (replace with Azure Web App outbound IPs):
+host    normas    linuxuser    0.0.0.0/0    md5
+
+# Restart PostgreSQL
+sudo systemctl restart postgresql</code></pre>
+            </div>
+
+            <div class="step">
+                <h4><span class="step-number">11</span>Create Storage Account for Frontend</h4>
+                <pre><code>az storage account create `
+    --name $storage `
+    --resource-group $rg `
+    --location $location `
+    --sku Standard_LRS `
+    --kind StorageV2</code></pre>
+            </div>
+
+            <div class="step">
+                <h4><span class="step-number">12</span>Enable Static Website Hosting</h4>
+                <pre><code>az storage blob service-properties update `
+    --account-name $storage `
+    --static-website `
+    --index-document index.html `
+    --404-document index.html</code></pre>
+            </div>
+
+            <div class="step">
+                <h4><span class="step-number">13</span>Update Frontend Configuration</h4>
+                <p>Edit <code>admin_frontend/app.js</code> and update the API URL:</p>
+                <pre><code>const API_BASE_URL = window.API_BASE_URL || "https://app-gen360-api.azurewebsites.net";</code></pre>
+            </div>
+
+            <div class="step">
+                <h4><span class="step-number">14</span>Upload Frontend Files</h4>
+                <pre><code># Get storage account key
+$key = az storage account keys list --account-name $storage --resource-group $rg --query "[0].value" -o tsv
+
+# Upload files
+az storage blob upload-batch `
+    --account-name $storage `
+    --account-key $key `
+    --destination '$web' `
+    --source ".\admin_frontend"</code></pre>
+            </div>
+
+            <h2>✅ Post-Deployment</h2>
+
+            <div class="resource-card">
+                <h4>1. Test API Health</h4>
+                <p>Visit: <a href="https://app-gen360-api.azurewebsites.net/health" target="_blank">https://app-gen360-api.azurewebsites.net/health</a></p>
+                <p>Should return: <code>{"status": "ok"}</code></p>
+            </div>
+
+            <div class="resource-card">
+                <h4>2. Test Frontend</h4>
+                <p>Visit: <a href="https://stgen360frontend.z15.web.core.windows.net" target="_blank">https://stgen360frontend.z15.web.core.windows.net</a></p>
+            </div>
+
+            <div class="resource-card">
+                <h4>3. View Logs</h4>
+                <pre><code># Stream logs
+az webapp log tail --name $webapp --resource-group $rg
+
+# Or view in Azure Portal:
+# https://portal.azure.com -> App Services -> app-gen360-api -> Log stream</code></pre>
+            </div>
+
+            <div class="resource-card">
+                <h4>4. Register First Admin User</h4>
+                <ol>
+                    <li>Go to frontend admin login page</li>
+                    <li>Click "Register"</li>
+                    <li>Create your admin account with MFA</li>
+                </ol>
+            </div>
+
+            <h2>🛠️ Troubleshooting</h2>
+
+            <div class="warning-box">
+                <h4>API Returns 500 Error</h4>
+                <ul>
+                    <li>Check database connection in App Service logs</li>
+                    <li>Verify PostgreSQL VM is reachable from Azure</li>
+                    <li>Check environment variables are set correctly</li>
+                </ul>
+            </div>
+
+            <div class="warning-box">
+                <h4>Database Connection Failed</h4>
+                <ul>
+                    <li>Verify PostgreSQL is running on VM</li>
+                    <li>Check firewall rules allow Azure App Service IPs</li>
+                    <li>Test connection: <code>psql -h $dbHost -U linuxuser -d normas</code></li>
+                </ul>
+            </div>
+
+            <div class="warning-box">
+                <h4>Frontend Can't Connect to API</h4>
+                <ul>
+                    <li>Check CORS settings in API</li>
+                    <li>Verify API URL in <code>app.js</code></li>
+                    <li>Check browser console for errors</li>
+                </ul>
+            </div>
+
+            <h2>📦 Resource Names</h2>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Resource Type</th>
+                        <th>Name</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Resource Group</td>
+                        <td><code>rg-gen360</code></td>
+                    </tr>
+                    <tr>
+                        <td>App Service Plan</td>
+                        <td><code>asp-gen360</code></td>
+                    </tr>
+                    <tr>
+                        <td>Web App (API)</td>
+                        <td><code>app-gen360-api</code></td>
+                    </tr>
+                    <tr>
+                        <td>Storage Account (Frontend)</td>
+                        <td><code>stgen360frontend</code></td>
+                    </tr>
+                    <tr>
+                        <td>Database</td>
+                        <td><code>normas</code></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h2>🔗 URLs</h2>
+
+            <div class="resource-card">
+                <ul>
+                    <li><strong>API:</strong> <a href="https://app-gen360-api.azurewebsites.net" target="_blank">https://app-gen360-api.azurewebsites.net</a></li>
+                    <li><strong>API Health Check:</strong> <a href="https://app-gen360-api.azurewebsites.net/health" target="_blank">https://app-gen360-api.azurewebsites.net/health</a></li>
+                    <li><strong>API Docs:</strong> <a href="https://app-gen360-api.azurewebsites.net/docs" target="_blank">https://app-gen360-api.azurewebsites.net/docs</a></li>
+                    <li><strong>Frontend:</strong> <a href="https://stgen360frontend.z15.web.core.windows.net" target="_blank">https://stgen360frontend.z15.web.core.windows.net</a></li>
+                </ul>
+            </div>
+
+            <h2>💰 Cost Estimation</h2>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Service</th>
+                        <th>Estimated Cost</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>App Service Plan B1</td>
+                        <td>~$13/month</td>
+                    </tr>
+                    <tr>
+                        <td>Storage Account</td>
+                        <td>~$1/month</td>
+                    </tr>
+                    <tr>
+                        <td>PostgreSQL VM</td>
+                        <td>Variable (existing)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Total</strong></td>
+                        <td><strong>~$14/month + PostgreSQL VM costs</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <footer>
+            <p>&copy; 2026 Gen360 - Resoluções ANA | Azure Deployment Guide</p>
+        </footer>
+    </div>
+</body>
+</html>
