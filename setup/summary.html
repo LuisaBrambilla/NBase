@@ -1,0 +1,1720 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Gen360 — Project Summary</title>
+		<style>
+			:root {
+				--bg: #f8f9fa;
+				--card-bg: #fff;
+				--border: #dee2e6;
+				--text: #212529;
+				--text-muted: #6c757d;
+				--primary: #0d6efd;
+				--primary-light: #e7f1ff;
+				--success: #198754;
+				--warning: #ffc107;
+				--danger: #dc3545;
+				--info: #0dcaf0;
+				--code-bg: #f1f3f5;
+				--accent: #6f42c1;
+			}
+			* {
+				box-sizing: border-box;
+				margin: 0;
+				padding: 0;
+			}
+			body {
+				font-family:
+					"Segoe UI",
+					system-ui,
+					-apple-system,
+					sans-serif;
+				background: var(--bg);
+				color: var(--text);
+				line-height: 1.6;
+			}
+			.container {
+				max-width: 1200px;
+				margin: 0 auto;
+				padding: 24px;
+			}
+
+			/* Header */
+			.hero {
+				background: linear-gradient(
+					135deg,
+					#1a237e 0%,
+					#0d47a1 50%,
+					#01579b 100%
+				);
+				color: #fff;
+				padding: 48px 24px;
+				text-align: center;
+				border-radius: 12px;
+				margin-bottom: 32px;
+			}
+			.hero h1 {
+				font-size: 2.5rem;
+				font-weight: 700;
+				margin-bottom: 8px;
+			}
+			.hero p {
+				font-size: 1.1rem;
+				opacity: 0.9;
+				max-width: 700px;
+				margin: 0 auto;
+			}
+			.hero .badge-row {
+				margin-top: 16px;
+				display: flex;
+				gap: 8px;
+				justify-content: center;
+				flex-wrap: wrap;
+			}
+			.badge {
+				display: inline-block;
+				padding: 4px 12px;
+				border-radius: 20px;
+				font-size: 0.8rem;
+				font-weight: 600;
+			}
+			.badge-blue {
+				background: rgba(255, 255, 255, 0.2);
+				color: #fff;
+			}
+
+			/* TOC */
+			.toc {
+				background: var(--card-bg);
+				border: 1px solid var(--border);
+				border-radius: 8px;
+				padding: 20px;
+				margin-bottom: 32px;
+			}
+			.toc h2 {
+				font-size: 1.2rem;
+				margin-bottom: 12px;
+				color: var(--primary);
+			}
+			.toc-grid {
+				display: grid;
+				grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+				gap: 4px 24px;
+			}
+			.toc a {
+				color: var(--primary);
+				text-decoration: none;
+				font-size: 0.95rem;
+				padding: 2px 0;
+				display: block;
+			}
+			.toc a:hover {
+				text-decoration: underline;
+			}
+
+			/* Section */
+			.section {
+				margin-bottom: 40px;
+			}
+			.section h2 {
+				font-size: 1.5rem;
+				font-weight: 700;
+				margin-bottom: 16px;
+				padding-bottom: 8px;
+				border-bottom: 3px solid var(--primary);
+				color: var(--primary);
+			}
+			.section h3 {
+				font-size: 1.15rem;
+				font-weight: 600;
+				margin: 20px 0 10px;
+				color: var(--text);
+			}
+
+			/* Cards */
+			.card {
+				background: var(--card-bg);
+				border: 1px solid var(--border);
+				border-radius: 8px;
+				padding: 20px;
+				margin-bottom: 16px;
+			}
+			.card-header {
+				font-weight: 700;
+				font-size: 1.05rem;
+				margin-bottom: 8px;
+				display: flex;
+				align-items: center;
+				gap: 8px;
+			}
+			.card-header .icon {
+				font-size: 1.2rem;
+			}
+			.card p,
+			.card li {
+				font-size: 0.93rem;
+			}
+
+			/* Architecture grid */
+			.arch-grid {
+				display: grid;
+				grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+				gap: 16px;
+				margin-bottom: 20px;
+			}
+			.arch-card {
+				background: var(--card-bg);
+				border: 1px solid var(--border);
+				border-radius: 8px;
+				padding: 20px;
+				border-left: 4px solid var(--primary);
+			}
+			.arch-card.frontend {
+				border-left-color: var(--success);
+			}
+			.arch-card.database {
+				border-left-color: var(--warning);
+			}
+			.arch-card.infra {
+				border-left-color: var(--accent);
+			}
+			.arch-card h4 {
+				margin-bottom: 8px;
+				font-size: 1rem;
+			}
+			.arch-card .detail {
+				font-size: 0.85rem;
+				color: var(--text-muted);
+			}
+			.arch-card code {
+				background: var(--code-bg);
+				padding: 2px 6px;
+				border-radius: 4px;
+				font-size: 0.85rem;
+			}
+
+			/* Tables */
+			table {
+				width: 100%;
+				border-collapse: collapse;
+				margin: 12px 0;
+				font-size: 0.9rem;
+			}
+			th,
+			td {
+				padding: 10px 12px;
+				text-align: left;
+				border: 1px solid var(--border);
+			}
+			th {
+				background: var(--primary-light);
+				font-weight: 600;
+				white-space: nowrap;
+			}
+			tr:nth-child(even) {
+				background: #f8f9fa;
+			}
+			td code {
+				background: var(--code-bg);
+				padding: 1px 5px;
+				border-radius: 3px;
+				font-size: 0.85rem;
+			}
+
+			/* Variable table */
+			.var-table td:first-child {
+				font-family: "Consolas", monospace;
+				font-size: 0.85rem;
+				font-weight: 600;
+				color: var(--primary);
+				white-space: nowrap;
+			}
+			.var-table td:nth-child(2) {
+				font-family: "Consolas", monospace;
+				font-size: 0.85rem;
+				color: var(--text-muted);
+			}
+
+			/* Tags */
+			.tag {
+				display: inline-block;
+				padding: 2px 8px;
+				border-radius: 4px;
+				font-size: 0.75rem;
+				font-weight: 600;
+				margin-right: 4px;
+			}
+			.tag-get {
+				background: #d1ecf1;
+				color: #0c5460;
+			}
+			.tag-post {
+				background: #d4edda;
+				color: #155724;
+			}
+			.tag-patch {
+				background: #fff3cd;
+				color: #856404;
+			}
+			.tag-auth {
+				background: #f8d7da;
+				color: #721c24;
+			}
+			.tag-public {
+				background: #e2e3e5;
+				color: #383d41;
+			}
+
+			/* File tree */
+			.file-tree {
+				font-family: "Consolas", "Courier New", monospace;
+				font-size: 0.85rem;
+				background: #1e1e1e;
+				color: #d4d4d4;
+				padding: 20px;
+				border-radius: 8px;
+				overflow-x: auto;
+				line-height: 1.7;
+			}
+			.file-tree .folder {
+				color: #569cd6;
+			}
+			.file-tree .file {
+				color: #ce9178;
+			}
+			.file-tree .comment {
+				color: #6a9955;
+			}
+
+			/* Responsive */
+			@media (max-width: 768px) {
+				.hero h1 {
+					font-size: 1.8rem;
+				}
+				.container {
+					padding: 16px;
+				}
+				.arch-grid {
+					grid-template-columns: 1fr;
+				}
+				table {
+					font-size: 0.8rem;
+				}
+				th,
+				td {
+					padding: 6px 8px;
+				}
+			}
+			details {
+				margin-bottom: 8px;
+			}
+			details summary {
+				cursor: pointer;
+				font-weight: 600;
+				padding: 8px;
+				background: var(--primary-light);
+				border-radius: 6px;
+			}
+			details[open] summary {
+				border-radius: 6px 6px 0 0;
+			}
+			details .detail-content {
+				padding: 12px;
+				border: 1px solid var(--border);
+				border-top: 0;
+				border-radius: 0 0 6px 6px;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="container">
+			<!-- Hero -->
+			<div class="hero">
+				<h1>Gen360</h1>
+				<p>
+					Gestão do Estoque Normativo 360 — A web application for managing and
+					querying normative acts (resolutions) from ANA (Agência Nacional de
+					Águas e Saneamento Básico — Brazil's National Water Agency)
+				</p>
+				<div class="badge-row">
+					<span class="badge badge-blue">Python 3.12</span>
+					<span class="badge badge-blue">FastAPI</span>
+					<span class="badge badge-blue">PostgreSQL</span>
+					<span class="badge badge-blue">Azure App Service</span>
+					<span class="badge badge-blue">Azure Container Apps</span>
+					<span class="badge badge-blue">Azure Blob Storage</span>
+				</div>
+			</div>
+
+			<!-- Table of Contents -->
+			<div class="toc">
+				<h2>Table of Contents</h2>
+				<div class="toc-grid">
+					<a href="#architecture">1. Architecture &amp; Infrastructure</a>
+					<a href="#env-vars">2. Environment Variables</a>
+					<a href="#api-endpoints">3. API Endpoints</a>
+					<a href="#database">4. Database Schema</a>
+					<a href="#frontend-pages">5. Frontend Pages</a>
+					<a href="#js-modules">6. JavaScript Modules</a>
+					<a href="#backend-code">7. Backend Code</a>
+					<a href="#file-tree">8. File Structure</a>
+					<a href="#deployment">9. Deployment</a>
+					<a href="#azure-resources">10. Azure Resources</a>
+				</div>
+			</div>
+
+			<!-- 1. Architecture -->
+			<div class="section" id="architecture">
+				<h2>1. Architecture &amp; Infrastructure</h2>
+				<div class="arch-grid">
+					<div class="arch-card">
+						<h4>🖥️ Backend API</h4>
+						<p>
+							Python FastAPI application served by Gunicorn + Uvicorn workers
+						</p>
+						<div class="detail">
+							<strong>Runtime:</strong> Python 3.12<br />
+							<strong>Framework:</strong> FastAPI<br />
+							<strong>Server:</strong> Gunicorn (4 workers) + UvicornWorker<br />
+							<strong>Port:</strong> 8000<br />
+							<strong>URL:</strong>
+							<code>https://app-gen360-api.azurewebsites.net</code>
+						</div>
+					</div>
+					<div class="arch-card frontend">
+						<h4>🌐 Frontend (Static)</h4>
+						<p>
+							Static HTML/CSS/JS served from Azure Blob Storage static website
+						</p>
+						<div class="detail">
+							<strong>Hosting:</strong> Azure Storage Account ($web
+							container)<br />
+							<strong>Stack:</strong> Vanilla HTML + CSS + JavaScript<br />
+							<strong>Charts:</strong> Chart.js + chartjs-plugin-datalabels<br />
+							<strong>MFA QR:</strong> QRious library<br />
+							<strong>URL:</strong>
+							<code>https://stgen360frontend.z15.web.core.windows.net</code>
+						</div>
+					</div>
+					<div class="arch-card database">
+						<h4>🗄️ Database</h4>
+						<p>PostgreSQL on a Linux VM with UUID and trigram extensions</p>
+						<div class="detail">
+							<strong>Engine:</strong> PostgreSQL<br />
+							<strong>Host:</strong> <code>20.226.39.175</code> (Azure VM)<br />
+							<strong>Database:</strong> <code>normas</code><br />
+							<strong>Extensions:</strong> uuid-ossp, pg_trgm<br />
+							<strong>Driver:</strong> psycopg2-binary
+						</div>
+					</div>
+					<div class="arch-card infra">
+						<h4>🐳 Container Apps (Alt)</h4>
+						<p>
+							Alternative deployment via Azure Container Apps with Docker image
+						</p>
+						<div class="detail">
+							<strong>Registry:</strong> <code>crgen360.azurecr.io</code><br />
+							<strong>Image:</strong> <code>gen360-api:latest</code><br />
+							<strong>Environment:</strong> <code>env-gen360</code><br />
+							<strong>URL:</strong>
+							<code
+								>https://ca-gen360-api.icypebble-471a7ef7.brazilsouth.azurecontainerapps.io</code
+							>
+						</div>
+					</div>
+				</div>
+
+				<h3>Request Flow</h3>
+				<div class="card">
+					<p>
+						<strong>User</strong> → Browser loads static files from
+						<strong>Azure Blob Storage</strong> → JavaScript calls API at
+						<strong>App Service / Container Apps</strong> → FastAPI processes
+						request → Queries <strong>PostgreSQL</strong> on Azure VM → Returns
+						JSON response
+					</p>
+					<p
+						style="margin-top: 8px; font-size: 0.9rem; color: var(--text-muted)"
+					>
+						Admin routes require a JWT Bearer token (obtained via
+						<code>/admin/login</code>). Public routes (<code>/public/*</code>)
+						are open.
+					</p>
+				</div>
+			</div>
+
+			<!-- 2. Environment Variables -->
+			<div class="section" id="env-vars">
+				<h2>2. Environment Variables</h2>
+				<table class="var-table">
+					<thead>
+						<tr>
+							<th>Variable</th>
+							<th>Default</th>
+							<th>Description</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<td>DB_HOST</td>
+							<td>localhost</td>
+							<td>PostgreSQL server hostname or IP</td>
+						</tr>
+						<tr>
+							<td>DB_PORT</td>
+							<td>5432</td>
+							<td>PostgreSQL port</td>
+						</tr>
+						<tr>
+							<td>DB_NAME</td>
+							<td>normas</td>
+							<td>Database name</td>
+						</tr>
+						<tr>
+							<td>DB_USER</td>
+							<td>postgres</td>
+							<td>Database username</td>
+						</tr>
+						<tr>
+							<td>DB_PASSWORD</td>
+							<td>(hardcoded fallback)</td>
+							<td>Database password</td>
+						</tr>
+						<tr>
+							<td>JWT_SECRET</td>
+							<td>troque-este-segredo</td>
+							<td>HMAC-SHA256 secret for JWT signing</td>
+						</tr>
+						<tr>
+							<td>JWT_ALGORITHM</td>
+							<td>HS256</td>
+							<td>JWT algorithm (set in Azure, used conceptually)</td>
+						</tr>
+						<tr>
+							<td>JWT_EXPIRE_MINUTES</td>
+							<td>60</td>
+							<td>JWT token expiration time in minutes</td>
+						</tr>
+						<tr>
+							<td>MFA_ISSUER</td>
+							<td>ResolucoesAdmin</td>
+							<td>TOTP issuer name shown in authenticator apps</td>
+						</tr>
+						<tr>
+							<td>CORS_ORIGINS</td>
+							<td>*</td>
+							<td>Comma-separated allowed origins (e.g. frontend URL)</td>
+						</tr>
+						<tr>
+							<td>SCM_DO_BUILD_DURING_DEPLOYMENT</td>
+							<td>true</td>
+							<td>Azure: triggers Oryx build on zip deploy</td>
+						</tr>
+						<tr>
+							<td>ENABLE_ORYX_BUILD</td>
+							<td>true</td>
+							<td>Azure: enables Oryx build system</td>
+						</tr>
+						<tr>
+							<td>WEBSITES_CONTAINER_START_TIME_LIMIT</td>
+							<td>600</td>
+							<td>Azure: container startup timeout (seconds)</td>
+						</tr>
+						<tr>
+							<td>WEBSITE_HTTPLOGGING_RETENTION_DAYS</td>
+							<td>3</td>
+							<td>Azure: HTTP log retention period</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+
+			<!-- 3. API Endpoints -->
+			<div class="section" id="api-endpoints">
+				<h2>3. API Endpoints</h2>
+
+				<h3>Public Endpoints (No Auth Required)</h3>
+				<table>
+					<thead>
+						<tr>
+							<th>Method</th>
+							<th>Path</th>
+							<th>Description</th>
+							<th>Params</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<td><span class="tag tag-get">GET</span></td>
+							<td><code>/health</code></td>
+							<td>Health check — returns <code>{"status":"ok"}</code></td>
+							<td>—</td>
+						</tr>
+						<tr>
+							<td><span class="tag tag-get">GET</span></td>
+							<td><code>/health/db</code></td>
+							<td>
+								Database connectivity check, tables existence, admin count
+							</td>
+							<td>—</td>
+						</tr>
+						<tr>
+							<td><span class="tag tag-get">GET</span></td>
+							<td><code>/public/atos</code></td>
+							<td>List normative acts with filtering, sorting, pagination</td>
+							<td>
+								<code
+									>data, ano, ano_min, ano_max, numero, texto, assunto, ementa,
+									status, origem, sort_by, sort_dir, limit, offset</code
+								>
+							</td>
+						</tr>
+						<tr>
+							<td><span class="tag tag-get">GET</span></td>
+							<td><code>/public/atos/{ato_id}</code></td>
+							<td>
+								Get a single act — redirects to official URL or renders HTML
+							</td>
+							<td><code>ato_id</code> (UUID path param)</td>
+						</tr>
+						<tr>
+							<td><span class="tag tag-get">GET</span></td>
+							<td><code>/public/filtros</code></td>
+							<td>
+								Get distinct filter options: years, assuntos, statuses, orgaos
+							</td>
+							<td>—</td>
+						</tr>
+						<tr>
+							<td><span class="tag tag-get">GET</span></td>
+							<td><code>/public/resumo</code></td>
+							<td>Public summary: totals, top orgaos, years, periods</td>
+							<td>—</td>
+						</tr>
+						<tr>
+							<td><span class="tag tag-get">GET</span></td>
+							<td><code>/public/orgaos-principais</code></td>
+							<td>Top organs grouped by year</td>
+							<td><code>limit</code> (default 8)</td>
+						</tr>
+						<tr>
+							<td><span class="tag tag-get">GET</span></td>
+							<td><code>/public/orgaos-arvore</code></td>
+							<td>Organ hierarchy tree for a year</td>
+							<td><code>ano</code> (required), <code>limit</code></td>
+						</tr>
+					</tbody>
+				</table>
+
+				<h3>Admin Authentication (No Auth Required)</h3>
+				<table>
+					<thead>
+						<tr>
+							<th>Method</th>
+							<th>Path</th>
+							<th>Description</th>
+							<th>Body</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<td><span class="tag tag-post">POST</span></td>
+							<td><code>/admin/login</code></td>
+							<td>Login — returns JWT token; supports MFA two-step</td>
+							<td><code>{email, senha, mfa_code?}</code></td>
+						</tr>
+						<tr>
+							<td><span class="tag tag-post">POST</span></td>
+							<td><code>/admin/register</code></td>
+							<td>
+								Step 1: Validate email/password, generate MFA secret + QR URI
+							</td>
+							<td><code>{nome?, email, senha}</code></td>
+						</tr>
+						<tr>
+							<td><span class="tag tag-post">POST</span></td>
+							<td><code>/admin/register/confirm</code></td>
+							<td>Step 2: Confirm registration with MFA code</td>
+							<td><code>{nome?, email, senha, mfa_secret, mfa_code}</code></td>
+						</tr>
+					</tbody>
+				</table>
+
+				<h3>
+					Admin Protected Endpoints
+					<span class="tag tag-auth">Bearer Token</span>
+				</h3>
+				<table>
+					<thead>
+						<tr>
+							<th>Method</th>
+							<th>Path</th>
+							<th>Description</th>
+							<th>Body / Params</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<td><span class="tag tag-get">GET</span></td>
+							<td><code>/admin/me</code></td>
+							<td>Get current admin profile</td>
+							<td>—</td>
+						</tr>
+						<tr>
+							<td><span class="tag tag-patch">PATCH</span></td>
+							<td><code>/admin/me</code></td>
+							<td>Update admin name and/or email</td>
+							<td><code>{nome?, email?}</code></td>
+						</tr>
+						<tr>
+							<td><span class="tag tag-patch">PATCH</span></td>
+							<td><code>/admin/me/senha</code></td>
+							<td>Change password</td>
+							<td><code>{senha_atual, senha_nova}</code></td>
+						</tr>
+						<tr>
+							<td><span class="tag tag-post">POST</span></td>
+							<td><code>/admin/me/mfa/setup</code></td>
+							<td>Generate new MFA secret + QR URI</td>
+							<td>—</td>
+						</tr>
+						<tr>
+							<td><span class="tag tag-post">POST</span></td>
+							<td><code>/admin/me/mfa/confirm</code></td>
+							<td>Confirm MFA setup with TOTP code</td>
+							<td><code>{mfa_secret, mfa_code}</code></td>
+						</tr>
+						<tr>
+							<td><span class="tag tag-patch">PATCH</span></td>
+							<td><code>/admin/me/mfa/disable</code></td>
+							<td>Disable MFA (requires current password)</td>
+							<td><code>{senha_atual}</code></td>
+						</tr>
+						<tr>
+							<td><span class="tag tag-get">GET</span></td>
+							<td><code>/admin/stats</code></td>
+							<td>Statistics: totals, per-year, per-status, per-theme, flow</td>
+							<td>Query: <code>ano?, status?, assunto?</code></td>
+						</tr>
+						<tr>
+							<td><span class="tag tag-get">GET</span></td>
+							<td><code>/admin/verificacao/normas</code></td>
+							<td>List norms pending verification</td>
+							<td>Query: <code>limit, offset, somente_pendentes</code></td>
+						</tr>
+						<tr>
+							<td><span class="tag tag-get">GET</span></td>
+							<td><code>/admin/verificacao/resumo</code></td>
+							<td>
+								Verification summary: totals + recent approved/fixed lists
+							</td>
+							<td>Query: <code>limit, dias</code> (1, 7, or 30)</td>
+						</tr>
+						<tr>
+							<td><span class="tag tag-post">POST</span></td>
+							<td><code>/admin/verificacao/{norma_id}/decisao</code></td>
+							<td>
+								Record verification decision (approve/refuse) with field updates
+							</td>
+							<td>
+								<code
+									>{decisao, data_publicacao?, ano?, numero?, ementa?, assunto?,
+									status?, url_oficial?, descricao_verificacao?}</code
+								>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+
+			<!-- 4. Database -->
+			<div class="section" id="database">
+				<h2>4. Database Schema</h2>
+
+				<h3>Table: <code>norma</code></h3>
+				<table>
+					<thead>
+						<tr>
+							<th>Column</th>
+							<th>Type</th>
+							<th>Constraints / Default</th>
+							<th>Description</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<td><code>id</code></td>
+							<td>UUID</td>
+							<td>PK, auto-generated</td>
+							<td>Unique identifier</td>
+						</tr>
+						<tr>
+							<td><code>orgao</code></td>
+							<td>TEXT</td>
+							<td>NOT NULL, default 'ANA'</td>
+							<td>Issuing body</td>
+						</tr>
+						<tr>
+							<td><code>tipo</code></td>
+							<td>TEXT</td>
+							<td>NOT NULL, default 'Resolução'</td>
+							<td>Act type</td>
+						</tr>
+						<tr>
+							<td><code>numero</code></td>
+							<td>INT</td>
+							<td>NOT NULL</td>
+							<td>Act number</td>
+						</tr>
+						<tr>
+							<td><code>ano</code></td>
+							<td>INT</td>
+							<td>NOT NULL</td>
+							<td>Act year</td>
+						</tr>
+						<tr>
+							<td><code>data_publicacao</code></td>
+							<td>DATE</td>
+							<td>—</td>
+							<td>Publication date</td>
+						</tr>
+						<tr>
+							<td><code>titulo</code></td>
+							<td>TEXT</td>
+							<td>—</td>
+							<td>Act title</td>
+						</tr>
+						<tr>
+							<td><code>ementa</code></td>
+							<td>TEXT</td>
+							<td>—</td>
+							<td>Act summary/abstract</td>
+						</tr>
+						<tr>
+							<td><code>assunto</code></td>
+							<td>TEXT</td>
+							<td>—</td>
+							<td>Topic/subject</td>
+						</tr>
+						<tr>
+							<td><code>origem</code></td>
+							<td>TEXT</td>
+							<td>CHECK: govbr, ocr, dou, dodf, manual</td>
+							<td>Data source</td>
+						</tr>
+						<tr>
+							<td><code>status</code></td>
+							<td>TEXT</td>
+							<td>CHECK: vigente, nao_vigente, vigente_alterado</td>
+							<td>Current legal status</td>
+						</tr>
+						<tr>
+							<td><code>consolidado</code></td>
+							<td>BOOLEAN</td>
+							<td>DEFAULT FALSE</td>
+							<td>Whether the act is consolidated</td>
+						</tr>
+						<tr>
+							<td><code>ignorar_estatisticas</code></td>
+							<td>BOOLEAN</td>
+							<td>DEFAULT FALSE</td>
+							<td>Exclude from statistics</td>
+						</tr>
+						<tr>
+							<td><code>url_oficial</code></td>
+							<td>TEXT</td>
+							<td>—</td>
+							<td>Official URL of the act</td>
+						</tr>
+						<tr>
+							<td><code>caminho_html</code></td>
+							<td>TEXT</td>
+							<td>—</td>
+							<td>Path to cleaned HTML file</td>
+						</tr>
+						<tr>
+							<td><code>caminho_html_bruto</code></td>
+							<td>TEXT</td>
+							<td>—</td>
+							<td>Path to raw HTML file</td>
+						</tr>
+						<tr>
+							<td><code>caminho_pdf</code></td>
+							<td>TEXT</td>
+							<td>—</td>
+							<td>Path to PDF file</td>
+						</tr>
+						<tr>
+							<td><code>texto_busca</code></td>
+							<td>TEXT</td>
+							<td>GIN trigram index</td>
+							<td>Full-text search field</td>
+						</tr>
+						<tr>
+							<td><code>verificacao_status</code></td>
+							<td>TEXT</td>
+							<td>— (migration 004)</td>
+							<td>
+								Verification status: pendente/aprovado/consertado/recusado
+							</td>
+						</tr>
+						<tr>
+							<td><code>verificacao_descricao</code></td>
+							<td>TEXT</td>
+							<td>— (migration 004)</td>
+							<td>Verification notes</td>
+						</tr>
+						<tr>
+							<td><code>verificacao_em</code></td>
+							<td>TIMESTAMP</td>
+							<td>— (migration 004)</td>
+							<td>When verification was done</td>
+						</tr>
+						<tr>
+							<td><code>verificacao_admin_id</code></td>
+							<td>UUID</td>
+							<td>— (migration 004)</td>
+							<td>Admin who verified</td>
+						</tr>
+						<tr>
+							<td><code>criado_em</code></td>
+							<td>TIMESTAMP</td>
+							<td>DEFAULT now()</td>
+							<td>Creation timestamp</td>
+						</tr>
+						<tr>
+							<td><code>atualizado_em</code></td>
+							<td>TIMESTAMP</td>
+							<td>Auto-updated by trigger</td>
+							<td>Last update timestamp</td>
+						</tr>
+					</tbody>
+				</table>
+				<p style="margin-top: 8px; font-size: 0.9rem">
+					<strong>Unique Constraint:</strong>
+					<code>(orgao, tipo, ano, numero, origem)</code> &nbsp;|&nbsp;
+					<strong>Indexes:</strong> ano+numero, data_publicacao, status,
+					assunto, texto_busca (GIN trigram), verificacao_status
+				</p>
+
+				<h3>Table: <code>admins</code></h3>
+				<table>
+					<thead>
+						<tr>
+							<th>Column</th>
+							<th>Type</th>
+							<th>Constraints / Default</th>
+							<th>Description</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<td><code>id</code></td>
+							<td>UUID</td>
+							<td>PK, auto-generated</td>
+							<td>Admin unique ID</td>
+						</tr>
+						<tr>
+							<td><code>nome</code></td>
+							<td>TEXT</td>
+							<td>—</td>
+							<td>Display name</td>
+						</tr>
+						<tr>
+							<td><code>email</code></td>
+							<td>TEXT</td>
+							<td>UNIQUE, NOT NULL</td>
+							<td>Login email</td>
+						</tr>
+						<tr>
+							<td><code>senha_hash</code></td>
+							<td>TEXT</td>
+							<td>NOT NULL</td>
+							<td>PBKDF2-SHA256 password hash</td>
+						</tr>
+						<tr>
+							<td><code>mfa_secret</code></td>
+							<td>TEXT</td>
+							<td>— (migration 003)</td>
+							<td>TOTP secret key (base32)</td>
+						</tr>
+						<tr>
+							<td><code>mfa_enabled</code></td>
+							<td>BOOLEAN</td>
+							<td>DEFAULT TRUE (migration 003)</td>
+							<td>Whether MFA is active</td>
+						</tr>
+						<tr>
+							<td><code>ativo</code></td>
+							<td>BOOLEAN</td>
+							<td>DEFAULT TRUE</td>
+							<td>Account active flag</td>
+						</tr>
+						<tr>
+							<td><code>criado_em</code></td>
+							<td>TIMESTAMP</td>
+							<td>DEFAULT now()</td>
+							<td>Account creation time</td>
+						</tr>
+						<tr>
+							<td><code>atualizado_em</code></td>
+							<td>TIMESTAMP</td>
+							<td>DEFAULT now()</td>
+							<td>Last update time</td>
+						</tr>
+					</tbody>
+				</table>
+
+				<h3>Migrations</h3>
+				<table>
+					<thead>
+						<tr>
+							<th>File</th>
+							<th>Description</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<td><code>002_origem_dodf.sql</code></td>
+							<td>
+								Adds <code>'dodf'</code> to the <code>origem</code> CHECK
+								constraint
+							</td>
+						</tr>
+						<tr>
+							<td><code>003_admin_mfa.sql</code></td>
+							<td>
+								Adds <code>mfa_secret</code> and
+								<code>mfa_enabled</code> columns to <code>admins</code>
+							</td>
+						</tr>
+						<tr>
+							<td><code>004_verificacao_normas.sql</code></td>
+							<td>
+								Adds verification columns (<code>verificacao_status</code>,
+								<code>verificacao_descricao</code>, <code>verificacao_em</code>,
+								<code>verificacao_admin_id</code>) to <code>norma</code>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+
+			<!-- 5. Frontend Pages -->
+			<div class="section" id="frontend-pages">
+				<h2>5. Frontend Pages</h2>
+
+				<details>
+					<summary>index.html — Public Landing Page</summary>
+					<div class="detail-content">
+						<p>
+							<strong>Purpose:</strong> Placeholder/construction page. Shows
+							Gen360 logo and "Site em construção" message.
+						</p>
+						<p><strong>API Calls:</strong> None</p>
+						<p><strong>Scripts:</strong> None</p>
+					</div>
+				</details>
+
+				<details>
+					<summary>admin_login.html — Admin Login</summary>
+					<div class="detail-content">
+						<p>
+							<strong>Purpose:</strong> Login page for admin users.
+							Email/password form with conditional MFA code field.
+						</p>
+						<p><strong>API Calls:</strong> <code>POST /admin/login</code></p>
+						<p><strong>Scripts:</strong> theme.js, config.js, admin_auth.js</p>
+						<p>
+							<strong>Flow:</strong> Submit credentials → if MFA required, show
+							MFA code field → on success, store JWT in localStorage → redirect
+							to admin_home.html
+						</p>
+					</div>
+				</details>
+
+				<details>
+					<summary>admin_register.html — Admin Registration</summary>
+					<div class="detail-content">
+						<p>
+							<strong>Purpose:</strong> New admin registration with MFA setup.
+							Two-step flow.
+						</p>
+						<p>
+							<strong>API Calls:</strong> <code>POST /admin/register</code>,
+							<code>POST /admin/register/confirm</code>
+						</p>
+						<p>
+							<strong>Scripts:</strong> QRious (CDN), theme.js, admin_auth.js
+						</p>
+						<p>
+							<strong>Flow:</strong> Enter name/email/password → API returns MFA
+							secret → show QR code → user scans with authenticator → enter TOTP
+							code → confirm registration → redirect to login
+						</p>
+						<p>
+							<strong>Features:</strong> Password strength meter, complexity
+							validation (upper + lower + number + special char)
+						</p>
+					</div>
+				</details>
+
+				<details>
+					<summary>admin_home.html — Main Consultation Panel</summary>
+					<div class="detail-content">
+						<p>
+							<strong>Purpose:</strong> Full-featured norm search and
+							consultation page. Summary panel, filters, paginated table.
+						</p>
+						<p>
+							<strong>API Calls:</strong> <code>GET /public/atos</code>,
+							<code>GET /public/filtros</code>, <code>GET /public/resumo</code>
+						</p>
+						<p>
+							<strong>Scripts:</strong> theme.js, config.js, admin_header.js,
+							app.js, admin_session.js
+						</p>
+						<p>
+							<strong>Features:</strong> Year range slider, text search,
+							status/assunto/ementa filters, sorting, pagination (50 per page),
+							summary bar charts, assunto chips
+						</p>
+					</div>
+				</details>
+
+				<details>
+					<summary>admin_dashboard.html — Simple Dashboard</summary>
+					<div class="detail-content">
+						<p>
+							<strong>Purpose:</strong> Minimal admin dashboard with welcome
+							message. Legacy/simple version.
+						</p>
+						<p><strong>API Calls:</strong> <code>GET /admin/me</code></p>
+						<p><strong>Scripts:</strong> theme.js, admin_dashboard.js</p>
+					</div>
+				</details>
+
+				<details>
+					<summary>admin_stats.html — Statistics Dashboard</summary>
+					<div class="detail-content">
+						<p>
+							<strong>Purpose:</strong> Interactive statistics dashboard with 5
+							Chart.js visualizations.
+						</p>
+						<p><strong>API Calls:</strong> <code>GET /admin/stats</code></p>
+						<p>
+							<strong>Scripts:</strong> Chart.js (CDN),
+							chartjs-plugin-datalabels (CDN), theme.js, config.js,
+							admin_header.js, admin_session.js, admin_stats.js
+						</p>
+						<p><strong>Charts:</strong></p>
+						<ul>
+							<li>
+								Stacked bar: Acts by year and status
+								(vigente/nao_vigente/vigente_alterado)
+							</li>
+							<li>Doughnut: Status distribution</li>
+							<li>
+								Stacked bar: Regulatory flow (created vs revoked per year)
+							</li>
+							<li>Horizontal bar: Acts by theme (top assuntos)</li>
+							<li>Waterfall: Stock evolution over time</li>
+						</ul>
+						<p>
+							<strong>Summary cards:</strong> Vigentes, Revogados, Consolidados,
+							Idade Média
+						</p>
+					</div>
+				</details>
+
+				<details>
+					<summary>admin_profile.html — Profile Settings</summary>
+					<div class="detail-content">
+						<p>
+							<strong>Purpose:</strong> Admin profile management with inline
+							editing.
+						</p>
+						<p>
+							<strong>API Calls:</strong> <code>GET /admin/me</code>,
+							<code>PATCH /admin/me</code>, <code>PATCH /admin/me/senha</code>,
+							<code>POST /admin/me/mfa/setup</code>,
+							<code>POST /admin/me/mfa/confirm</code>,
+							<code>PATCH /admin/me/mfa/disable</code>
+						</p>
+						<p>
+							<strong>Scripts:</strong> QRious (CDN), theme.js, config.js,
+							admin_session.js, admin_header.js, admin_profile_photo.js,
+							admin_profile.js
+						</p>
+						<p>
+							<strong>Features:</strong> Profile photo (stored in localStorage
+							as base64), editable name, email, password change, MFA
+							enable/disable with QR code
+						</p>
+					</div>
+				</details>
+
+				<details>
+					<summary>admin_resolucao.html — Norm Verification Workflow</summary>
+					<div class="detail-content">
+						<p>
+							<strong>Purpose:</strong> Manual norm verification. Admins review
+							pending norms, edit metadata, and approve or refuse.
+						</p>
+						<p>
+							<strong>API Calls:</strong>
+							<code>GET /admin/verificacao/normas</code>,
+							<code>GET /admin/verificacao/resumo</code>,
+							<code>POST /admin/verificacao/{id}/decisao</code>
+						</p>
+						<p>
+							<strong>Scripts:</strong> theme.js, config.js, admin_header.js,
+							admin_session.js, admin_resolucao.js
+						</p>
+						<p>
+							<strong>Features:</strong> Paginated norm list, editable fields
+							(date, year, number, ementa, assunto, status, link, description),
+							approve/refuse buttons, time-filtered history (1/7/30 days)
+						</p>
+					</div>
+				</details>
+
+				<details>
+					<summary>orgaos.html — Organs by Year (Tree View)</summary>
+					<div class="detail-content">
+						<p>
+							<strong>Purpose:</strong> Displays normative acts organized in a
+							collapsible tree by organ and year.
+						</p>
+						<p>
+							<strong>API Calls:</strong>
+							<code>GET /public/orgaos-arvore?ano=...&amp;limit=8</code>,
+							<code>GET /public/filtros</code>
+						</p>
+						<p><strong>Scripts:</strong> theme.js, orgaos.js</p>
+						<p>
+							<strong>Features:</strong> Year selector dropdown, collapsible
+							organ hierarchy (principal → sub-organ → individual acts)
+						</p>
+					</div>
+				</details>
+			</div>
+
+			<!-- 6. JavaScript Modules -->
+			<div class="section" id="js-modules">
+				<h2>6. JavaScript Modules</h2>
+				<table>
+					<thead>
+						<tr>
+							<th>File</th>
+							<th>Purpose</th>
+							<th>Key Functions</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<td><code>app.js</code></td>
+							<td>
+								Main logic for admin_home.html — norm listing, filtering,
+								pagination, summary charts
+							</td>
+							<td>
+								<code>fetchAtos()</code>, <code>renderAtos()</code>,
+								<code>carregarResumo()</code>, <code>carregarFiltros()</code>,
+								<code>carregarAtos()</code>
+							</td>
+						</tr>
+						<tr>
+							<td><code>admin_auth.js</code></td>
+							<td>Login and registration form handlers with MFA flow</td>
+							<td>
+								<code>avaliarSenha()</code>, <code>senhaAtendeRegras()</code>,
+								login/register submit handlers
+							</td>
+						</tr>
+						<tr>
+							<td><code>admin_session.js</code></td>
+							<td>Session guard — redirects to login if no token</td>
+							<td>Token check on load, logout click handler</td>
+						</tr>
+						<tr>
+							<td><code>admin_header.js</code></td>
+							<td>Profile avatar menu and dropdown</td>
+							<td><code>applyAvatarToAll()</code>, profile menu toggle</td>
+						</tr>
+						<tr>
+							<td><code>admin_dashboard.js</code></td>
+							<td>Simple dashboard welcome message</td>
+							<td><code>carregarAdmin()</code></td>
+						</tr>
+						<tr>
+							<td><code>admin_stats.js</code></td>
+							<td>Statistics charts (5 Chart.js instances) with drill-down</td>
+							<td>
+								<code>fetchStats()</code>, <code>atualizarCharts()</code>,
+								<code>atualizarResumo()</code>, <code>construirQuery()</code>
+							</td>
+						</tr>
+						<tr>
+							<td><code>admin_profile.js</code></td>
+							<td>
+								Profile settings — inline edit for name, email, password, MFA
+							</td>
+							<td>
+								<code>loadMe()</code>, <code>showEdit()</code>,
+								<code>hideEdit()</code>, <code>setupMfaForm()</code>
+							</td>
+						</tr>
+						<tr>
+							<td><code>admin_resolucao.js</code></td>
+							<td>Norm verification workflow — review, edit, approve/refuse</td>
+							<td>
+								<code>carregarPendentes()</code>, <code>carregarResumo()</code>,
+								<code>decidir()</code>, <code>payloadAtual()</code>
+							</td>
+						</tr>
+						<tr>
+							<td><code>admin_profile_photo.js</code></td>
+							<td>Profile photo upload (stored as base64 in localStorage)</td>
+							<td><code>applySavedPhoto()</code>, file input change handler</td>
+						</tr>
+						<tr>
+							<td><code>orgaos.js</code></td>
+							<td>Organ tree view for orgaos.html</td>
+							<td>
+								<code>renderArvore()</code>,
+								<code>carregarOrgaosArvore()</code>, <code>carregarAnos()</code>
+							</td>
+						</tr>
+						<tr>
+							<td><code>theme.js</code></td>
+							<td>Forces light theme (dark mode disabled)</td>
+							<td>Sets <code>body.light</code> class</td>
+						</tr>
+						<tr>
+							<td><code>styles.css</code></td>
+							<td>
+								Single stylesheet (1972 lines) — CSS variables, responsive, all
+								components
+							</td>
+							<td>
+								Dark/light themes, gov-header, filters, tables, charts, auth
+								forms, verification workflow
+							</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+
+			<!-- 7. Backend Code -->
+			<div class="section" id="backend-code">
+				<h2>7. Backend Code</h2>
+
+				<h3>api/main.py (518 lines)</h3>
+				<div class="card">
+					<p>
+						FastAPI application entry point. Defines all routes,
+						request/response models, CORS middleware, and admin auth middleware.
+					</p>
+					<p><strong>Key components:</strong></p>
+					<ul>
+						<li>
+							<strong>CORS:</strong> Configured via
+							<code>CORS_ORIGINS</code> env var
+						</li>
+						<li>
+							<strong>Auth Middleware:</strong> Intercepts all
+							<code>/admin/*</code> routes (except login/register) and validates
+							JWT
+						</li>
+						<li>
+							<strong>Pydantic Models:</strong> AdminRegisterPayload,
+							AdminLoginPayload, AdminRegisterConfirmPayload,
+							NormaVerificacaoPayload, AdminPerfilUpdatePayload,
+							AdminSenhaUpdatePayload, AdminMfaConfirmPayload,
+							AdminMfaDisablePayload
+						</li>
+						<li>
+							<strong>Password Rules:</strong> Must have uppercase + lowercase +
+							number + special character
+						</li>
+					</ul>
+				</div>
+
+				<h3>api/auth.py (120 lines)</h3>
+				<div class="card">
+					<p>
+						Authentication utilities — zero external dependencies (no PyJWT, no
+						pyotp).
+					</p>
+					<ul>
+						<li>
+							<strong>JWT:</strong> Manual HS256 implementation (sign, verify,
+							expiry check)
+						</li>
+						<li>
+							<strong>Password Hashing:</strong> PBKDF2-SHA256 with 200,000
+							iterations + random 16-byte salt
+						</li>
+						<li>
+							<strong>TOTP/MFA:</strong> Manual RFC 6238 implementation (base32
+							secret, SHA1 HMAC, 6-digit code, ±1 window)
+						</li>
+						<li>
+							<strong>OTPAuth URI:</strong> Generates
+							<code>otpauth://totp/</code> URIs for QR code scanning
+						</li>
+					</ul>
+				</div>
+
+				<h3>api/queries.py (1029 lines)</h3>
+				<div class="card">
+					<p>
+						Database query layer — 19 functions for all PostgreSQL operations.
+					</p>
+					<table>
+						<thead>
+							<tr>
+								<th>Function</th>
+								<th>Description</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td><code>listar_atos()</code></td>
+								<td>Paginated norm listing with dynamic filters and sorting</td>
+							</tr>
+							<tr>
+								<td><code>obter_ato()</code></td>
+								<td>Fetch single norm by UUID</td>
+							</tr>
+							<tr>
+								<td><code>filtros_publicos()</code></td>
+								<td>Distinct filter values for UI dropdowns</td>
+							</tr>
+							<tr>
+								<td><code>resumo_publico()</code></td>
+								<td>Public summary statistics</td>
+							</tr>
+							<tr>
+								<td><code>orgaos_principais_por_ano()</code></td>
+								<td>Top organs grouped by year</td>
+							</tr>
+							<tr>
+								<td><code>orgaos_arvore()</code></td>
+								<td>Organ hierarchy tree for a year</td>
+							</tr>
+							<tr>
+								<td><code>estatisticas_admin()</code></td>
+								<td>Full admin stats with reference data</td>
+							</tr>
+							<tr>
+								<td><code>obter_admin_por_email()</code></td>
+								<td>Find admin by email</td>
+							</tr>
+							<tr>
+								<td><code>obter_admin_por_id()</code></td>
+								<td>Find admin by UUID</td>
+							</tr>
+							<tr>
+								<td><code>criar_admin()</code></td>
+								<td>Create admin with MFA</td>
+							</tr>
+							<tr>
+								<td><code>atualizar_admin()</code></td>
+								<td>Update admin name/email</td>
+							</tr>
+							<tr>
+								<td><code>atualizar_admin_senha()</code></td>
+								<td>Update password hash</td>
+							</tr>
+							<tr>
+								<td><code>atualizar_admin_mfa()</code></td>
+								<td>Update MFA settings</td>
+							</tr>
+							<tr>
+								<td><code>garantir_colunas_verificacao()</code></td>
+								<td>Ensure verification columns exist (startup check)</td>
+							</tr>
+							<tr>
+								<td><code>listar_normas_para_verificacao()</code></td>
+								<td>List norms pending review</td>
+							</tr>
+							<tr>
+								<td><code>resumo_verificacoes()</code></td>
+								<td>Verification summary with time filters</td>
+							</tr>
+							<tr>
+								<td><code>registrar_decisao_verificacao()</code></td>
+								<td>Record approve/refuse decision</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+
+				<h3>db/db.py (59 lines)</h3>
+				<div class="card">
+					<p>
+						Database connection factory. Reads DB_* env vars, creates psycopg2
+						connections with RealDictCursor and UTF-8 encoding.
+					</p>
+				</div>
+			</div>
+
+			<!-- 8. File Structure -->
+			<div class="section" id="file-tree">
+				<h2>8. File Structure</h2>
+				<div class="file-tree">
+					<span class="folder">Gen360/</span>
+					├── <span class="file">api/</span> │ ├──
+					<span class="file">main.py</span>
+					<span class="comment"># FastAPI app, routes, models, middleware</span>
+					│ ├── <span class="file">auth.py</span>
+					<span class="comment"># JWT, password hashing, TOTP</span> │ └──
+					<span class="file">queries.py</span>
+					<span class="comment"># All PostgreSQL queries (19 functions)</span>
+					├── <span class="file">db/</span> │ ├──
+					<span class="file">db.py</span>
+					<span class="comment"># Database connection factory</span> │ ├──
+					<span class="file">models.sql</span>
+					<span class="comment"># Schema: norma + admins tables</span> │ └──
+					<span class="file">migracoes/</span> │ ├──
+					<span class="file">002_origem_dodf.sql</span> │ ├──
+					<span class="file">003_admin_mfa.sql</span> │ └──
+					<span class="file">004_verificacao_normas.sql</span> ├──
+					<span class="file">admin_frontend/</span> │ ├──
+					<span class="file">index.html</span>
+					<span class="comment"># Public landing page</span> │ ├──
+					<span class="file">admin_login.html</span>
+					<span class="comment"># Login page</span> │ ├──
+					<span class="file">admin_register.html</span>
+					<span class="comment"># Registration + MFA setup</span> │ ├──
+					<span class="file">admin_home.html</span>
+					<span class="comment"># Main consultation panel</span> │ ├──
+					<span class="file">admin_dashboard.html</span>
+					<span class="comment"># Simple dashboard</span> │ ├──
+					<span class="file">admin_stats.html</span>
+					<span class="comment"># Statistics with Chart.js</span> │ ├──
+					<span class="file">admin_profile.html</span>
+					<span class="comment"># Profile settings</span> │ ├──
+					<span class="file">admin_resolucao.html</span>
+					<span class="comment"># Norm verification workflow</span> │ ├──
+					<span class="file">orgaos.html</span>
+					<span class="comment"># Organ tree view</span> │ ├──
+					<span class="file">app.js</span>
+					<span class="comment"># Main listing/filtering logic</span> │ ├──
+					<span class="file">admin_auth.js</span>
+					<span class="comment"># Login/register handlers</span> │ ├──
+					<span class="file">admin_session.js</span>
+					<span class="comment"># Session guard</span> │ ├──
+					<span class="file">admin_header.js</span>
+					<span class="comment"># Avatar menu</span> │ ├──
+					<span class="file">admin_dashboard.js</span>
+					<span class="comment"># Dashboard logic</span> │ ├──
+					<span class="file">admin_stats.js</span>
+					<span class="comment"># Statistics charts</span> │ ├──
+					<span class="file">admin_profile.js</span>
+					<span class="comment"># Profile edit logic</span> │ ├──
+					<span class="file">admin_resolucao.js</span>
+					<span class="comment"># Verification workflow</span> │ ├──
+					<span class="file">admin_profile_photo.js</span>
+					<span class="comment"># Photo upload (localStorage)</span> │ ├──
+					<span class="file">orgaos.js</span>
+					<span class="comment"># Organ tree rendering</span> │ ├──
+					<span class="file">theme.js</span>
+					<span class="comment"># Light theme enforcer</span> │ ├──
+					<span class="file">styles.css</span>
+					<span class="comment"># All styles (1972 lines)</span> │ └──
+					<span class="file">deploy_profile.ps1</span>
+					<span class="comment"># SCP deploy script</span> ├──
+					<span class="file">scripts/</span>
+					<span class="comment"># Data maintenance scripts (30+ files)</span>
+					├── <span class="file">data/</span>
+					<span class="comment"># HTML content files, index.json</span> ├──
+					<span class="file">setup/</span>
+					<span class="comment"># Azure config (subs.txt, this file)</span> ├──
+					<span class="file">Dockerfile</span>
+					<span class="comment"
+						># Docker build: python:3.12-slim + gunicorn</span
+					>
+					├── <span class="file">.dockerignore</span>
+					<span class="comment"># Excludes data/, frontend/, scripts/</span> ├──
+					<span class="file">.deployment</span>
+					<span class="comment"
+						># Azure: SCM_DO_BUILD_DURING_DEPLOYMENT=true</span
+					>
+					├── <span class="file">requirements.txt</span>
+					<span class="comment"># fastapi, uvicorn, psycopg2-binary, ...</span>
+					├── <span class="file">runtime.txt</span>
+					<span class="comment"># python-3.12</span> └──
+					<span class="file">README.md</span>
+					<span class="comment"># Project documentation</span>
+				</div>
+			</div>
+
+			<!-- 9. Deployment -->
+			<div class="section" id="deployment">
+				<h2>9. Deployment</h2>
+
+				<h3>Docker Build &amp; Push</h3>
+				<div class="card">
+					<pre
+						style="
+							background: var(--code-bg);
+							padding: 12px;
+							border-radius: 6px;
+							overflow-x: auto;
+							font-size: 0.85rem;
+						"
+					>
+# Build image in Azure Container Registry (no local Docker needed)
+az acr build --registry crgen360 --resource-group DemoGoverno \
+  --image gen360-api:latest --file Dockerfile . --no-logs
+
+# Update App Service (pulls new image)
+az webapp restart --resource-group DemoGoverno --name app-gen360-api
+
+# Update Container App
+az containerapp update --name ca-gen360-api --resource-group DemoGoverno \
+  --image crgen360.azurecr.io/gen360-api:latest</pre
+					>
+				</div>
+
+				<h3>Frontend Deployment</h3>
+				<div class="card">
+					<pre
+						style="
+							background: var(--code-bg);
+							padding: 12px;
+							border-radius: 6px;
+							overflow-x: auto;
+							font-size: 0.85rem;
+						"
+					>
+# Upload frontend files to Azure Blob Storage static website
+az storage blob upload-batch \
+  --account-name stgen360frontend \
+  --destination '$web' \
+  --source admin_frontend/</pre
+					>
+				</div>
+
+				<h3>Database Migrations</h3>
+				<div class="card">
+					<pre
+						style="
+							background: var(--code-bg);
+							padding: 12px;
+							border-radius: 6px;
+							overflow-x: auto;
+							font-size: 0.85rem;
+						"
+					>
+# Run migrations in order
+psql -h 20.226.39.175 -U linuxuser -d normas -f db/models.sql
+psql -h 20.226.39.175 -U linuxuser -d normas -f db/migracoes/002_origem_dodf.sql
+psql -h 20.226.39.175 -U linuxuser -d normas -f db/migracoes/003_admin_mfa.sql
+psql -h 20.226.39.175 -U linuxuser -d normas -f db/migracoes/004_verificacao_normas.sql</pre
+					>
+				</div>
+			</div>
+
+			<!-- 10. Azure Resources -->
+			<div class="section" id="azure-resources">
+				<h2>10. Azure Resources</h2>
+				<table>
+					<thead>
+						<tr>
+							<th>Resource</th>
+							<th>Type</th>
+							<th>Name</th>
+							<th>Details</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<td>Subscription</td>
+							<td>—</td>
+							<td>—</td>
+							<td>
+								ID: <code>618a82e3-0571-4142-b50d-c8d2c34060ae</code
+								><br />Tenant: <code>6b1db0da-c53f-48bf-b271-9297590ad872</code>
+							</td>
+						</tr>
+						<tr>
+							<td>Resource Group</td>
+							<td>—</td>
+							<td><code>DemoGoverno</code></td>
+							<td>Region: Brazil South</td>
+						</tr>
+						<tr>
+							<td>App Service</td>
+							<td>Web App (Linux Container)</td>
+							<td><code>app-gen360-api</code></td>
+							<td>
+								Docker image from
+								<code>crgen360.azurecr.io/gen360-api:latest</code><br />URL:
+								<code>https://app-gen360-api.azurewebsites.net</code>
+							</td>
+						</tr>
+						<tr>
+							<td>Container Registry</td>
+							<td>ACR (Basic)</td>
+							<td><code>crgen360</code></td>
+							<td>Login: <code>crgen360.azurecr.io</code></td>
+						</tr>
+						<tr>
+							<td>Container Apps Env</td>
+							<td>Managed Environment</td>
+							<td><code>env-gen360</code></td>
+							<td>Region: Brazil South</td>
+						</tr>
+						<tr>
+							<td>Container App</td>
+							<td>Container App</td>
+							<td><code>ca-gen360-api</code></td>
+							<td>
+								CPU: 0.5, Memory: 1Gi, Min: 0, Max: 3 replicas<br />URL:
+								<code
+									>https://ca-gen360-api.icypebble-471a7ef7.brazilsouth.azurecontainerapps.io</code
+								>
+							</td>
+						</tr>
+						<tr>
+							<td>Storage Account</td>
+							<td>Static Website</td>
+							<td><code>stgen360frontend</code></td>
+							<td>
+								Container: <code>$web</code><br />URL:
+								<code>https://stgen360frontend.z15.web.core.windows.net</code>
+							</td>
+						</tr>
+						<tr>
+							<td>Virtual Machine</td>
+							<td>Linux VM</td>
+							<td>—</td>
+							<td>PostgreSQL host at <code>20.226.39.175</code></td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+
+			<!-- Footer -->
+			<div
+				style="
+					text-align: center;
+					padding: 24px;
+					color: var(--text-muted);
+					font-size: 0.85rem;
+					border-top: 1px solid var(--border);
+					margin-top: 40px;
+				"
+			>
+				Generated on February 13, 2026 &nbsp;|&nbsp; Gen360 — Gestão do Estoque
+				Normativo 360
+			</div>
+		</div>
+	</body>
+</html>
