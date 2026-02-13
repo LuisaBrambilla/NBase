@@ -8,8 +8,8 @@ env/
 *.zip
 *applogs*
 *webapp*
-app_logs*
-
+app_logs/
+deploy-logs/
 # Python
 __pycache__/
 *.py[cod]
