@@ -10,6 +10,8 @@ env/
 *webapp*
 app_logs/
 deploy-logs/
+app_logs.zip
+
 # Python
 __pycache__/
 *.py[cod]
