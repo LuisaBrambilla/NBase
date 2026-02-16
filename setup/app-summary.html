@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gen360 — Project Summary</title>
+  <style>
+    :root {
+      --bg: #f8f9fa;
+      --card: #ffffff;
+      --text: #212529;
+      --muted: #6c757d;
+      --accent: #0d6efd;
+      --accent-light: #e7f1ff;
+      --border: #dee2e6;
+      --code-bg: #f1f3f5;
+      --success: #198754;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+      padding: 2rem 1rem;
+    }
+    .container { max-width: 900px; margin: 0 auto; }
+    h1 { font-size: 2rem; margin-bottom: .25rem; }
+    h1 small { font-size: 1rem; color: var(--muted); font-weight: 400; }
+    h2 { font-size: 1.4rem; margin-top: 2.5rem; margin-bottom: .75rem; border-bottom: 2px solid var(--accent); padding-bottom: .3rem; }
+    h3 { font-size: 1.15rem; margin-top: 1.5rem; margin-bottom: .5rem; }
+    p, li { margin-bottom: .5rem; }
+    ul, ol { padding-left: 1.5rem; }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
+    th, td { text-align: left; padding: .55rem .75rem; border: 1px solid var(--border); }
+    th { background: var(--accent-light); font-weight: 600; }
+    td code { background: var(--code-bg); padding: .15rem .35rem; border-radius: 3px; font-size: .92em; }
+
+    pre {
+      background: #1e1e2e;
+      color: #cdd6f4;
+      padding: 1rem 1.25rem;
+      border-radius: 6px;
+      overflow-x: auto;
+      font-size: .9rem;
+      line-height: 1.5;
+      margin: 1rem 0;
+    }
+    code { font-family: "Cascadia Code", "Fira Code", Consolas, monospace; }
+    .inline-code { background: var(--code-bg); padding: .15rem .35rem; border-radius: 3px; font-size: .92em; }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.25rem 1.5rem;
+      margin: 1rem 0;
+    }
+    .flow-diagram {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.25rem 1.5rem;
+      margin: 1rem 0;
+      font-family: "Cascadia Code", "Fira Code", Consolas, monospace;
+      font-size: .88rem;
+      line-height: 1.8;
+      white-space: pre-wrap;
+    }
+    .flow-diagram .arrow { color: var(--accent); font-weight: bold; }
+    .badge {
+      display: inline-block;
+      padding: .2rem .6rem;
+      border-radius: 4px;
+      font-size: .82rem;
+      font-weight: 600;
+    }
+    .badge-blue { background: var(--accent-light); color: var(--accent); }
+    .badge-green { background: #d1e7dd; color: var(--success); }
+
+    .toc { list-style: none; padding: 0; }
+    .toc li { margin-bottom: .35rem; }
+    .toc li::before { content: "§ "; color: var(--accent); font-weight: bold; }
+
+    footer { margin-top: 3rem; text-align: center; color: var(--muted); font-size: .85rem; }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <h1>Gen360 <small>— Project Summary</small></h1>
+  <p><strong>Gestão do Estoque Normativo 360</strong> — A web application for querying and managing regulatory acts (<em>atos normativos</em>) from <strong>ANA</strong> (Agência Nacional de Águas e Saneamento Básico — Brazil's national water agency).</p>
+
+  <div class="card">
+    <strong>Table of Contents</strong>
+    <ul class="toc">
+      <li><a href="#architecture">Architecture</a></li>
+      <li><a href="#features">Key Features</a></li>
+      <li><a href="#database">Database Schema</a></li>
+      <li><a href="#mfa">MFA Implementation (TOTP)</a></li>
+      <li><a href="#setup">How to Set Up</a></li>
+      <li><a href="#learning">Learning About the TOTP Standard</a></li>
+    </ul>
+  </div>
+
+  <!-- ───────── Architecture ───────── -->
+  <h2 id="architecture">Architecture</h2>
+  <table>
+    <thead><tr><th>Layer</th><th>Technology</th><th>Location</th></tr></thead>
+    <tbody>
+      <tr><td>Backend API</td><td>Python / FastAPI</td><td><code>api/</code></td></tr>
+      <tr><td>Database</td><td>PostgreSQL</td><td><code>db/</code></td></tr>
+      <tr><td>Admin Frontend</td><td>Vanilla HTML / CSS / JS</td><td><code>admin_frontend/</code></td></tr>
+      <tr><td>Data Ingestion</td><td>Python scripts</td><td><code>scripts/</code>, root <code>.py</code> files</td></tr>
+    </tbody>
+  </table>
+
+  <!-- ───────── Features ───────── -->
+  <h2 id="features">Key Features</h2>
+  <ol>
+    <li><strong>Public API</strong> — browse, search, and filter regulatory norms by year, number, subject, status, full-text, etc. (<code>/public/atos</code>, <code>/public/filtros</code>, <code>/public/resumo</code>).</li>
+    <li><strong>Admin Panel</strong> — protected dashboard where admins register, log in (with MFA), manage their profile, verify norms, and view statistics.</li>
+    <li><strong>Data Scraping &amp; OCR</strong> — scripts to scrape the DOU/DODF (Brazilian official gazette) and OCR PDFs to populate the database.</li>
+  </ol>
+
+  <!-- ───────── Database ───────── -->
+  <h2 id="database">Database Schema (PostgreSQL)</h2>
+  <ul>
+    <li><code>norma</code> — main table for regulatory norms (number, year, publication date, subject, status, origin, full-text, etc.).</li>
+    <li><code>admins</code> — admin users with email, hashed password, MFA secret, and active flag.</li>
+  </ul>
+
+  <!-- ───────── MFA ───────── -->
+  <h2 id="mfa">MFA Implementation — TOTP (Not a Google API)</h2>
+  <div class="card">
+    <p>This project <strong>does not use any external Google API</strong> for MFA. It implements the <strong>TOTP (Time-based One-Time Password)</strong> standard — the same open protocol used by Google Authenticator, Microsoft Authenticator, Authy, etc.</p>
+  </div>
+
+  <h3>Core Functions in <code>api/auth.py</code></h3>
+  <table>
+    <thead><tr><th>Function</th><th>Purpose</th></tr></thead>
+    <tbody>
+      <tr><td><code>gerar_mfa_secret()</code></td><td>Generates a random 20-byte Base32-encoded shared secret.</td></tr>
+      <tr><td><code>gerar_otpauth_uri(secret, email)</code></td><td>Builds a standard <code>otpauth://totp/…</code> URI for QR code rendering.</td></tr>
+      <tr><td><code>_totp_code(secret, timestamp)</code></td><td>Core TOTP algorithm (RFC 6238): HMAC-SHA1 + dynamic truncation → 6-digit code.</td></tr>
+      <tr><td><code>verificar_totp(secret, code, window=1)</code></td><td>Validates user-supplied 6-digit code with ±1 time-step tolerance.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Registration Flow</h3>
+  <div class="flow-diagram">User fills email + password
+        <span class="arrow">↓</span>
+POST /admin/register → server generates MFA secret + otpauth URI
+        <span class="arrow">↓</span>
+Frontend renders QR code (using qrious.js library)
+        <span class="arrow">↓</span>
+User scans QR in Google Authenticator / any TOTP app
+        <span class="arrow">↓</span>
+User enters 6-digit code from app
+        <span class="arrow">↓</span>
+POST /admin/register/confirm → server verifies TOTP code → creates admin</div>
+
+  <h3>Login Flow</h3>
+  <div class="flow-diagram">POST /admin/login { email, senha }
+        <span class="arrow">↓</span>
+If MFA enabled → returns { mfa_required: true }
+        <span class="arrow">↓</span>
+Frontend shows MFA code field
+        <span class="arrow">↓</span>
+POST /admin/login { email, senha, mfa_code }
+        <span class="arrow">↓</span>
+Server verifies password + TOTP → returns JWT token</div>
+
+  <!-- ───────── Setup ───────── -->
+  <h2 id="setup">How to Set Up the Project</h2>
+
+  <h3>1. Prerequisites</h3>
+  <ul>
+    <li>Python 3.x</li>
+    <li>PostgreSQL database</li>
+    <li>A TOTP authenticator app (Google Authenticator, Microsoft Authenticator, Authy, etc.)</li>
+  </ul>
+
+  <h3>2. Install Dependencies</h3>
+  <pre><code>pip install -r requirements.txt</code></pre>
+
+  <h3>3. Environment Variables</h3>
+  <p>Create a <code>.env</code> file (or set env vars) with:</p>
+  <table>
+    <thead><tr><th>Variable</th><th>Purpose</th><th>Default</th></tr></thead>
+    <tbody>
+      <tr><td><code>DATABASE_URL</code> or individual PG vars</td><td>PostgreSQL connection</td><td>—</td></tr>
+      <tr><td><code>JWT_SECRET</code></td><td>Secret for signing JWT tokens</td><td><code>troque-este-segredo</code></td></tr>
+      <tr><td><code>JWT_EXPIRE_MINUTES</code></td><td>Token expiration in minutes</td><td><code>60</code></td></tr>
+      <tr><td><code>MFA_ISSUER</code></td><td>Name shown in authenticator app</td><td><code>ResolucoesAdmin</code></td></tr>
+      <tr><td><code>CORS_ORIGINS</code></td><td>Allowed frontend origins</td><td><code>*</code></td></tr>
+    </tbody>
+  </table>
+
+  <h3>4. Set Up the Database</h3>
+  <pre><code>-- Run the schema
+\i db/models.sql
+-- Run any migrations in db/migracoes/</code></pre>
+
+  <h3>5. Start the API</h3>
+  <pre><code>uvicorn api.main:app --reload</code></pre>
+
+  <h3>6. Access the Admin Panel</h3>
+  <p>Open <code>admin_frontend/admin_register.html</code> in a browser (or serve via Nginx). Register an admin account — you'll be presented with a QR code to scan with your authenticator app.</p>
+
+  <!-- ───────── Learning ───────── -->
+  <h2 id="learning">Learning About the TOTP / "Google Authenticator" Standard</h2>
+  <p>This project implements TOTP from scratch (no external API needed). Key resources:</p>
+  <table>
+    <thead><tr><th>Resource</th><th>What You'll Learn</th></tr></thead>
+    <tbody>
+      <tr><td><a href="https://datatracker.ietf.org/doc/html/rfc6238" target="_blank">RFC 6238 — TOTP</a></td><td>The official TOTP specification</td></tr>
+      <tr><td><a href="https://datatracker.ietf.org/doc/html/rfc4226" target="_blank">RFC 4226 — HOTP</a></td><td>The underlying HMAC-based OTP algorithm</td></tr>
+      <tr><td><a href="https://github.com/google/google-authenticator/wiki/Key-Uri-Format" target="_blank">Google Authenticator Key URI format</a></td><td>The <code>otpauth://</code> URI format for QR codes</td></tr>
+      <tr><td><a href="https://pypi.org/project/pyotp/" target="_blank">pyotp library</a></td><td>Popular Python library (this project rolls its own instead)</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Key Concepts</h3>
+  <ul>
+    <li><strong>Shared secret</strong> — a Base32-encoded random key known to both server and authenticator app.</li>
+    <li><strong>Time step</strong> — current Unix time ÷ 30 seconds = counter value.</li>
+    <li><strong>HMAC-SHA1</strong> — the counter is HMAC'd with the shared secret.</li>
+    <li><strong>Dynamic truncation</strong> — extracts a 6-digit number from the HMAC digest.</li>
+    <li><strong>Window tolerance</strong> — checking ±1 time step handles minor clock differences.</li>
+  </ul>
+
+  <div class="card">
+    <p>The implementation in <code>api/auth.py</code> (lines 88–122) is a complete, standalone TOTP implementation — no Google API calls are made. Any standard TOTP authenticator app (Google Authenticator, Authy, Microsoft Authenticator, 1Password, etc.) will work with it because they all follow the same RFC 6238 standard.</p>
+  </div>
+
+  <footer>
+    <p>Generated on 2026-02-14 — Gen360 Project Documentation</p>
+  </footer>
+
+</div>
+</body>
+</html>
