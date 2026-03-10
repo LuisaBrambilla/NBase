@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Consulta de Normas - ARES-PCJ</title>
+    <style>
+      html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; }
+      iframe { display: block; width: 100%; height: 100%; border: none; }
+    </style>
+  </head>
+  <body>
+    <script>
+      (function () {
+        try {
+          localStorage.setItem("admin_client", "arespcj");
+        } catch (e) {}
+      })();
+    </script>
+    <iframe id="consultaFrame" src="consulta.html?client=arespcj" title="Consulta de Normas ARES-PCJ"></iframe>
+    <script>
+      (function () {
+        var frame = document.getElementById("consultaFrame");
+        var logoUrl = "logo_arespcj.png";
+        function applyArespcj() {
+          try {
+            var doc = frame.contentDocument;
+            if (!doc || !doc.body) return;
+            doc.documentElement.classList.add("client-arespcj");
+            if (doc.title && doc.title.indexOf("ANA") !== -1) {
+              doc.title = doc.title.replace("ANA", "ARES-PCJ");
+            }
+            var sub = doc.querySelector(".subtitle-ana");
+            if (sub) sub.style.display = "none";
+            doc.querySelectorAll(".gov-logo, .auth-logo").forEach(function (el) {
+              el.src = logoUrl;
+              el.alt = "ARES-PCJ";
+            });
+          } catch (e) {}
+        }
+        frame.addEventListener("load", function () {
+          applyArespcj();
+          setTimeout(applyArespcj, 100);
+          setTimeout(applyArespcj, 500);
+        });
+      })();
+    </script>
+  </body>
+</html>

@@ -22,6 +22,33 @@ const statRevogados = document.getElementById("statRevogados");
 const statConsolidados = document.getElementById("statConsolidados");
 const statIdadeMedia = document.getElementById("statIdadeMedia");
 const statsSummaryNote = document.getElementById("statsSummaryNote");
+const statsSubtitle = document.getElementById("statsSubtitle");
+const statsError = document.getElementById("statsError");
+
+const isArespcj = () => (localStorage.getItem("admin_client") || "tecbis") === "arespcj";
+
+function getChartColors() {
+  if (isArespcj()) {
+    return {
+      vigente: "rgba(48, 111, 213, 0.85)",
+      vigente_alterado: "rgba(74, 180, 239, 0.85)",
+      nao_vigente: "rgba(26, 45, 188, 0.85)",
+      primary: "rgba(48, 111, 213, 0.75)",
+      primaryBar: "rgba(48, 111, 213, 0.7)",
+      positivo: "rgba(61, 146, 226, 0.85)",
+      negativo: "rgba(26, 45, 188, 0.85)",
+    };
+  }
+  return {
+    vigente: "rgba(66, 133, 244, 0.85)",
+    vigente_alterado: "rgba(246, 196, 45, 0.85)",
+    nao_vigente: "rgba(234, 67, 53, 0.85)",
+    primary: "rgba(66, 133, 244, 0.75)",
+    primaryBar: "rgba(44, 111, 183, 0.7)",
+    positivo: "rgba(52, 168, 83, 0.85)",
+    negativo: "rgba(234, 67, 53, 0.85)",
+  };
+}
 
 let chartAno;
 let chartStatus;
@@ -162,8 +189,12 @@ const construirQuery = () => {
 };
 
 const fetchStats = async () => {
+  const headers = Object.assign(
+    { Authorization: `Bearer ${token}` },
+    window.getApiHeaders ? window.getApiHeaders() : {}
+  );
   const response = await fetch(`${API_BASE}/admin/stats${construirQuery()}`, {
-    headers: { Authorization: `Bearer ${token}` },
+    headers,
   });
   if (!response.ok) {
     throw new Error("Erro ao carregar estatísticas.");
@@ -185,15 +216,16 @@ const atualizarCharts = (data) => {
   atualizarResumo(data.total ?? 0, data.resumo);
 
   const semFiltros = !filtros.ano && !filtros.status && !filtros.assunto;
-  const porAnoStatus = semFiltros
-    ? Object.entries(REFERENCIA_POR_ANO_STATUS).flatMap(([ano, grupos]) =>
-        Object.entries(grupos).map(([status, total]) => ({
-          ano: Number(ano),
-          status,
-          total,
-        }))
-      )
-    : data.por_ano_status || [];
+  const porAnoStatus =
+    semFiltros && !isArespcj()
+      ? Object.entries(REFERENCIA_POR_ANO_STATUS).flatMap(([ano, grupos]) =>
+          Object.entries(grupos).map(([status, total]) => ({
+            ano: Number(ano),
+            status,
+            total,
+          }))
+        )
+      : data.por_ano_status || [];
   const baseAnos = data.por_ano?.map((item) => String(item.ano)) || [];
   const anosPorStatus = Array.from(
     new Set(porAnoStatus.map((item) => String(item.ano)))
@@ -210,6 +242,7 @@ const atualizarCharts = (data) => {
     mapaAnoStatus.get(anoKey)[item.status] = Number(item.total || 0);
   });
 
+  const colors = getChartColors();
   const chartAnoDatasets = statusOrdem
     .filter((status) => chartAnoLabels.some((ano) => (mapaAnoStatus.get(ano)?.[status] ?? 0) > 0))
     .map((status) => ({
@@ -218,10 +251,10 @@ const atualizarCharts = (data) => {
       data: chartAnoLabels.map((ano) => mapaAnoStatus.get(ano)?.[status] ?? 0),
       backgroundColor:
         status === "nao_vigente"
-          ? "rgba(234, 67, 53, 0.78)"
+          ? colors.nao_vigente
           : status === "vigente"
-          ? "rgba(66, 133, 244, 0.78)"
-          : "rgba(246, 196, 45, 0.85)",
+          ? colors.vigente
+          : colors.vigente_alterado,
       borderWidth: 0,
       stack: "status",
     }));
@@ -239,8 +272,12 @@ const atualizarCharts = (data) => {
   const statusKeys = data.por_status?.map((item) => item.status) || [];
   const statusValores = data.por_status?.map((item) => item.total) || [];
 
-  const temasLabels = data.por_tema?.map((item) => item.assunto) || [];
-  const temasValores = data.por_tema?.map((item) => item.total) || [];
+  // Filtrar temas sem nome para evitar "gap" no gráfico (slot vazio)
+  const porTemaFiltrado = (data.por_tema || []).filter(
+    (item) => item.assunto != null && String(item.assunto).trim() !== ""
+  );
+  const temasLabels = porTemaFiltrado.map((item) => item.assunto);
+  const temasValores = porTemaFiltrado.map((item) => item.total);
 
   let fluxoAnos = data.fluxo?.map((item) => String(item.ano)) || [];
   let fluxoVigente = data.fluxo?.map((item) => item.vigente) || [];
@@ -270,7 +307,7 @@ const atualizarCharts = (data) => {
               key: "total",
               label: "Resoluções publicadas",
               data: valoresAno,
-              backgroundColor: "rgba(44, 111, 183, 0.7)",
+              backgroundColor: colors.primaryBar,
               stack: "status",
             },
           ],
@@ -312,6 +349,11 @@ const atualizarCharts = (data) => {
     },
   });
 
+  const statusColors = [
+    colors.vigente,
+    colors.vigente_alterado,
+    colors.nao_vigente,
+  ];
   chartStatus = new Chart(chartStatusEl, {
     type: "doughnut",
     data: {
@@ -320,11 +362,7 @@ const atualizarCharts = (data) => {
         {
           data: statusValores,
           radius: "80%",
-          backgroundColor: [
-            "rgba(66, 133, 244, 0.85)",
-            "rgba(52, 168, 83, 0.85)",
-            "rgba(234, 67, 53, 0.85)",
-          ],
+          backgroundColor: statusColors,
         },
       ],
     },
@@ -377,17 +415,17 @@ const atualizarCharts = (data) => {
         {
           label: "Vigente",
           data: fluxoVigente,
-          backgroundColor: "rgba(66, 133, 244, 0.75)",
+          backgroundColor: colors.vigente.replace("0.85", "0.75"),
         },
         {
           label: "Vigente alterado",
           data: fluxoAlterado,
-          backgroundColor: "rgba(52, 168, 83, 0.75)",
+          backgroundColor: colors.vigente_alterado.replace("0.85", "0.75"),
         },
         {
           label: "Revogado",
           data: fluxoNaoVigente,
-          backgroundColor: "rgba(234, 67, 53, 0.75)",
+          backgroundColor: colors.nao_vigente.replace("0.85", "0.75"),
         },
       ],
     },
@@ -417,6 +455,7 @@ const atualizarCharts = (data) => {
     },
   });
 
+  // Gráfico 1: Atos por temas — barras horizontais, assuntos no eixo vertical (texto horizontal)
   chartTemas = new Chart(chartTemasEl, {
     type: "bar",
     data: {
@@ -425,17 +464,54 @@ const atualizarCharts = (data) => {
         {
           label: "Atos",
           data: temasValores,
-          backgroundColor: "rgba(130, 173, 230, 0.85)",
+          backgroundColor: colors.primary,
         },
       ],
     },
     options: {
       indexAxis: "y",
       responsive: true,
-      plugins: { legend: { display: false } },
+      maintainAspectRatio: false,
+      layout: {
+        padding: { left: 8, right: 16, top: 12, bottom: 12 },
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          enabled: true,
+          callbacks: {
+            title: (items) => (items.length && temasLabels[items[0].dataIndex] ? temasLabels[items[0].dataIndex] : ""),
+          },
+        },
+        datalabels: {
+          color: "#1b1816",
+          anchor: "end",
+          align: "end",
+          offset: 6,
+          formatter: (v) => (v != null ? String(v) : ""),
+          font: { size: 11, weight: "600" },
+        },
+      },
       scales: {
-        x: { ticks: { color: "#6c757d" } },
-        y: { ticks: { color: "#6c757d" } },
+        x: {
+          beginAtZero: true,
+          ticks: { color: "#6c757d", font: { size: 10 }, maxTicksLimit: 11 },
+          grid: { display: true, color: "rgba(0,0,0,0.06)" },
+          border: { display: false },
+        },
+        y: {
+          ticks: {
+            color: "#6c757d",
+            font: { size: 11 },
+            maxRotation: 0,
+            autoSkip: false,
+            padding: 6,
+          },
+          grid: { display: false },
+          border: { display: false },
+          barPercentage: 0.8,
+          categoryPercentage: 0.9,
+        },
       },
       onClick: (_evt, elements) => {
         if (!elements.length) return;
@@ -447,7 +523,7 @@ const atualizarCharts = (data) => {
     },
   });
 
-  // Waterfall: variacao anual do estoque (adicoes/remocoes)
+  // Gráfico 2: Evolução do estoque — barras horizontais por ano (variação: verde +, vermelho -)
   const fluxoAnoAsc = (data.fluxo || [])
     .map((item) => ({
       ano: String(item.ano),
@@ -458,36 +534,28 @@ const atualizarCharts = (data) => {
     }))
     .sort((a, b) => Number(a.ano) - Number(b.ano));
 
-  let acumuladoWaterfall = 0;
-  const labelsWaterfall = fluxoAnoAsc.map((item) => item.ano);
-  const barrasWaterfall = fluxoAnoAsc.map((item) => {
-    const inicio = acumuladoWaterfall;
-    acumuladoWaterfall += item.delta;
-    return [inicio, acumuladoWaterfall];
+  const labelsEstoque = fluxoAnoAsc.map((item) => item.ano);
+  const valoresEstoque = fluxoAnoAsc.map((item) => item.delta);
+  const totalEstoque = valoresEstoque.reduce((s, v) => s + v, 0);
+  labelsEstoque.push("Total");
+  valoresEstoque.push(totalEstoque);
+
+  const c = getChartColors();
+  const coresEstoque = valoresEstoque.map((v, i) => {
+    if (i === valoresEstoque.length - 1) return c.primary || c.vigente;
+    return v >= 0 ? (c.positivo || c.vigente) : (c.negativo || c.nao_vigente);
   });
-  const deltasWaterfall = fluxoAnoAsc.map((item) => item.delta);
 
-  const totalFinal = acumuladoWaterfall;
-  labelsWaterfall.push("Total");
-  barrasWaterfall.push([0, totalFinal]);
-  deltasWaterfall.push(totalFinal);
-
+  // Gráfico 2: Evolução do estoque — colunas verticais por ano (estilo Fluxo de normas)
   chartEstoque = new Chart(chartEstoqueEl, {
     type: "bar",
     data: {
-      labels: labelsWaterfall,
+      labels: labelsEstoque,
       datasets: [
         {
-          label: "Variação do estoque",
-          data: barrasWaterfall,
-          backgroundColor: deltasWaterfall.map((valor, idx) => {
-            const isTotal = idx === deltasWaterfall.length - 1;
-            if (isTotal) return "rgba(66, 133, 244, 0.85)";
-            return valor >= 0
-              ? "rgba(52, 168, 83, 0.85)"
-              : "rgba(234, 67, 53, 0.85)";
-          }),
-          borderWidth: 0,
+          label: "Variação",
+          data: valoresEstoque,
+          backgroundColor: coresEstoque,
         },
       ],
     },
@@ -498,50 +566,44 @@ const atualizarCharts = (data) => {
           display: true,
           position: "bottom",
           labels: {
-            generateLabels: () => [
-              {
-                text: "Aumentar",
-                fillStyle: "rgba(52, 168, 83, 0.85)",
-                strokeStyle: "rgba(52, 168, 83, 0.85)",
-                lineWidth: 1,
-              },
-              {
-                text: "Diminuir",
-                fillStyle: "rgba(234, 67, 53, 0.85)",
-                strokeStyle: "rgba(234, 67, 53, 0.85)",
-                lineWidth: 1,
-              },
-              {
-                text: "Total",
-                fillStyle: "rgba(66, 133, 244, 0.85)",
-                strokeStyle: "rgba(66, 133, 244, 0.85)",
-                lineWidth: 1,
-              },
-            ],
+            generateLabels: () => {
+              const pos = (c.positivo || c.vigente).replace("0.85", "0.75");
+              const neg = (c.negativo || c.nao_vigente).replace("0.85", "0.75");
+              const tot = (c.primary || c.vigente).replace("0.85", "0.75");
+              return [
+                { text: "Aumentar", fillStyle: pos, strokeStyle: pos, lineWidth: 1 },
+                { text: "Diminuir", fillStyle: neg, strokeStyle: neg, lineWidth: 1 },
+                { text: "Total", fillStyle: tot, strokeStyle: tot, lineWidth: 1 },
+              ];
+            },
           },
         },
         datalabels: {
           color: "#1b1816",
           anchor: "end",
-          align: "top",
-          formatter: (_value, ctx) => {
-            const idx = ctx.dataIndex;
-            const delta = deltasWaterfall[idx];
-            if (idx === deltasWaterfall.length - 1) return String(delta);
-            if (!delta) return "0";
-            return String(delta);
-          },
+          align: (ctx) => (ctx.raw >= 0 ? "top" : "bottom"),
+          formatter: (v) => (v != null ? String(v) : ""),
           font: { size: 10, weight: "600" },
         },
       },
       scales: {
-        x: { ticks: { color: "#6c757d" } },
-        y: { ticks: { color: "#6c757d" } },
+        x: {
+          stacked: false,
+          ticks: { color: "#6c757d", maxRotation: 45, minRotation: 45, font: { size: 10 } },
+          grid: { display: false },
+          border: { display: false },
+        },
+        y: {
+          stacked: false,
+          ticks: { color: "#6c757d" },
+          grid: { display: true, color: "rgba(0,0,0,0.06)" },
+          border: { display: false },
+        },
       },
       onClick: (_evt, elements) => {
         if (!elements.length) return;
         const idx = elements[0].index;
-        if (idx >= fluxoAnoAsc.length) return; // ignora barra Total
+        if (idx >= fluxoAnoAsc.length) return;
         const ano = fluxoAnoAsc[idx].ano;
         filtros.ano = filtros.ano === ano ? null : ano;
         carregarEstatisticas();
@@ -551,12 +613,17 @@ const atualizarCharts = (data) => {
 };
 
 const carregarEstatisticas = async () => {
+  if (statsError) {
+    statsError.textContent = "";
+    statsError.classList.add("hidden");
+  }
   try {
     const data = await fetchStats();
     atualizarCharts(data);
   } catch (err) {
-    if (statsSummary) {
-      statsSummary.textContent = "Erro ao carregar estatísticas.";
+    if (statsError) {
+      statsError.textContent = "Erro ao carregar estatísticas. Verifique a conexão e se a sessão está válida.";
+      statsError.classList.remove("hidden");
     }
   }
 };
@@ -568,6 +635,12 @@ if (clearFiltersBtn) {
     filtros.assunto = null;
     carregarEstatisticas();
   });
+}
+
+if (statsSubtitle) {
+  statsSubtitle.textContent = isArespcj()
+    ? "Visualização dos atos da ARES-PCJ com filtros interativos."
+    : "Visualização dos atos da ANA com filtros interativos.";
 }
 
 carregarEstatisticas();

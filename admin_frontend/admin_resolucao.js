@@ -66,13 +66,14 @@ function renderListaResumo(elemento, itensResumo, vazio) {
   itensResumo.forEach((item) => {
     const li = document.createElement("li");
     li.className = "verificacao-resumo-item";
+    const orgaoLabel = item.orgao ? ` · ${item.orgao}` : "";
     li.innerHTML = `
       <span class="verificacao-resumo-linha">
         <strong>${item.ano ?? "—"}/${item.numero ?? "—"}</strong>
         <small>${formatarData(item.data_publicacao)}</small>
       </span>
       <span class="verificacao-resumo-linha">
-        <em>${formatarStatus(item.status)}</em>
+        <em>${formatarStatus(item.status)}${orgaoLabel}</em>
       </span>
     `;
     elemento.appendChild(li);
@@ -132,14 +133,13 @@ function render() {
 
 async function carregarPendentes() {
   setMensagem("Carregando normas pendentes...");
+  const headers = Object.assign(
+    { Authorization: `Bearer ${token}` },
+    window.getApiHeaders ? window.getApiHeaders() : {}
+  );
   const response = await fetch(
     `${API_BASE}/admin/verificacao/normas?limit=300&offset=0&somente_pendentes=true`,
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-      cache: "no-store",
-    }
+    { headers, cache: "no-store" }
   );
   if (!response.ok) {
     throw new Error("Erro ao carregar normas para verificação.");
@@ -154,14 +154,13 @@ async function carregarPendentes() {
 }
 
 async function carregarResumo() {
+  const headers = Object.assign(
+    { Authorization: `Bearer ${token}` },
+    window.getApiHeaders ? window.getApiHeaders() : {}
+  );
   const response = await fetch(
     `${API_BASE}/admin/verificacao/resumo?limit=8&dias=${filtroResumoDias}`,
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-      cache: "no-store",
-    }
+    { headers, cache: "no-store" }
   );
   if (!response.ok) {
     throw new Error("Erro ao carregar resumo das verificações.");
@@ -227,12 +226,13 @@ async function decidir(decisao) {
   if (!item) return;
 
   setMensagem("Salvando decisão...");
+  const headers = Object.assign(
+    { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    window.getApiHeaders ? window.getApiHeaders() : {}
+  );
   const response = await fetch(`${API_BASE}/admin/verificacao/${item.id}/decisao`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
+    headers,
     body: JSON.stringify(payloadAtual(decisao)),
   });
 

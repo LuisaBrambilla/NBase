@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Conteúdo da resolução</title>
+    <link rel="stylesheet" href="./styles.css" />
+    <style>
+      .viewer-root {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        background: #6b7280;
+        padding: 12px;
+        box-sizing: border-box;
+      }
+      .viewer-nav {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 16px;
+        padding: 10px 16px;
+        background: var(--bg-panel, #1e293b);
+        border-radius: 10px;
+        margin-bottom: 12px;
+        flex-shrink: 0;
+      }
+      .viewer-nav button {
+        padding: 8px 20px;
+        font-size: 1rem;
+        cursor: pointer;
+        border: 1px solid var(--border-soft, #334155);
+        border-radius: 8px;
+        background: var(--bg-input, #334155);
+        color: var(--text-primary, #f1f5f9);
+      }
+      .viewer-nav button:hover:not(:disabled) {
+        background: var(--accent, #3b82f6);
+        border-color: var(--accent, #3b82f6);
+      }
+      .viewer-nav button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+      .viewer-page-info {
+        color: var(--text-muted, #94a3b8);
+        font-size: 0.95rem;
+        min-width: 140px;
+        text-align: center;
+      }
+      .viewer-pages-wrap {
+        flex: 1;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        overflow: hidden;
+        min-width: 0;
+      }
+      .viewer-viewport {
+        width: 210mm;
+        max-width: 100%;
+        min-width: 0;
+        height: 297mm;
+        max-height: calc(100vh - 120px);
+        background: #fff;
+        box-shadow: 0 4px 24px rgba(0,0,0,0.35);
+        overflow: auto;
+        position: relative;
+        padding-bottom: 24px;
+        box-sizing: border-box;
+      }
+      .viewer-content {
+        width: 100%;
+        max-width: 210mm;
+        min-width: 0;
+        padding: 20mm;
+        padding-bottom: 24px;
+        box-sizing: border-box;
+        font-family: Georgia, 'Times New Roman', serif;
+        font-size: 11pt;
+        line-height: 1.5;
+        color: #1a1a1a;
+        min-height: 100%;
+      }
+      /* Layout ANA (gov.br): título azul, ementa em destaque, sem rodapé ARES */
+      #viewerContent.layout-ana .documentFirstHeading,
+      #viewerContent.layout-ana h1.documentFirstHeading {
+        color: #1351b0;
+        font-size: 1.75rem;
+        font-weight: 700;
+        text-align: center;
+        margin: 0 0 1rem 0;
+        line-height: 1.3;
+      }
+      #viewerContent.layout-ana .cover-richtext-tile .tile-content p,
+      #viewerContent.layout-ana .row .tile-content p {
+        text-align: justify;
+        margin: 0.5em 0;
+        line-height: 1.6;
+      }
+      #viewerContent.layout-ana .dou-paragraph {
+        text-align: justify;
+        margin: 0.6em 0;
+        line-height: 1.6;
+      }
+      #viewerContent.layout-ana .row + .row { margin-top: 0.5rem; }
+      #viewerContent.layout-ana .tile-default { margin-bottom: 0; }
+      /* Resoluções ARES-PCJ: texto justificado (justify), títulos centralizados, modelo uniforme */
+      #viewerContent.viewer-content-abnt {
+        padding: 2cm 2cm 2cm 3cm;
+        font-family: 'Times New Roman', Times, Georgia, serif;
+        font-size: 12pt;
+        line-height: 1.5;
+        text-align: justify;
+        color: #000;
+      }
+      #viewerContent.viewer-content-abnt .bloco-texto > p,
+      #viewerContent.viewer-content-abnt p {
+        text-align: justify;
+        line-height: 1.5;
+        margin: 0 0 0.5em 0;
+      }
+      #viewerContent.viewer-content-abnt .bloco-texto.doc-titulo > p,
+      #viewerContent.viewer-content-abnt .doc-titulo p,
+      #viewerContent.viewer-content-abnt h1,
+      #viewerContent.viewer-content-abnt h2 {
+        text-align: center;
+        font-weight: bold;
+      }
+      #viewerContent.viewer-content-abnt .pdf-tabela td,
+      #viewerContent.viewer-content-abnt .pdf-tabela th {
+        font-size: 12pt;
+        padding: 6px 8px;
+      }
+      /* Justify em todo o corpo do documento (resoluções ARES-PCJ) */
+      #viewerContent.viewer-content-abnt .viewer-pagina-body,
+      #viewerContent.viewer-content-abnt .bloco-texto:not(.doc-titulo):not(.doc-rodape),
+      #viewerContent.viewer-content-abnt .doc-conteudo { text-align: justify; }
+      #viewerContent.viewer-content-abnt .viewer-pagina-body p,
+      #viewerContent.viewer-content-abnt .bloco-texto:not(.doc-titulo):not(.doc-rodape) p { text-align: justify !important; }
+      .viewer-content .pagina { margin-bottom: 0; }
+      .viewer-content .bloco-texto { margin: 0 0 .6em 0; }
+      .viewer-content .bloco-texto > p { text-align: justify; line-height: 1.6; margin: .4em 0; }
+      .viewer-content .bloco-texto.doc-titulo > p { text-align: center; font-weight: bold; }
+      .viewer-content .pdf-tabela-wrap { overflow-x: auto; max-width: 100%; }
+      .viewer-content .pdf-tabela { border-collapse: collapse; width: 100%; }
+      .viewer-content .pdf-tabela td, .viewer-content .pdf-tabela th { border: 1px solid #ccc; padding: 4px 8px; }
+      .viewer-content .pdf-imagem { margin: .6em 0; max-width: 100%; height: auto; }
+      .viewer-content img { max-width: 100%; height: auto; }
+      /* Todas as resoluções ARES-PCJ: corpo em justify, títulos e ementa centralizados */
+      .viewer-content .bloco-texto:not(.doc-titulo):not(.doc-rodape) > p,
+      .viewer-content .viewer-pagina-body p,
+      .viewer-content .doc-conteudo p,
+      .viewer-content div[class*="bloco"]:not(.doc-titulo) p { text-align: justify !important; }
+      .viewer-content .bloco-texto.doc-ementa > p,
+      .viewer-content .doc-ementa p { text-align: center !important; font-style: italic; }
+      .viewer-pagina-body { text-align: justify; flex: 1; }
+      /* Rodapé azul e cabeçalho duplicados: nunca no topo; rodapé só no fim (injetado) */
+      .viewer-pagina-body .doc-cabecalho-bar,
+      .viewer-pagina-body .doc-rodape,
+      .viewer-pagina-body .bloco-texto.doc-rodape,
+      .viewer-pagina-body .ares-faixa-contatos,
+      .viewer-pagina-body .ares-ocultar-do-doc,
+      .viewer-pagina-body [class*="rodape"] { display: none !important; }
+      /* Espaçador antes do rodapé: ao fazer scroll, há 100px de folga e o rodapé não fica cortado no topo */
+      .ares-footer-buffer {
+        flex-shrink: 0;
+        height: 100px;
+        min-height: 100px;
+        background: #fff;
+      }
+      /* Rodapé único: ocupa toda a largura, texto não cortado nas laterais */
+      .ares-footer-wrap {
+        flex-shrink: 0;
+        min-width: 0;
+        width: 100%;
+        position: relative;
+        overflow: visible;
+        min-height: 165px;
+        padding-top: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #fff;
+      }
+      /* Ondas: fundo branco no topo, depois 3 faixas azuis; texto na faixa azul escura */
+      .ares-footer-wrap::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 165" preserveAspectRatio="none"><path fill="%23e0f2f7" d="M0 70 Q300 40 600 70 T1200 70 V165 H0 Z"/><path fill="%23b3d9e8" d="M0 88 Q400 58 800 88 T1200 88 V165 H0 Z"/><path fill="%232c7bb6" d="M0 105 Q250 82 600 105 T1200 105 V165 H0 Z"/><path fill="%231a365d" d="M0 165 H1200 V165 H0 Z"/></svg>') no-repeat center bottom;
+        background-size: 100% 100%;
+        pointer-events: none;
+      }
+      .ares-footer-inner {
+        position: relative;
+        z-index: 1;
+        color: #fff;
+        font-size: 0.8rem;
+        line-height: 1.65;
+        text-align: center;
+        padding: 24px 28px 28px;
+        font-family: Arial, Helvetica, sans-serif;
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        box-sizing: border-box;
+        white-space: normal;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+      }
+      .ares-footer-inner a { color: #fff; text-decoration: none; }
+      .ares-footer-inner a:hover { text-decoration: underline; }
+      .viewer-pagina-wrap { display: flex; flex-direction: column; min-height: 100%; min-width: 0; width: 100%; box-sizing: border-box; }
+      .viewer-loading, .viewer-error {
+        padding: 2rem;
+        text-align: center;
+        color: var(--text-muted, #94a3b8);
+      }
+      .viewer-error { color: #f87171; }
+      .viewer-ana-bar {
+        display: none;
+        padding: 10px 16px;
+        background: #1351b0;
+        color: #fff;
+        text-align: center;
+        font-size: 0.95rem;
+        border-radius: 10px;
+        margin-bottom: 12px;
+        flex-shrink: 0;
+      }
+      .viewer-ana-bar a {
+        color: #fff;
+        text-decoration: underline;
+        font-weight: 600;
+      }
+      .viewer-ana-bar a:hover { opacity: 0.9; }
+    </style>
+  </head>
+  <body class="viewer-root">
+    <div id="viewerAnaBar" class="viewer-ana-bar" style="display: none;">
+      Documento da ANA. <a href="https://www.gov.br/ana/pt-br/legislacao/resolucoes/resolucoes-regulatorias" target="_blank" rel="noopener">Ver resoluções regulatórias no site oficial</a>
+    </div>
+    <nav class="viewer-nav" id="viewerNav" style="display: none;">
+      <button type="button" id="btnAnterior">← Anterior</button>
+      <span class="viewer-page-info" id="pageInfo">Página 1 de 1</span>
+      <button type="button" id="btnProximo">Próximo →</button>
+    </nav>
+    <div class="viewer-pages-wrap" id="pagesWrap">
+      <div id="viewerLoading" class="viewer-loading">A carregar…</div>
+      <div id="viewerError" class="viewer-error" style="display: none;"></div>
+      <div class="viewer-viewport viewer-pdf-wrap" id="viewerPdfWrap" style="display: none;">
+        <iframe id="viewerPdfIframe" title="PDF do ato" style="width:100%;height:100%;border:0;"></iframe>
+        <p class="viewer-pdf-nota" style="margin:8px 0 0;font-size:0.85rem;color:var(--text-muted,#94a3b8);">Documento exibido em PDF (igual ao original).</p>
+      </div>
+      <div class="viewer-viewport" id="viewerViewport" style="display: none;">
+        <div class="viewer-content" id="viewerContent"></div>
+      </div>
+    </div>
+    <script src="./config.js"></script>
+    <script>
+      (function () {
+        const API_BASE = window.API_BASE_URL || '/api';
+        const params = new URLSearchParams(window.location.search);
+        const atoId = params.get('id');
+        const viewerLoading = document.getElementById('viewerLoading');
+        const viewerError = document.getElementById('viewerError');
+        const viewerNav = document.getElementById('viewerNav');
+        const viewerViewport = document.getElementById('viewerViewport');
+        const viewerContent = document.getElementById('viewerContent');
+        const viewerPdfWrap = document.getElementById('viewerPdfWrap');
+        const viewerPdfIframe = document.getElementById('viewerPdfIframe');
+        const btnAnterior = document.getElementById('btnAnterior');
+        const btnProximo = document.getElementById('btnProximo');
+        const pageInfo = document.getElementById('pageInfo');
+        const viewerAnaBar = document.getElementById('viewerAnaBar');
+
+        let totalPages = 1;
+        let currentIndex = 0;
+        let pageHeightPx = 950;
+        let pageOffsets = [0];
+        let pageNodes = [];
+        var _viewerIsAna = false;
+
+        var FOOTER_ARES = '<div class="ares-footer-wrap">' +
+          '<div class="ares-footer-inner">' +
+          'Agência Reguladora dos Serviços de Saneamento das Bacias dos Rios Piracicaba, Capivari e Jundiaí<br/>' +
+          'Av. Paulista, 633 - Jardim Santana - Americana, SP - 13478-580 - Fone (19) 3471-5100 - <a href="https://www.arespcj.com.br" target="_blank" rel="noopener">www.arespcj.com.br</a>' +
+          '</div></div>';
+
+        function wrapPageWithHeaderFooter(pageNode) {
+          removerNosAntesDoTituloResolucao(pageNode);
+          var wrap = document.createElement('div');
+          wrap.className = 'viewer-pagina-wrap';
+          var body = document.createElement('div');
+          body.className = 'viewer-pagina-body';
+          while (pageNode.firstChild) body.appendChild(pageNode.firstChild);
+          esconderCabecalhoRodapeDuplicadosDoDoc(body);
+          wrap.appendChild(body);
+          if (!_viewerIsAna) {
+            var buffer = document.createElement('div');
+            buffer.className = 'ares-footer-buffer';
+            wrap.appendChild(buffer);
+            var footerDiv = document.createElement('div');
+            footerDiv.innerHTML = FOOTER_ARES;
+            while (footerDiv.firstChild) wrap.appendChild(footerDiv.firstChild);
+          }
+          return wrap;
+        }
+
+        /** Remove o rodapé azul e blocos de cabeçalho que aparecem em cima; o rodapé fica só no fim (injetado). */
+        function esconderCabecalhoRodapeDuplicadosDoDoc(container) {
+          if (!container || !container.querySelectorAll) return;
+          var footerPhrase1 = 'Agência Reguladora';
+          var footerPhrase2 = 'Paulista, 633';
+          var footerPhrase3 = '13478-580';
+          var footerPhrase4 = '3471-5100';
+          var headerPhrase1 = 'AGÊNCIA REGULADORA';
+          var headerPhrase2 = 'PCJ';
+          function textOf(el) { return (el.textContent || '').replace(/\s+/g, ' ').trim(); }
+          function isRodapeAzul(el) {
+            var t = textOf(el);
+            if (t.length > 850) return false;
+            var hasAgencia = t.indexOf(footerPhrase1) !== -1;
+            var hasEndereco = t.indexOf(footerPhrase2) !== -1 || t.indexOf(footerPhrase3) !== -1;
+            var hasFone = t.indexOf(footerPhrase4) !== -1 || t.indexOf('arespcj.com') !== -1;
+            return hasAgencia && (hasEndereco || hasFone);
+          }
+          function isFooterBlock(el) {
+            var t = textOf(el);
+            return t.length < 750 && t.indexOf(footerPhrase1) !== -1 && t.indexOf(footerPhrase2) !== -1;
+          }
+          function isHeaderBlock(el) {
+            var t = textOf(el);
+            return t.length < 400 && t.indexOf(headerPhrase1) !== -1 && t.indexOf(headerPhrase2) !== -1 && t.indexOf('RESOLUÇÃO') === -1;
+          }
+          var removed;
+          do {
+            removed = 0;
+            var children = Array.prototype.slice.call(container.children);
+            for (var i = 0; i < children.length; i++) {
+              var ch = children[i];
+              if (ch.nodeType !== 1) continue;
+              var cls = (ch.className || '') + ' ';
+              var isInjected = cls.indexOf('doc-cabecalho-bar') !== -1 || cls.indexOf('doc-rodape') !== -1 || (ch.classList && (ch.classList.contains('doc-cabecalho-bar') || ch.classList.contains('doc-rodape')));
+              if (isInjected || isRodapeAzul(ch) || isFooterBlock(ch) || isHeaderBlock(ch)) {
+                container.removeChild(ch);
+                removed++;
+                break;
+              }
+              esconderCabecalhoRodapeDuplicadosDoDoc(ch);
+            }
+          } while (removed > 0);
+          var all = container.querySelectorAll('p, div, td, th, section, table, tr');
+          var toRemove = [];
+          for (var j = 0; j < all.length; j++) {
+            var el = all[j];
+            var text = textOf(el);
+            if (text.length > 950) continue;
+            var isRodape = (text.indexOf(footerPhrase1) !== -1 && (text.indexOf(footerPhrase2) !== -1 || text.indexOf(footerPhrase3) !== -1 || text.indexOf(footerPhrase4) !== -1)) || (text.indexOf(footerPhrase1) !== -1 && text.indexOf('arespcj.com') !== -1);
+            var isHeader = text.indexOf(headerPhrase1) !== -1 && text.indexOf(headerPhrase2) !== -1 && text.indexOf('RESOLUÇÃO') === -1;
+            if (isRodape || isHeader) toRemove.push(el);
+          }
+          var outermost = [];
+          for (var k = 0; k < toRemove.length; k++) {
+            var el = toRemove[k];
+            var parent = el.parentElement;
+            var hasAncestor = false;
+            while (parent && parent !== container) {
+              if (toRemove.indexOf(parent) !== -1) { hasAncestor = true; break; }
+              parent = parent.parentElement;
+            }
+            if (!hasAncestor) outermost.push(el);
+          }
+          for (var r = 0; r < outermost.length; r++) {
+            var node = outermost[r];
+            if (node.parentNode) node.parentNode.removeChild(node);
+          }
+        }
+
+        function showError(msg) {
+          viewerLoading.style.display = 'none';
+          viewerError.style.display = 'block';
+          viewerError.textContent = msg;
+        }
+
+        /** Remove cabeçalho/navegação de páginas ANA/gov.br (links de acessibilidade, "Termos mais buscados"). */
+        function removerCabecalhoAnaGovBr(container) {
+          if (!container || !container.querySelectorAll) return;
+          var toRemove = [];
+          container.querySelectorAll('a, div, section, nav, p').forEach(function (el) {
+            var t = (el.textContent || '').trim();
+            if (t.indexOf('Ir para o Conteúdo') !== -1 || t.indexOf('Ir para a Página Inicial') !== -1 ||
+                t.indexOf('Ir para o menu de Navegação') !== -1 || t.indexOf('Ir para a Busca') !== -1 ||
+                t.indexOf('Abrir menu principal') !== -1 || t.indexOf('Ir para o Mapa do site') !== -1) {
+              toRemove.push(el);
+            }
+            if (t === 'Termos mais buscados' || (t.length < 100 && t.indexOf('Termos mais buscados') !== -1)) toRemove.push(el);
+          });
+          toRemove.forEach(function (el) {
+            var p = el.parentElement;
+            if (p) p.removeChild(el);
+          });
+          var listas = container.querySelectorAll('ul, div');
+          listas.forEach(function (el) {
+            var txt = (el.textContent || '').trim();
+            var links = el.querySelectorAll('a');
+            var linkTexts = Array.from(links).map(function (a) { return (a.textContent || '').trim(); }).join(' ');
+            if (txt.length < 500 && (linkTexts.indexOf('imposto de renda') !== -1 && linkTexts.indexOf('inss') !== -1)) {
+              if (el.parentElement) el.parentElement.removeChild(el);
+            }
+          });
+        }
+
+        function parseHtml(html) {
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(html, 'text/html');
+          const paginas = doc.querySelectorAll('.pagina');
+          if (paginas.length > 0) {
+            var nodes = Array.from(paginas).map(function (p) {
+              var clone = p.cloneNode(true);
+              esconderCabecalhoRodapeDuplicadosDoDoc(clone);
+              return clone;
+            });
+            return { mode: 'pagina', nodes: nodes };
+          }
+          const body = doc.body;
+          const docConteudo = doc.querySelector('.doc-conteudo');
+          var mainEl = doc.querySelector('main');
+          var contentEl = mainEl ? mainEl.querySelector('#content') : null;
+          var root = docConteudo || contentEl || doc.querySelector('#conteudo') || mainEl || doc.querySelector('[role="main"]') || body;
+          if (!root || !root.childNodes.length) {
+            var div = document.createElement('div');
+            div.innerHTML = body ? body.innerHTML : html;
+            root = div;
+          }
+          removerCabecalhoAnaGovBr(root);
+          const wrap = document.createElement('div');
+          wrap.className = 'viewer-content-inner';
+          while (root.firstChild) wrap.appendChild(root.firstChild);
+          return { mode: 'scroll', root: wrap };
+        }
+
+        function updateButtons() {
+          btnAnterior.disabled = currentIndex <= 0;
+          btnProximo.disabled = currentIndex >= totalPages - 1;
+        }
+
+        function updatePageInfo() {
+          pageInfo.textContent = 'Página ' + (currentIndex + 1) + ' de ' + (totalPages || 1);
+        }
+
+        function showCurrentPageContent() {
+          if (pageNodes.length === 0) return;
+          viewerContent.innerHTML = '';
+          var pageClone = pageNodes[currentIndex].cloneNode(true);
+          viewerContent.appendChild(wrapPageWithHeaderFooter(pageClone));
+          viewerViewport.scrollTop = 0;
+        }
+
+        function goToPage(index) {
+          if (index < 0 || index >= totalPages) return;
+          currentIndex = index;
+          if (pageNodes.length > 0) {
+            showCurrentPageContent();
+          } else {
+            if (pageOffsets.length > index) {
+              viewerContent.style.top = (-pageOffsets[index]) + 'px';
+            } else {
+              viewerContent.style.top = (-index * pageHeightPx) + 'px';
+            }
+          }
+          updateButtons();
+          updatePageInfo();
+        }
+
+        /** Encontra o primeiro nó (em ordem no DOM) cujo texto contém "RESOLUÇÃO ARES-PCJ Nº ...". */
+        function encontrarNoComTituloResolucao(container) {
+          var re = /RESOLUÇÃO\s+ARES-PCJ\s+N[°º]?\s*\d+/i;
+          var walker = document.createTreeWalker(container, NodeFilter.SHOW_ELEMENT, null, false);
+          var el;
+          while ((el = walker.nextNode())) {
+            if (re.test(el.textContent || '')) return el;
+          }
+          return null;
+        }
+
+        /** Remove do DOM tudo antes do título "RESOLUÇÃO ARES-PCJ Nº ..." (banner, logo, contactos). */
+        function removerNosAntesDoTituloResolucao(container) {
+          if (!container) return;
+          var tituloEl = encontrarNoComTituloResolucao(container);
+          if (!tituloEl) return;
+          var node = tituloEl;
+          while (node && node.parentNode && node.parentNode !== container) {
+            var prev = node.previousSibling;
+            while (prev) {
+              var toRemove = prev;
+              prev = prev.previousSibling;
+              node.parentNode.removeChild(toRemove);
+            }
+            node = node.parentNode;
+          }
+          if (node && node.parentNode === container) {
+            var prev = node.previousSibling;
+            while (prev) {
+              var toRemove = prev;
+              prev = prev.previousSibling;
+              container.removeChild(toRemove);
+            }
+          }
+        }
+
+        function initViewer(html, origem) {
+          origem = (origem || '').toLowerCase();
+          /* ANA: pelo header X-Origem ou por deteção no HTML (fallback se o header não vier) */
+          var isAna = origem === 'govbr' || /RESOLUÇÃO\s+ANA\s+N[°º]?\s*\d+/i.test(html);
+          _viewerIsAna = isAna;
+          const parsed = parseHtml(html);
+          viewerContent.innerHTML = '';
+          viewerContent.classList.remove('layout-ana');
+          if (isAna) viewerContent.classList.add('layout-ana');
+          else viewerContent.classList.add('viewer-content-abnt');
+          viewerLoading.style.display = 'none';
+          viewerError.style.display = 'none';
+          viewerViewport.style.display = 'block';
+          viewerNav.style.display = 'flex';
+          if (viewerAnaBar) viewerAnaBar.style.display = isAna ? 'block' : 'none';
+
+          if (parsed.mode === 'pagina' && parsed.nodes.length > 0) {
+            pageNodes = parsed.nodes;
+            totalPages = pageNodes.length;
+            currentIndex = 0;
+            viewerContent.style.position = '';
+            viewerContent.style.left = '';
+            showCurrentPageContent();
+          } else {
+            viewerContent.style.position = 'absolute';
+            viewerContent.style.left = '0';
+            viewerContent.style.top = '0';
+            removerNosAntesDoTituloResolucao(parsed.root);
+            var scrollWrap = document.createElement('div');
+            scrollWrap.className = 'viewer-pagina-wrap';
+            var scrollBody = document.createElement('div');
+            scrollBody.className = 'viewer-pagina-body';
+            while (parsed.root.firstChild) scrollBody.appendChild(parsed.root.firstChild);
+            esconderCabecalhoRodapeDuplicadosDoDoc(scrollBody);
+            scrollWrap.appendChild(scrollBody);
+            if (!isAna) {
+              var buffer = document.createElement('div');
+              buffer.className = 'ares-footer-buffer';
+              scrollWrap.appendChild(buffer);
+              var ft = document.createElement('div');
+              ft.innerHTML = FOOTER_ARES;
+              while (ft.firstChild) scrollWrap.appendChild(ft.firstChild);
+            }
+            viewerContent.appendChild(scrollWrap);
+            viewerContent.style.top = '0px';
+            pageHeightPx = viewerViewport.clientHeight;
+            var contentHeight = viewerContent.scrollHeight;
+            totalPages = Math.max(1, Math.ceil(contentHeight / pageHeightPx));
+            pageOffsets = [];
+            for (var j = 0; j < totalPages; j++) pageOffsets.push(j * pageHeightPx);
+            currentIndex = 0;
+            viewerContent.style.top = '0px';
+          }
+          updateButtons();
+          updatePageInfo();
+        }
+
+        function showPdf() {
+          viewerLoading.style.display = 'none';
+          viewerError.style.display = 'none';
+          viewerViewport.style.display = 'none';
+          viewerPdfWrap.style.display = 'block';
+          viewerPdfIframe.src = API_BASE + '/public/atos/' + encodeURIComponent(atoId) + '/pdf';
+          viewerNav.style.display = 'none';
+          if (viewerAnaBar) viewerAnaBar.style.display = 'none';
+        }
+
+        if (!atoId) {
+          showError('Identificador do ato não informado (use ?id=... na URL).');
+        } else {
+          /* Preferir HTML (versão formatada: sem banner em cima, rodapé no fim); PDF só se não houver HTML */
+          fetch(API_BASE + '/public/atos/' + encodeURIComponent(atoId) + '/conteudo', { method: 'GET', headers: Object.assign({ Accept: 'text/html' }, window.getApiHeaders ? window.getApiHeaders() : {}) })
+            .then(function (r) {
+              var origem = r.headers.get('X-Origem') || '';
+              if (r.ok) return r.text().then(function (t) { return { ok: true, text: t, origem: origem }; });
+              return { ok: false, status: r.status, origem: '' };
+            })
+            .then(function (result) {
+              if (result.ok && result.text && result.text.trim()) {
+                initViewer(result.text, result.origem);
+                return;
+              }
+              return fetch(API_BASE + '/public/atos/' + encodeURIComponent(atoId) + '/pdf', { method: 'HEAD', headers: window.getApiHeaders ? window.getApiHeaders() : {} })
+                .then(function (r) {
+                  if (r.ok) showPdf();
+                  else showError('Conteúdo não disponível para este ato.');
+                });
+            })
+            .catch(function (err) {
+              showError(err.message || 'Erro ao carregar o conteúdo.');
+            });
+        }
+
+        btnAnterior.addEventListener('click', function () { goToPage(currentIndex - 1); });
+        btnProximo.addEventListener('click', function () { goToPage(currentIndex + 1); });
+        document.addEventListener('keydown', function (e) {
+          if (e.key === 'ArrowLeft') { e.preventDefault(); goToPage(currentIndex - 1); }
+          if (e.key === 'ArrowRight') { e.preventDefault(); goToPage(currentIndex + 1); }
+        });
+      })();
+    </script>
+  </body>
+</html>

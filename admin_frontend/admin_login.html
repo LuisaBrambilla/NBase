@@ -25,6 +25,13 @@
 
       <form id="loginForm" class="auth-form">
         <label>
+          Cliente
+          <select name="layout" id="layoutSelect" class="auth-select">
+            <option value="tecbis">Tecbis</option>
+            <option value="arespcj">ARES-CPJ</option>
+          </select>
+        </label>
+        <label>
           Email
           <input type="email" name="email" required />
         </label>
@@ -57,9 +64,7 @@
     </div>
 
     <script src="./theme.js"></script>
-    <script>
-      window.API_BASE_URL = "/api";
-    </script>
+    <script src="./config.js"></script>
     <script src="./admin_auth.js"></script>
   </body>
 </html>

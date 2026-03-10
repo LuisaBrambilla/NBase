@@ -52,7 +52,46 @@ const atualizarForcaSenha = () => {
   strengthLabel.textContent = `Força: ${label}`;
 };
 
+// Na página de login: troca logo e tema conforme o cliente selecionado (antes de logar)
+function atualizarLogoETemaLogin() {
+  const layoutSelect = document.getElementById("layoutSelect");
+  const authLogos = document.querySelector(".auth-logos");
+  if (!layoutSelect || !authLogos) return;
+  const imgs = authLogos.querySelectorAll(".auth-logo");
+  const valor = (layoutSelect.value || "tecbis").toLowerCase();
+  if (valor === "arespcj") {
+    document.documentElement.classList.add("client-arespcj");
+    if (imgs[0]) {
+      imgs[0].src = "logo_arespcj.png";
+      imgs[0].alt = "ARES-PCJ";
+      imgs[0].style.display = "";
+    }
+    imgs.forEach(function (el) {
+      if (el.classList.contains("secondary")) el.style.display = "none";
+    });
+  } else {
+    document.documentElement.classList.remove("client-arespcj");
+    if (imgs[0]) {
+      imgs[0].src = "Gen360.png";
+      imgs[0].alt = "Gen360";
+      imgs[0].style.display = "";
+    }
+    if (imgs[1]) {
+      imgs[1].src = "Gen360 - Monocromatico.png";
+      imgs[1].alt = "Gen360";
+      imgs[1].style.display = "";
+    }
+  }
+}
+
 if (loginForm) {
+  const layoutSelect = document.getElementById("layoutSelect");
+  if (layoutSelect) {
+    var ultimoCliente = localStorage.getItem("admin_client");
+    if (ultimoCliente === "arespcj") layoutSelect.value = "arespcj";
+    atualizarLogoETemaLogin();
+    layoutSelect.addEventListener("change", atualizarLogoETemaLogin);
+  }
   let mfaStep = false;
   loginForm.addEventListener("submit", async (event) => {
     event.preventDefault();
@@ -63,6 +102,7 @@ if (loginForm) {
       const payload = {
         email: formData.get("email"),
         senha: formData.get("senha"),
+        layout: formData.get("layout") || "tecbis",
       };
       if (mfaStep) {
         payload.mfa_code = formData.get("mfa_code");
@@ -74,8 +114,28 @@ if (loginForm) {
         body: JSON.stringify(payload),
       });
 
-      const data = await response.json();
+      const text = await response.text();
+      const contentType = (response.headers.get("Content-Type") || "").toLowerCase();
+      const pareceHtml = contentType.includes("text/html") || (text && text.trimStart().startsWith("<"));
+
+      if (pareceHtml) {
+        throw new Error(
+          "A API não respondeu em JSON. Abra o site pelo mesmo servidor da API (ex.: http://localhost:8000/admin_login.html) após rodar: uvicorn api.main:root_app --reload --port 8000"
+        );
+      }
+
+      let data = {};
+      try {
+        data = text ? JSON.parse(text) : {};
+      } catch (_) {
+        throw new Error("Resposta inválida do servidor. Verifique se a API está a correr (uvicorn api.main:root_app).");
+      }
       if (!response.ok) {
+        if (response.status === 405) {
+          throw new Error(
+            "Method Not Allowed: o servidor não aceita POST neste endereço. Verifique se a API está a correr com root_app (uvicorn api.main:root_app) e se o proxy permite POST em /api."
+          );
+        }
         throw new Error(data.detail || "Falha no login");
       }
       if (data.mfa_required) {
@@ -85,6 +145,8 @@ if (loginForm) {
         return;
       }
       localStorage.setItem("admin_token", data.access_token);
+      const layout = data.layout || payload.layout || "tecbis";
+      localStorage.setItem("admin_client", layout);
       setMessage(loginMsg, "Login realizado com sucesso.", "success");
       window.location.href = "./admin_home.html";
     } catch (err) {
