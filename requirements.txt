@@ -2,6 +2,7 @@ fastapi
 uvicorn
 pydantic
 psycopg2-binary
+python-dotenv
 pdf2docx
 python-docx
 pytesseract
