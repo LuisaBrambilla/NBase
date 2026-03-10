@@ -1,0 +1,15 @@
+#!/bin/sh
+# Regista um deploy no audit_log após cada 'git pull' (merge).
+# Instalação na VPS (uma vez):
+#   cp scripts/git-hooks/post-merge .git/hooks/post-merge
+#   chmod +x .git/hooks/post-merge
+#
+# Quando fizeres 'git pull' no servidor, o deploy é registado automaticamente.
+
+ROOT="$(git rev-parse --show-toplevel)"
+cd "$ROOT" || exit 0
+if [ -f venv/bin/activate ]; then
+  . venv/bin/activate
+  python scripts/registrar_deploy.py 2>/dev/null || true
+fi
+exit 0
