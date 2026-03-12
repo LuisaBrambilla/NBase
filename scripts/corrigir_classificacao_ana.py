@@ -119,7 +119,7 @@ def main() -> int:
     try:
         with conn.cursor() as cur:
             # Obter um admin_id para marcar verificacao_admin_id (normas aprovadas em lote)
-            cur.execute("SELECT id FROM admin WHERE ativo = true LIMIT 1")
+            cur.execute("SELECT id FROM admins WHERE ativo = true LIMIT 1")
             row = cur.fetchone()
             admin_id = str(row["id"]) if row else None
             if not admin_id:
