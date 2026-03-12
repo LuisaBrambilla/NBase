@@ -15,6 +15,14 @@ const btnAnterior = document.getElementById("verificacaoAnterior");
 const btnProxima = document.getElementById("verificacaoProxima");
 const btnAprovar = document.getElementById("btnAprovar");
 const btnRecusar = document.getElementById("btnRecusar");
+const btnFonteTecbis = document.getElementById("verificacaoFonteTecbis");
+const btnFonteArespcj = document.getElementById("verificacaoFonteArespcj");
+const wrapOrigem = document.getElementById("verificacaoOrigemWrap");
+const btnOrigemTodas = document.getElementById("verificacaoOrigemTodas");
+const btnOrigemGovbr = document.getElementById("verificacaoOrigemGovbr");
+const btnOrigemArespcj = document.getElementById("verificacaoOrigemArespcj");
+
+let origemFilter = "";
 
 const vData = document.getElementById("vData");
 const vAno = document.getElementById("vAno");
@@ -137,8 +145,11 @@ async function carregarPendentes() {
     { Authorization: `Bearer ${token}` },
     window.getApiHeaders ? window.getApiHeaders() : {}
   );
+  const client = getClientAtual();
+  const params = new URLSearchParams({ limit: "300", offset: "0", somente_pendentes: "true" });
+  if (client === "tecbis" && origemFilter) params.set("origem", origemFilter);
   const response = await fetch(
-    `${API_BASE}/admin/verificacao/normas?limit=300&offset=0&somente_pendentes=true`,
+    `${API_BASE}/admin/verificacao/normas?${params.toString()}`,
     { headers, cache: "no-store" }
   );
   if (!response.ok) {
@@ -158,8 +169,10 @@ async function carregarResumo() {
     { Authorization: `Bearer ${token}` },
     window.getApiHeaders ? window.getApiHeaders() : {}
   );
+  const params = new URLSearchParams({ limit: "8", dias: String(filtroResumoDias) });
+  if (getClientAtual() === "tecbis" && origemFilter) params.set("origem", origemFilter);
   const response = await fetch(
-    `${API_BASE}/admin/verificacao/resumo?limit=8&dias=${filtroResumoDias}`,
+    `${API_BASE}/admin/verificacao/resumo?${params.toString()}`,
     { headers, cache: "no-store" }
   );
   if (!response.ok) {
@@ -191,6 +204,50 @@ function marcarFiltroResumoAtivo() {
     const dias = Number(btn.dataset.dias || "0");
     btn.classList.toggle("ativo", dias === filtroResumoDias);
   });
+}
+
+function getClientAtual() {
+  return localStorage.getItem("admin_client") || "tecbis";
+}
+
+function marcarFonteAtiva() {
+  const client = getClientAtual();
+  if (btnFonteTecbis) btnFonteTecbis.classList.toggle("ativo", client === "tecbis");
+  if (btnFonteArespcj) btnFonteArespcj.classList.toggle("ativo", client === "arespcj");
+  if (wrapOrigem) wrapOrigem.style.display = client === "tecbis" ? "" : "none";
+}
+
+function marcarOrigemAtiva() {
+  if (btnOrigemTodas) btnOrigemTodas.classList.toggle("ativo", !origemFilter);
+  if (btnOrigemGovbr) btnOrigemGovbr.classList.toggle("ativo", origemFilter === "govbr");
+  if (btnOrigemArespcj) btnOrigemArespcj.classList.toggle("ativo", origemFilter === "arespcj");
+}
+
+async function trocarFonte(client) {
+  if (client !== "tecbis" && client !== "arespcj") return;
+  try {
+    localStorage.setItem("admin_client", client);
+    if (client === "arespcj") origemFilter = "";
+    marcarFonteAtiva();
+    marcarOrigemAtiva();
+    setMensagem("A carregar " + (client === "tecbis" ? "todas as normas (Tecbis)…" : "só ARES-PCJ…"));
+    await Promise.all([carregarPendentes(), carregarResumo()]);
+    setMensagem(client === "tecbis" ? "Mostrando todas as normas (ANA + ARES-PCJ). Use «Origem» para filtrar." : "Mostrando só resoluções ARES-PCJ.", "success");
+  } catch (err) {
+    setMensagem(err.message, "error");
+  }
+}
+
+async function trocarOrigem(origem) {
+  origemFilter = origem || "";
+  marcarOrigemAtiva();
+  try {
+    setMensagem("A carregar " + (origemFilter === "govbr" ? "normas ANA (govbr)…" : origemFilter === "arespcj" ? "normas ARES-PCJ…" : "todas…"));
+    await Promise.all([carregarPendentes(), carregarResumo()]);
+    setMensagem(origemFilter === "govbr" ? "Mostrando só normas ANA (govbr)." : origemFilter === "arespcj" ? "Mostrando só ARES-PCJ." : "Mostrando todas as origens.", "success");
+  } catch (err) {
+    setMensagem(err.message, "error");
+  }
 }
 
 filtroResumoBtns.forEach((btn) => {
@@ -277,6 +334,19 @@ btnRecusar.addEventListener("click", async () => {
     setMensagem(err.message, "error");
   }
 });
+
+marcarFonteAtiva();
+marcarOrigemAtiva();
+if (wrapOrigem && getClientAtual() === "arespcj") wrapOrigem.style.display = "none";
+if (btnFonteTecbis) {
+  btnFonteTecbis.addEventListener("click", () => trocarFonte("tecbis"));
+}
+if (btnFonteArespcj) {
+  btnFonteArespcj.addEventListener("click", () => trocarFonte("arespcj"));
+}
+if (btnOrigemTodas) btnOrigemTodas.addEventListener("click", () => trocarOrigem(""));
+if (btnOrigemGovbr) btnOrigemGovbr.addEventListener("click", () => trocarOrigem("govbr"));
+if (btnOrigemArespcj) btnOrigemArespcj.addEventListener("click", () => trocarOrigem("arespcj"));
 
 Promise.all([carregarPendentes(), carregarResumo()]).catch((err) =>
   setMensagem(err.message, "error")

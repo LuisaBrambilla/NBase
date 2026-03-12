@@ -21,5 +21,5 @@ fi
 
 echo ">>> Registar deploy no audit_log"
 . venv/bin/activate
-python scripts/registrar_deploy.py "$@"
+python3 scripts/registrar_deploy.py "$@"
 echo ">>> Deploy concluído."

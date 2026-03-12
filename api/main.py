@@ -596,11 +596,12 @@ def admin_verificacao_normas(
     limit: int = 50,
     offset: int = 0,
     somente_pendentes: bool = True,
+    origem: Optional[str] = None,
     admin: Dict[str, Any] = Depends(require_admin),
 ) -> Dict[str, Any]:
     _ = admin
     return queries.listar_normas_para_verificacao(
-        limit=limit, offset=offset, somente_pendentes=somente_pendentes
+        limit=limit, offset=offset, somente_pendentes=somente_pendentes, origem=origem
     )
 
 
@@ -608,12 +609,13 @@ def admin_verificacao_normas(
 def admin_verificacao_resumo(
     limit: int = 12,
     dias: Optional[int] = 30,
+    origem: Optional[str] = None,
     admin: Dict[str, Any] = Depends(require_admin),
 ) -> Dict[str, Any]:
     _ = admin
     if dias is not None and dias not in {1, 7, 30}:
         raise HTTPException(status_code=400, detail="Filtro de período inválido.")
-    return queries.resumo_verificacoes(limit=limit, dias=dias)
+    return queries.resumo_verificacoes(limit=limit, dias=dias, origem=origem)
 
 
 @app.get("/admin/audit-log")

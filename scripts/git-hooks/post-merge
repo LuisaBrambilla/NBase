@@ -10,6 +10,6 @@ ROOT="$(git rev-parse --show-toplevel)"
 cd "$ROOT" || exit 0
 if [ -f venv/bin/activate ]; then
   . venv/bin/activate
-  python scripts/registrar_deploy.py 2>/dev/null || true
+  python3 scripts/registrar_deploy.py 2>/dev/null || true
 fi
 exit 0

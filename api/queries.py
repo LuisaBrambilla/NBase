@@ -940,7 +940,11 @@ def garantir_colunas_verificacao() -> None:
 
 
 def listar_normas_para_verificacao(
-    *, limit: int = 50, offset: int = 0, somente_pendentes: bool = True
+    *,
+    limit: int = 50,
+    offset: int = 0,
+    somente_pendentes: bool = True,
+    origem: str | None = None,
 ) -> Dict[str, Any]:
     # Pendentes = ainda não validadas por um usuário (sem verificacao_admin_id) ou status explícito pendente
     where_pendentes = (
@@ -948,12 +952,20 @@ def listar_normas_para_verificacao(
         if somente_pendentes
         else ""
     )
+    where_origem = " AND origem = %s" if origem else ""
+    params_count: List[Any] = []
+    params_lista: List[Any] = []
+    if origem:
+        params_count.append(origem)
+        params_lista.append(origem)
+    params_lista.extend([limit, offset])
 
     sql_count = f"""
         SELECT COUNT(*) AS total
         FROM norma
         WHERE 1=1
         {where_pendentes}
+        {where_origem}
     """
     sql_lista = f"""
         SELECT
@@ -974,6 +986,7 @@ def listar_normas_para_verificacao(
         FROM norma
         WHERE 1=1
         {where_pendentes}
+        {where_origem}
         ORDER BY ano DESC, numero DESC
         LIMIT %s OFFSET %s
     """
@@ -981,9 +994,9 @@ def listar_normas_para_verificacao(
     conn = get_connection()
     try:
         with conn.cursor() as cur:
-            cur.execute(sql_count)
+            cur.execute(sql_count, params_count)
             total = cur.fetchone()["total"]
-            cur.execute(sql_lista, (limit, offset))
+            cur.execute(sql_lista, params_lista)
             itens = cur.fetchall()
     finally:
         conn.close()
@@ -991,14 +1004,21 @@ def listar_normas_para_verificacao(
     return {"total": total, "itens": itens}
 
 
-def resumo_verificacoes(*, limit: int = 12, dias: int | None = None) -> Dict[str, Any]:
+def resumo_verificacoes(
+    *, limit: int = 12, dias: int | None = None, origem: str | None = None
+) -> Dict[str, Any]:
     where_periodo = ""
+    where_origem = " AND origem = %s" if origem else ""
     params_totais: list[Any] = []
-    params_lista: list[Any] = [limit]
+    params_lista: list[Any] = []
+    if origem:
+        params_totais.append(origem)
+        params_lista.append(origem)
     if dias is not None and dias > 0:
-        where_periodo = "AND verificacao_em >= (now() - (%s * interval '1 day'))"
+        where_periodo = " AND verificacao_em >= (now() - (%s * interval '1 day'))"
         params_totais.append(dias)
-        params_lista = [dias, limit]
+        params_lista.append(dias)
+    params_lista.append(limit)
 
     conn = get_connection()
     try:
@@ -1011,9 +1031,10 @@ def resumo_verificacoes(*, limit: int = 12, dias: int | None = None) -> Dict[str
                 FROM norma
                 WHERE verificacao_status IN ('aprovado', 'consertado', 'recusado')
                   AND verificacao_admin_id IS NOT NULL
+                  {where_origem}
                   {where_periodo}
                 GROUP BY COALESCE(verificacao_status, 'pendente')
-                """.format(where_periodo=where_periodo),
+                """.format(where_origem=where_origem, where_periodo=where_periodo),
                 params_totais,
             )
             rows = cur.fetchall()
@@ -1033,10 +1054,11 @@ def resumo_verificacoes(*, limit: int = 12, dias: int | None = None) -> Dict[str
                 FROM norma
                 WHERE verificacao_status = 'aprovado'
                   AND verificacao_admin_id IS NOT NULL
+                  {where_origem}
                   {where_periodo}
                 ORDER BY verificacao_em DESC NULLS LAST, atualizado_em DESC
                 LIMIT %s
-                """.format(where_periodo=where_periodo),
+                """.format(where_origem=where_origem, where_periodo=where_periodo),
                 params_lista,
             )
             aprovadas = cur.fetchall()
@@ -1055,10 +1077,11 @@ def resumo_verificacoes(*, limit: int = 12, dias: int | None = None) -> Dict[str
                 FROM norma
                 WHERE verificacao_status = 'consertado'
                   AND verificacao_admin_id IS NOT NULL
+                  {where_origem}
                   {where_periodo}
                 ORDER BY verificacao_em DESC NULLS LAST, atualizado_em DESC
                 LIMIT %s
-                """.format(where_periodo=where_periodo),
+                """.format(where_origem=where_origem, where_periodo=where_periodo),
                 params_lista,
             )
             consertadas = cur.fetchall()
