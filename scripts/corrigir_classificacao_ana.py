@@ -147,6 +147,21 @@ def main() -> int:
                                 updated_status += cur.rowcount
                 print(f"Status atualizados: {updated_status}")
 
+                # Marcar como aprovadas todas as demais normas ANA (govbr) ainda pendentes,
+                # para que as 548 apareçam em Verificações aprovadas (as 8 que não estavam nas listas).
+                if not dry and admin_id:
+                    cur.execute(
+                        """
+                        UPDATE norma
+                        SET verificacao_status = 'aprovado', verificacao_em = now(), verificacao_admin_id = %s
+                        WHERE origem = %s AND (verificacao_status IS NULL OR verificacao_status = 'pendente')
+                        """,
+                        (admin_id, ORIGEM),
+                    )
+                    restantes = cur.rowcount
+                    if restantes:
+                        print(f"Normas ANA (govbr) restantes marcadas como aprovadas: {restantes}")
+
             updated_assunto = 0
             if not args.status_only:
                 for assunto_nome, pares in ASSUNTOS_MAP.items():
