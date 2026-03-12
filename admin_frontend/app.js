@@ -286,12 +286,9 @@ function renderResumoChart(data) {
   resumoChart.appendChild(
     renderResumoGrupo("Período", periodos, (item) => item.label)
   );
-  var client = localStorage.getItem("admin_client");
-  if (client !== "arespcj") {
-    resumoChart.appendChild(
-      renderResumoGrupo("Normas por órgão", orgaos, (item) => item.label)
-    );
-  }
+  resumoChart.appendChild(
+    renderResumoGrupo("Normas por órgão", orgaos, (item) => item.label)
+  );
 }
 
 async function carregarResumo() {

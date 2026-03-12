@@ -37,14 +37,14 @@ app.add_middleware(
 # Cadastro de admin é só pelo backend (scripts/criar_admin.py); não expor register no site
 _ADMIN_PUBLIC_PATHS = {"/admin/login"}
 
-# Clientes/layouts: tecbis = acesso a todos os arquivos; cada outro cliente só vê sua origem
+# Gen360 (Tecbis) = banco principal. Projeto resolucoes_arespcj usa X-Client: arespcj = banco normas_arespcj.
 VALID_CLIENTS = {"tecbis", "arespcj"}
-CLIENT_TO_ORIGEM = {"tecbis": None, "arespcj": "arespcj"}  # None = sem filtro
+CLIENT_TO_ORIGEM = {"tecbis": None, "arespcj": "arespcj"}
 
 
 @app.middleware("http")
 async def client_middleware(request: Request, call_next):
-    """Lê o header X-Client (tecbis | arespcj) e define request.state.client. Se arespcj, usa banco normas_arespcj."""
+    """Lê X-Client: tecbis (banco principal) ou arespcj (banco normas_arespcj)."""
     raw = (request.headers.get("X-Client") or "").strip().lower()
     if raw == "ares-pcj":
         raw = "arespcj"
@@ -78,7 +78,7 @@ class AdminLoginPayload(BaseModel):
     email: str
     senha: str
     mfa_code: Optional[str] = None
-    layout: Optional[str] = "tecbis"  # tecbis = todos os clientes; arespcj = só ARES-PCJ
+    layout: Optional[str] = "tecbis"
 
 
 class AdminRegisterConfirmPayload(BaseModel):
@@ -199,26 +199,25 @@ def health() -> Dict[str, str]:
 
 @app.get("/site-config")
 def site_config(request: Request) -> Dict[str, Any]:
-    """Layout do site por cliente (Tecbis / ARES-PCJ). Replicado no banco normas_arespcj."""
+    """Layout por cliente: Tecbis (Gen360) ou ARES-PCJ (resolucoes_arespcj)."""
     client = getattr(request.state, "client", None) or "tecbis"
     cfg = queries.obter_site_config(client)
     if cfg is not None:
         return {
-            "client": cfg.get("client"),
+            "client": cfg.get("client", client),
             "logo_path": cfg.get("logo_path"),
             "subtitle_visible": bool(cfg.get("subtitle_visible", True)),
             "site_name": cfg.get("site_name"),
             "login_query": cfg.get("login_query"),
             "theme_class": cfg.get("theme_class"),
         }
-    # Fallback se a tabela site_config ainda não existir
     if client == "arespcj":
         return {
             "client": "arespcj",
             "logo_path": "logo_arespcj.png",
             "subtitle_visible": False,
             "site_name": "ARES-PCJ",
-            "login_query": "client=arespcj",
+            "login_query": None,
             "theme_class": "client-arespcj",
         }
     return {
@@ -633,7 +632,6 @@ def admin_audit_log(
     client = getattr(request.state, "client", "tecbis")
     if client not in VALID_CLIENTS:
         raise HTTPException(status_code=403, detail="Acesso ao log de auditoria não disponível para este cliente.")
-    # Tecbis: sem filtro por client (vê todos). ARES-PCJ: só entradas com client=arespcj.
     client_filter = client if client == "arespcj" else None
     return queries.listar_audit_log(
         limit=limit, offset=offset, action=action, admin_id=admin_id, desde=desde, ate=ate, client=client_filter

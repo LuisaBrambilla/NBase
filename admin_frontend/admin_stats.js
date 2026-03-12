@@ -25,20 +25,7 @@ const statsSummaryNote = document.getElementById("statsSummaryNote");
 const statsSubtitle = document.getElementById("statsSubtitle");
 const statsError = document.getElementById("statsError");
 
-const isArespcj = () => (localStorage.getItem("admin_client") || "tecbis") === "arespcj";
-
 function getChartColors() {
-  if (isArespcj()) {
-    return {
-      vigente: "rgba(48, 111, 213, 0.85)",
-      vigente_alterado: "rgba(74, 180, 239, 0.85)",
-      nao_vigente: "rgba(26, 45, 188, 0.85)",
-      primary: "rgba(48, 111, 213, 0.75)",
-      primaryBar: "rgba(48, 111, 213, 0.7)",
-      positivo: "rgba(61, 146, 226, 0.85)",
-      negativo: "rgba(26, 45, 188, 0.85)",
-    };
-  }
   return {
     vigente: "rgba(66, 133, 244, 0.85)",
     vigente_alterado: "rgba(246, 196, 45, 0.85)",
@@ -217,7 +204,7 @@ const atualizarCharts = (data) => {
 
   const semFiltros = !filtros.ano && !filtros.status && !filtros.assunto;
   const porAnoStatus =
-    semFiltros && !isArespcj()
+    semFiltros
       ? Object.entries(REFERENCIA_POR_ANO_STATUS).flatMap(([ano, grupos]) =>
           Object.entries(grupos).map(([status, total]) => ({
             ano: Number(ano),
@@ -638,9 +625,7 @@ if (clearFiltersBtn) {
 }
 
 if (statsSubtitle) {
-  statsSubtitle.textContent = isArespcj()
-    ? "Visualização dos atos da ARES-PCJ com filtros interativos."
-    : "Visualização dos atos da ANA com filtros interativos.";
+  statsSubtitle.textContent = "Visualização dos atos da ANA com filtros interativos.";
 }
 
 carregarEstatisticas();

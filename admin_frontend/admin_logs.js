@@ -9,17 +9,15 @@
   }
 
   const client = localStorage.getItem("admin_client") || "tecbis";
-  if (client !== "tecbis" && client !== "arespcj") {
-    document.getElementById("logsError").textContent = "O registo de atividade está disponível apenas nos layouts Tecbis e ARES-PCJ.";
+  if (client !== "tecbis") {
+    document.getElementById("logsError").textContent = "O registo de atividade está disponível apenas no layout Tecbis.";
     document.getElementById("logsError").classList.remove("hidden");
     document.querySelector(".panel-body").style.display = "none";
     return;
   }
   var subtitleEl = document.getElementById("logsSubtitle");
   if (subtitleEl) {
-    subtitleEl.textContent = client === "arespcj"
-      ? "Log de ações na plataforma (layout ARES-PCJ). Login, alterações de perfil, senha e verificações de normas."
-      : "Log de ações na plataforma (layout Tecbis – centro de dados). Login, alterações de perfil, senha e verificações de normas.";
+    subtitleEl.textContent = "Log de ações na plataforma (centro de dados). Login, alterações de perfil, senha e verificações de normas.";
   }
 
   const logsLoading = document.getElementById("logsLoading");
