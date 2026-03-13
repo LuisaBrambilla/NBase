@@ -63,9 +63,10 @@ function renderArvore(data) {
 
 async function carregarOrgaosArvore(ano) {
   try {
+    const headers = window.getApiHeaders ? window.getApiHeaders() : {};
     const response = await fetch(
       `${API_BASE_URL}/public/orgaos-arvore?ano=${ano}&limit=8`,
-      { cache: "no-store" }
+      { cache: "no-store", headers }
     );
     if (!response.ok) {
       throw new Error("Erro ao carregar órgãos.");
@@ -81,8 +82,10 @@ async function carregarOrgaosArvore(ano) {
 
 async function carregarAnos() {
   try {
+    const headers = window.getApiHeaders ? window.getApiHeaders() : {};
     const response = await fetch(`${API_BASE_URL}/public/filtros`, {
       cache: "no-store",
+      headers,
     });
     if (!response.ok) {
       throw new Error("Erro ao carregar anos.");

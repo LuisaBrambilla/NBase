@@ -18,6 +18,7 @@
           <a class="top-nav-link" href="./admin_home.html">Consulta de Normas</a>
           <a class="top-nav-link" href="./admin_stats.html">Estatísticas</a>
           <a class="top-nav-link active" href="./admin_resolucao.html">Verificação de Normas</a>
+          <a class="top-nav-link" id="navLogs" href="./admin_logs.html">Logs</a>
         </div>
         <div class="gov-actions">
           <div class="profile-menu-wrapper">
@@ -56,6 +57,11 @@
         <div class="panel panel-wide verificacao-card">
           <div class="panel-header">
             <span class="panel-title">Revisão manual</span>
+            <span class="verificacao-origem" id="verificacaoOrigemWrap">
+              <span class="verificacao-fonte-label">Origem:</span>
+              <button type="button" id="verificacaoOrigemTodas" class="verificacao-fonte-btn" data-origem="" title="Todas as origens">Todas</button>
+              <button type="button" id="verificacaoOrigemGovbr" class="verificacao-fonte-btn" data-origem="govbr" title="Normas ANA (gov.br)">ANA (govbr)</button>
+            </span>
             <span id="verificacaoContador" class="panel-tag">0 pendentes</span>
           </div>
           <div class="panel-body">
@@ -165,6 +171,7 @@
     <script src="./config.js"></script>
     <script src="./admin_header.js"></script>
     <script src="./admin_session.js"></script>
+    <script src="./admin_common.js?v=2"></script>
     <script src="./admin_resolucao.js"></script>
   </body>
 </html>

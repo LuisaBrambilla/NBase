@@ -8,6 +8,7 @@ const logoutTop = document.getElementById("adminLogoutTop");
 if (logoutTop) {
   logoutTop.addEventListener("click", () => {
     localStorage.removeItem("admin_token");
-    window.location.href = "./index.html";
+    localStorage.removeItem("admin_client");
+    window.location.href = "./admin_login.html";
   });
 }

@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <base href="/" />
+    <title>Consulta de Normas - ANA</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body class="no-sidebar">
+    <header class="gov-header">
+      <div class="gov-header-top">
+        <img class="gov-logo" src="./Gen360.png" alt="Gen360" />
+        <div class="gov-nav">
+          <a class="top-nav-link active" href="/consulta">Consulta de Normas</a>
+        </div>
+        <div class="gov-actions">
+          <a href="./admin_login.html" class="btn btn-secondary">Entrar</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="container dashboard-shell">
+      <section class="dashboard">
+        <div class="dashboard-top">
+          <div>
+            <h1>Consulta</h1>
+            <p class="subtitle subtitle-ana">
+              Pesquisa entre atos do órgão público ANA (Agência Nacional de
+              Águas e Saneamento Básico)
+            </p>
+          </div>
+          <div class="top-actions"></div>
+        </div>
+
+        <div class="dashboard-grid">
+          <div id="filtersOverlay" class="filters-inline">
+            <div class="filters-panel filters-panel-inline">
+              <div class="filters-header">
+                <h3>Filtros da consulta</h3>
+              </div>
+              <form id="filtrosForm" class="filter-row">
+                <div class="filter-group">
+                  <label for="fAnoMin">Ano</label>
+                  <div class="range-field">
+                    <div class="range-inputs">
+                      <input
+                        id="fAnoMinInput"
+                        type="number"
+                        inputmode="numeric"
+                        placeholder="De"
+                      />
+                      <span class="range-sep">—</span>
+                      <input
+                        id="fAnoMaxInput"
+                        type="number"
+                        inputmode="numeric"
+                        placeholder="Até"
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div class="filter-group">
+                  <label for="fNumero">Número</label>
+                  <input id="fNumero" type="number" placeholder="Ex.: 123" />
+                </div>
+                <div class="filter-group">
+                  <label for="fStatus">Status</label>
+                  <select id="fStatus">
+                    <option value="">Todos</option>
+                    <option value="vigente">Vigente</option>
+                    <option value="nao_vigente">Revogado</option>
+                    <option value="vigente_alterado">Vigente alterado</option>
+                  </select>
+                  <input id="fAssunto" type="hidden" />
+                </div>
+                <div class="filter-group search">
+                  <label for="fEmenta">Ementa</label>
+                  <input id="fEmenta" type="text" placeholder="Buscar na ementa..." />
+                </div>
+                <div class="filter-group search">
+                  <label for="fTexto">Corpo</label>
+                  <input id="fTexto" type="text" placeholder="Buscar no corpo do texto..." />
+                </div>
+                <div class="filter-group">
+                  <label for="fOrdenar">Ordenar</label>
+                  <select id="fOrdenar">
+                    <option value="data:desc">Data (mais recente)</option>
+                    <option value="data:asc">Data (mais antiga)</option>
+                    <option value="ano:desc">Ano (desc)</option>
+                    <option value="ano:asc">Ano (asc)</option>
+                    <option value="numero:asc">Número (asc)</option>
+                    <option value="numero:desc">Número (desc)</option>
+                    <option value="ementa:asc">Ementa (A-Z)</option>
+                    <option value="assunto:asc">Assunto (A-Z)</option>
+                  </select>
+                </div>
+                <div class="filter-actions">
+                  <button id="filtrarBtn" class="btn" type="submit">Filtrar</button>
+                  <button id="limparBtn" class="btn btn-secondary" type="button">
+                    Limpar
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          <div class="panel panel-wide">
+            <div class="panel-header">
+              <span class="panel-title">Assuntos</span>
+            </div>
+            <div class="panel-body">
+              <div id="assuntosList" class="assuntos-list"></div>
+            </div>
+          </div>
+
+          <div class="panel panel-table">
+            <div class="panel-header">
+              <span class="panel-title">Consulta de Atos - DODF</span>
+            </div>
+            <div class="panel-body">
+              <div class="table-wrapper">
+                <table id="atosTable">
+                  <thead>
+                    <tr>
+                      <th>Data</th>
+                      <th>Ano</th>
+                      <th>Número</th>
+                      <th>Ementa</th>
+                      <th>Assunto</th>
+                      <th>Status</th>
+                      <th>Link</th>
+                    </tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+              <div class="pagination">
+                <button id="prevPage" class="btn btn-secondary" type="button">
+                  Anterior
+                </button>
+                <span id="pageInfo" class="page-info">Página 1 de 1</span>
+                <button id="nextPage" class="btn btn-secondary" type="button">
+                  Próxima
+                </button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+    </main>
+
+    <script src="./theme.js"></script>
+    <script src="./config.js?v=2"></script>
+    <script src="./app.js"></script>
+  </body>
+</html>

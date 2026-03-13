@@ -34,6 +34,7 @@ const assuntosList = document.getElementById("assuntosList");
 const resumoChart = document.getElementById("resumoChart");
 const statAtos = document.getElementById("statAtos");
 const statAssuntos = document.getElementById("statAssuntos");
+const statOrgaos = document.getElementById("statOrgaos");
 
 const PAGE_SIZE = 50;
 let currentPage = 1;
@@ -157,9 +158,10 @@ function atualizarPaginacao() {
 
 async function fetchAtos(params = "", offset = 0) {
   const query = params ? `&${params}` : "";
+  const headers = Object.assign({}, window.getApiHeaders ? window.getApiHeaders() : {});
   const response = await fetch(
     `${API_BASE_URL}/public/atos?limit=${PAGE_SIZE}&offset=${offset}${query}`,
-    { cache: "no-store" }
+    { cache: "no-store", headers }
   );
   if (!response.ok) {
     throw new Error("Erro ao carregar atos.");
@@ -192,9 +194,15 @@ function renderAtos(data) {
 
   itens.forEach((item) => {
     const row = document.createElement("tr");
-    const link = item.url_oficial
-      ? item.url_oficial
-      : `${API_BASE_URL}/public/atos/${item.id}`;
+    // Resoluções ANA (gov.br): Abrir leva ao site oficial; demais abrem o viewer interno
+    const isAna = (item.origem || "").toLowerCase() === "govbr";
+    const urlOficialAna = item.url_oficial && item.url_oficial.trim();
+    const linkAbrir = isAna
+      ? (urlOficialAna || (item.ano != null && item.numero != null
+          ? "https://www.gov.br/ana/pt-br/legislacao/resolucoes/resolucoes-regulatorias/" + item.ano + "/" + item.numero
+          : "https://www.gov.br/ana/pt-br/legislacao/resolucoes/resolucoes-regulatorias"))
+      : (window.APP_BASE_PATH || "") + "conteudo_viewer.html?id=" + encodeURIComponent(item.id);
+    const pdfUrl = `${API_BASE_URL}/public/atos/${item.id}/pdf`;
     row.innerHTML = `
       <td>${formatarDataBr(item.data_publicacao)}</td>
       <td>${item.ano ?? "—"}</td>
@@ -202,7 +210,10 @@ function renderAtos(data) {
       <td>${primeiraParagrafo(item.ementa)}</td>
       <td>${item.assunto ?? "—"}</td>
       <td>${formatarStatus(item.status)}</td>
-      <td><a class="table-link" href="${link}" target="_blank" rel="noopener">Abrir</a></td>
+      <td>
+        <a class="table-link" href="${linkAbrir}" target="_blank" rel="noopener">Abrir</a>
+        <a class="table-link" href="${pdfUrl}" target="_blank" rel="noopener">PDF</a>
+      </td>
     `;
     tabela.appendChild(row);
   });
@@ -264,6 +275,10 @@ function renderResumoChart(data) {
     label: item.periodo ? String(item.periodo).slice(0, 7) : "—",
     total: Number(item.total || 0),
   }));
+  const orgaos = (data.orgaos || []).map((item) => ({
+    label: String(item.orgao || "").trim() || "—",
+    total: Number(item.total || 0),
+  }));
 
   resumoChart.appendChild(
     renderResumoGrupo("Ano", anos, (item) => item.label)
@@ -271,12 +286,17 @@ function renderResumoChart(data) {
   resumoChart.appendChild(
     renderResumoGrupo("Período", periodos, (item) => item.label)
   );
+  resumoChart.appendChild(
+    renderResumoGrupo("Normas por órgão", orgaos, (item) => item.label)
+  );
 }
 
 async function carregarResumo() {
   try {
+    const headers = window.getApiHeaders ? window.getApiHeaders() : {};
     const response = await fetch(`${API_BASE_URL}/public/resumo`, {
       cache: "no-store",
+      headers,
     });
     if (!response.ok) {
       throw new Error("Erro ao carregar resumo.");
@@ -285,6 +305,7 @@ async function carregarResumo() {
 
     if (statAtos) statAtos.textContent = data.totais?.atos ?? "—";
     if (statAssuntos) statAssuntos.textContent = data.totais?.assuntos ?? "—";
+    if (statOrgaos) statOrgaos.textContent = data.totais?.orgaos ?? "—";
 
     renderResumoChart(data);
   } catch (err) {
@@ -352,8 +373,10 @@ async function carregarAtosComParams(params, page) {
 }
 
 async function carregarFiltros() {
+  const headers = window.getApiHeaders ? window.getApiHeaders() : {};
   const response = await fetch(`${API_BASE_URL}/public/filtros`, {
     cache: "no-store",
+    headers,
   });
   if (!response.ok) {
     throw new Error("Erro ao carregar filtros.");
@@ -524,7 +547,9 @@ carregarFiltros()
     fOrdenar.value = "data:desc";
     return carregarAtos();
   })
-  .then(() => carregarResumo())
+  .then(() => {
+    if (resumoChart) return carregarResumo();
+  })
   .catch((err) => {
     tabela.innerHTML = `<tr><td colspan='7'>${err.message}</td></tr>`;
   });

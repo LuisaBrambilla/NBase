@@ -1,28 +1,57 @@
+/**
+ * Configuração por ambiente (Gen360).
+ * Valores padrão: Hostinger (mesma origem).
+ * No deploy para Azure (ou outro ambiente), o pipeline pode substituir este arquivo
+ * ou injetar antes: window.ENV_API_BASE_URL e opcionalmente window.ENV_APP_BASE_PATH.
+ */
 (function () {
-  const DEFAULT_REMOTE_API = "https://app-gen360-api.azurewebsites.net";
-  const host = window.location.hostname || "";
-  const protocol = window.location.protocol || "";
-  const isLocalHost = ["localhost", "127.0.0.1", "::1"].includes(host);
-  const isFileProtocol = protocol === "file:";
-  const isAzureStatic = /\.web\.core\.windows\.net$/i.test(host);
+  "use strict";
+  // Gen360: apenas layout Tecbis (biblioteca de normas). ARES-PCJ tem projeto/layout próprio.
+  try {
+    localStorage.setItem("admin_client", "tecbis");
+  } catch (e) {}
 
-  let configured = (window.API_BASE_URL || "").trim();
+  window.API_BASE_URL = (window.ENV_API_BASE_URL != null && window.ENV_API_BASE_URL !== "") ? window.ENV_API_BASE_URL : "/api";
+  window.APP_BASE_PATH = window.ENV_APP_BASE_PATH != null ? window.ENV_APP_BASE_PATH : "";
+  window.getApiHeaders = function () {
+    return { "X-Client": "tecbis" };
+  };
 
-  if (!configured) {
-    configured = isLocalHost || isFileProtocol ? "http://localhost:8000" : DEFAULT_REMOTE_API;
-  }
-
-  if (configured.startsWith("/")) {
-    if (isLocalHost && window.location.origin) {
-      configured = `${window.location.origin}${configured}`;
-    } else {
-      configured = DEFAULT_REMOTE_API;
+  function applyLayoutFromConfig(cfg) {
+    if (!cfg) return;
+    var theme = cfg.theme_class;
+    if (theme) document.documentElement.classList.add(theme);
+    if (cfg.subtitle_visible === false) {
+      var subAna = document.querySelector(".subtitle-ana");
+      if (subAna) subAna.style.display = "none";
+    }
+    if (cfg.site_name && document.title && document.title.indexOf("ANA") !== -1) {
+      document.title = document.title.replace("ANA", cfg.site_name);
+    }
+    if (cfg.logo_path) {
+      var name = cfg.site_name || "Gen360";
+      document.querySelectorAll(".gov-logo").forEach(function (el) {
+        el.src = cfg.logo_path;
+        el.alt = name;
+      });
     }
   }
 
-  if (isAzureStatic && !isLocalHost) {
-    configured = DEFAULT_REMOTE_API;
+  function runLayout() {
+    var apiBase = window.API_BASE_URL || "/api";
+    fetch(apiBase + "/site-config", { headers: { "X-Client": "tecbis" } })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (data) {
+        if (data && (data.logo_path != null || data.theme_class != null || data.site_name != null)) {
+          applyLayoutFromConfig(data);
+        }
+      })
+      .catch(function () {});
   }
 
-  window.API_BASE_URL = configured.replace(/\/+$/, "");
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", runLayout);
+  } else {
+    runLayout();
+  }
 })();

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin - Registo de Atividade (Tecbis)</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body class="no-sidebar">
+    <header class="gov-header">
+      <div class="gov-header-top">
+        <img class="gov-logo" src="./Gen360.png" alt="Gen360" />
+        <div class="gov-nav">
+          <a class="top-nav-link" href="./admin_home.html">Consulta de Normas</a>
+          <a class="top-nav-link" href="./admin_stats.html">Estatísticas</a>
+          <a class="top-nav-link" href="./admin_resolucao.html">Verificação de Normas</a>
+          <a class="top-nav-link" id="navLogs" href="./admin_logs.html">Logs</a>
+        </div>
+        <div class="gov-actions">
+          <div class="profile-menu-wrapper">
+            <button id="profileMenuToggle" class="avatar-menu-toggle" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="profileMenu">
+              <span class="login-avatar"></span>
+            </button>
+            <div id="profileMenu" class="profile-menu" hidden>
+              <a class="profile-menu-link" href="./admin_profile.html?v=2">⚙️ Configurações de Perfil</a>
+            </div>
+          </div>
+          <button id="adminLogoutTop" class="btn btn-secondary" type="button">Sair</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="container dashboard-shell">
+      <section class="dashboard">
+        <div class="dashboard-top">
+          <div>
+            <h1>Registo de Atividade</h1>
+            <p class="subtitle" id="logsSubtitle">
+              Log de ações na plataforma (layout Tecbis – centro de dados). Login, alterações de perfil, senha e verificações de normas.
+            </p>
+          </div>
+        </div>
+
+        <div id="logsError" class="stats-error hidden" role="alert"></div>
+
+        <div class="panel panel-wide">
+          <div class="panel-header">
+            <span class="panel-title">Logs</span>
+            <div class="filter-row" style="flex-wrap: wrap; gap: 8px;">
+              <select id="filterAction" class="filter-select">
+                <option value="">Todas as ações</option>
+                <option value="login">Login</option>
+                <option value="perfil_atualizado">Perfil atualizado</option>
+                <option value="senha_alterada">Senha alterada</option>
+                <option value="verificacao_norma">Verificação de norma</option>
+                <option value="deploy">Deploy</option>
+              </select>
+              <input type="datetime-local" id="filterDesde" class="filter-input" title="Desde" />
+              <input type="datetime-local" id="filterAte" class="filter-input" title="Até" />
+              <button type="button" id="btnFiltrar" class="btn btn-primary">Filtrar</button>
+              <button type="button" id="btnAtualizar" class="btn btn-secondary">Atualizar</button>
+            </div>
+          </div>
+          <div class="panel-body">
+            <div id="logsLoading" class="loading-inline">A carregar…</div>
+            <div id="logsBox" class="logs-box hidden">
+              <table class="table table-striped" aria-label="Registo de atividade">
+                <thead>
+                  <tr>
+                    <th>Data / Hora</th>
+                    <th>Utilizador</th>
+                    <th>Ação</th>
+                    <th>Entidade</th>
+                    <th>Detalhes</th>
+                    <th>Layout / IP</th>
+                  </tr>
+                </thead>
+                <tbody id="logsTableBody"></tbody>
+              </table>
+              <div id="logsPagination" class="pagination-wrap"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script src="./config.js"></script>
+    <script src="./theme.js"></script>
+    <script src="./admin_header.js"></script>
+    <script src="./admin_session.js"></script>
+    <script src="./admin_common.js?v=2"></script>
+    <script src="./admin_logs.js"></script>
+  </body>
+</html>

@@ -15,6 +15,11 @@ const btnAnterior = document.getElementById("verificacaoAnterior");
 const btnProxima = document.getElementById("verificacaoProxima");
 const btnAprovar = document.getElementById("btnAprovar");
 const btnRecusar = document.getElementById("btnRecusar");
+const wrapOrigem = document.getElementById("verificacaoOrigemWrap");
+const btnOrigemTodas = document.getElementById("verificacaoOrigemTodas");
+const btnOrigemGovbr = document.getElementById("verificacaoOrigemGovbr");
+
+let origemFilter = "";
 
 const vData = document.getElementById("vData");
 const vAno = document.getElementById("vAno");
@@ -66,13 +71,14 @@ function renderListaResumo(elemento, itensResumo, vazio) {
   itensResumo.forEach((item) => {
     const li = document.createElement("li");
     li.className = "verificacao-resumo-item";
+    const orgaoLabel = item.orgao ? ` · ${item.orgao}` : "";
     li.innerHTML = `
       <span class="verificacao-resumo-linha">
         <strong>${item.ano ?? "—"}/${item.numero ?? "—"}</strong>
         <small>${formatarData(item.data_publicacao)}</small>
       </span>
       <span class="verificacao-resumo-linha">
-        <em>${formatarStatus(item.status)}</em>
+        <em>${formatarStatus(item.status)}${orgaoLabel}</em>
       </span>
     `;
     elemento.appendChild(li);
@@ -132,14 +138,15 @@ function render() {
 
 async function carregarPendentes() {
   setMensagem("Carregando normas pendentes...");
+  const headers = Object.assign(
+    { Authorization: `Bearer ${token}` },
+    window.getApiHeaders ? window.getApiHeaders() : {}
+  );
+  const params = new URLSearchParams({ limit: "300", offset: "0", somente_pendentes: "true" });
+  if (origemFilter) params.set("origem", origemFilter);
   const response = await fetch(
-    `${API_BASE}/admin/verificacao/normas?limit=300&offset=0&somente_pendentes=true`,
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-      cache: "no-store",
-    }
+    `${API_BASE}/admin/verificacao/normas?${params.toString()}`,
+    { headers, cache: "no-store" }
   );
   if (!response.ok) {
     throw new Error("Erro ao carregar normas para verificação.");
@@ -154,14 +161,15 @@ async function carregarPendentes() {
 }
 
 async function carregarResumo() {
+  const headers = Object.assign(
+    { Authorization: `Bearer ${token}` },
+    window.getApiHeaders ? window.getApiHeaders() : {}
+  );
+  const params = new URLSearchParams({ limit: "8", dias: String(filtroResumoDias) });
+  if (origemFilter) params.set("origem", origemFilter);
   const response = await fetch(
-    `${API_BASE}/admin/verificacao/resumo?limit=8&dias=${filtroResumoDias}`,
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-      cache: "no-store",
-    }
+    `${API_BASE}/admin/verificacao/resumo?${params.toString()}`,
+    { headers, cache: "no-store" }
   );
   if (!response.ok) {
     throw new Error("Erro ao carregar resumo das verificações.");
@@ -192,6 +200,23 @@ function marcarFiltroResumoAtivo() {
     const dias = Number(btn.dataset.dias || "0");
     btn.classList.toggle("ativo", dias === filtroResumoDias);
   });
+}
+
+function marcarOrigemAtiva() {
+  if (btnOrigemTodas) btnOrigemTodas.classList.toggle("ativo", !origemFilter);
+  if (btnOrigemGovbr) btnOrigemGovbr.classList.toggle("ativo", origemFilter === "govbr");
+}
+
+async function trocarOrigem(origem) {
+  origemFilter = origem || "";
+  marcarOrigemAtiva();
+  try {
+    setMensagem("A carregar " + (origemFilter === "govbr" ? "normas ANA (govbr)…" : "todas…"));
+    await Promise.all([carregarPendentes(), carregarResumo()]);
+    setMensagem(origemFilter === "govbr" ? "Mostrando só normas ANA (govbr)." : "Mostrando todas as origens.", "success");
+  } catch (err) {
+    setMensagem(err.message, "error");
+  }
 }
 
 filtroResumoBtns.forEach((btn) => {
@@ -227,12 +252,13 @@ async function decidir(decisao) {
   if (!item) return;
 
   setMensagem("Salvando decisão...");
+  const headers = Object.assign(
+    { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    window.getApiHeaders ? window.getApiHeaders() : {}
+  );
   const response = await fetch(`${API_BASE}/admin/verificacao/${item.id}/decisao`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
+    headers,
     body: JSON.stringify(payloadAtual(decisao)),
   });
 
@@ -277,6 +303,10 @@ btnRecusar.addEventListener("click", async () => {
     setMensagem(err.message, "error");
   }
 });
+
+marcarOrigemAtiva();
+if (btnOrigemTodas) btnOrigemTodas.addEventListener("click", () => trocarOrigem(""));
+if (btnOrigemGovbr) btnOrigemGovbr.addEventListener("click", () => trocarOrigem("govbr"));
 
 Promise.all([carregarPendentes(), carregarResumo()]).catch((err) =>
   setMensagem(err.message, "error")

@@ -18,6 +18,7 @@
           <a class="top-nav-link active" href="./admin_home.html">Consulta de Normas</a>
           <a class="top-nav-link" href="./admin_stats.html">Estatísticas</a>
           <a class="top-nav-link" href="./admin_resolucao.html">Verificação de Normas</a>
+          <a class="top-nav-link" id="navLogs" href="./admin_logs.html">Logs</a>
         </div>
         <div class="gov-actions">
           <div class="profile-menu-wrapper">
@@ -47,7 +48,7 @@
         <div class="dashboard-top">
           <div>
             <h1>Consulta</h1>
-            <p class="subtitle">
+            <p class="subtitle subtitle-ana">
               Pesquisa entre atos do órgão público ANA (Agência Nacional de
               Águas e Saneamento Básico)
             </p>
@@ -142,6 +143,10 @@
                   <span class="stat-label">Assuntos ativos</span>
                   <strong id="statAssuntos" class="stat-value">—</strong>
                 </div>
+                <div class="stat stat-orgaos">
+                  <span class="stat-label">Órgãos</span>
+                  <strong id="statOrgaos" class="stat-value">—</strong>
+                </div>
               </div>
               <div id="resumoChart" class="resumo-chart"></div>
             </div>
@@ -195,7 +200,11 @@
 
     <script src="./theme.js"></script>
     <script src="./config.js"></script>
+    <script>
+      window.API_BASE_URL = window.API_BASE_URL || "/api";
+    </script>
     <script src="./admin_header.js"></script>
+    <script src="./admin_common.js?v=2"></script>
     <script src="./app.js?v=2"></script>
     <script src="./admin_session.js"></script>
   </body>

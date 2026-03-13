@@ -63,6 +63,7 @@ if (loginForm) {
       const payload = {
         email: formData.get("email"),
         senha: formData.get("senha"),
+        layout: "tecbis",
       };
       if (mfaStep) {
         payload.mfa_code = formData.get("mfa_code");
@@ -74,8 +75,28 @@ if (loginForm) {
         body: JSON.stringify(payload),
       });
 
-      const data = await response.json();
+      const text = await response.text();
+      const contentType = (response.headers.get("Content-Type") || "").toLowerCase();
+      const pareceHtml = contentType.includes("text/html") || (text && text.trimStart().startsWith("<"));
+
+      if (pareceHtml) {
+        throw new Error(
+          "A API não respondeu em JSON. Abra o site pelo mesmo servidor da API (ex.: http://localhost:8000/admin_login.html) após rodar: uvicorn api.main:root_app --reload --port 8000"
+        );
+      }
+
+      let data = {};
+      try {
+        data = text ? JSON.parse(text) : {};
+      } catch (_) {
+        throw new Error("Resposta inválida do servidor. Verifique se a API está a correr (uvicorn api.main:root_app).");
+      }
       if (!response.ok) {
+        if (response.status === 405) {
+          throw new Error(
+            "Method Not Allowed: o servidor não aceita POST neste endereço. Verifique se a API está a correr com root_app (uvicorn api.main:root_app) e se o proxy permite POST em /api."
+          );
+        }
         throw new Error(data.detail || "Falha no login");
       }
       if (data.mfa_required) {
@@ -85,6 +106,7 @@ if (loginForm) {
         return;
       }
       localStorage.setItem("admin_token", data.access_token);
+      localStorage.setItem("admin_client", "tecbis");
       setMessage(loginMsg, "Login realizado com sucesso.", "success");
       window.location.href = "./admin_home.html";
     } catch (err) {

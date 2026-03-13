@@ -2,5 +2,12 @@ fastapi
 uvicorn
 pydantic
 psycopg2-binary
-gunicorn
 python-dotenv
+pdf2docx
+python-docx
+pytesseract
+Pillow
+qrcode
+mammoth
+beautifulsoup4
+pdfservices-sdk

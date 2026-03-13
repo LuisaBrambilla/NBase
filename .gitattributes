@@ -1,0 +1,6 @@
+# Fins de linha: Git normaliza conforme o sistema (CRLF no Windows, LF no Linux/macOS).
+* text=auto
+
+# Scripts shell: LF no repositório para correrem bem em Linux.
+*.sh text eol=lf
+*.ps1 text eol=lf

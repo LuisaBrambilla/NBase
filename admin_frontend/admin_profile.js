@@ -6,10 +6,11 @@ function getToken() {
 
 function authHeaders() {
   const t = getToken();
-  return {
+  const base = {
     "Content-Type": "application/json",
     ...(t ? { Authorization: `Bearer ${t}` } : {}),
   };
+  return Object.assign(base, window.getApiHeaders ? window.getApiHeaders() : {});
 }
 
 let meData = { nome: null, email: "", mfa_enabled: false };
@@ -21,7 +22,11 @@ function showEdit(field) {
   const display = document.getElementById("profile" + field.charAt(0).toUpperCase() + field.slice(1) + "Display");
   if (form) form.classList.remove("hidden");
   if (display) display.classList.add("hidden");
-  if (field === "mfa") setupMfaForm();
+  if (field === "mfa") {
+    const hint = document.getElementById("profileMfaHint");
+    if (hint) hint.classList.add("hidden");
+    setupMfaForm();
+  }
 }
 
 function hideEdit(field) {
@@ -29,6 +34,10 @@ function hideEdit(field) {
   const display = document.getElementById("profile" + field.charAt(0).toUpperCase() + field.slice(1) + "Display");
   if (form) form.classList.add("hidden");
   if (display) display.classList.remove("hidden");
+  if (field === "mfa") {
+    const hint = document.getElementById("profileMfaHint");
+    if (hint) hint.classList.remove("hidden");
+  }
 }
 
 function setMessage(el, text, type) {
@@ -48,11 +57,21 @@ async function loadMe() {
     document.getElementById("profileNomeDisplay").textContent = data.nome || "—";
     document.getElementById("profileEmailDisplay").textContent = data.email || "—";
     document.getElementById("profileSenhaDisplay").textContent = "••••••••";
-    document.getElementById("profileMfaDisplay").textContent = data.mfa_enabled ? "Ativo" : "Inativo";
+    const mfaDisplay = document.getElementById("profileMfaDisplay");
+    if (mfaDisplay) mfaDisplay.textContent = data.mfa_enabled ? "Ativo" : "Inativo";
+    const mfaHint = document.getElementById("profileMfaHint");
+    if (mfaHint) {
+      mfaHint.textContent = data.mfa_enabled
+        ? "Perdeu o celular ou o app? Clique no lápis e escolha \"Trocar autenticador\" para configurar outro (não precisa do antigo)."
+        : "O autenticador em duas etapas é configurado no primeiro acesso.";
+    }
   } catch (e) {
     document.getElementById("profileNomeDisplay").textContent = "—";
     document.getElementById("profileEmailDisplay").textContent = "—";
-    document.getElementById("profileMfaDisplay").textContent = "—";
+    const mfaDisplay = document.getElementById("profileMfaDisplay");
+    if (mfaDisplay) mfaDisplay.textContent = "—";
+    const mfaHint = document.getElementById("profileMfaHint");
+    if (mfaHint) mfaHint.textContent = "";
   }
 }
 
@@ -147,37 +166,79 @@ document.querySelector(".profile-card-save[data-save='senha']")?.addEventListene
 
 function setupMfaForm() {
   const statusText = document.getElementById("profileMfaStatusText");
+  const choiceDiv = document.getElementById("profileMfaChoice");
   const setupDiv = document.getElementById("profileMfaSetup");
   const disableDiv = document.getElementById("profileMfaDisable");
+  const cadastroBloco = document.getElementById("profileMfaCadastroBloco");
   const saveBtn = document.getElementById("profileMfaSave");
   if (!statusText || !setupDiv || !disableDiv) return;
+
+  choiceDiv?.classList.add("hidden");
+  setupDiv.classList.add("hidden");
+  disableDiv.classList.add("hidden");
+  cadastroBloco?.classList.add("hidden");
+  saveBtn?.classList.add("hidden");
+  document.getElementById("profileMfaCode").value = "";
+  document.getElementById("profileMfaSenha").value = "";
+  window._mfaSecret = null;
+  window._mfaUri = null;
+
   if (meData.mfa_enabled) {
-    statusText.textContent = "Desativar autenticador em duas etapas. Digite sua senha abaixo.";
-    setupDiv.classList.add("hidden");
-    disableDiv.classList.remove("hidden");
-    saveBtn.textContent = "Desativar";
+    statusText.textContent = "O que deseja fazer?";
+    choiceDiv?.classList.remove("hidden");
+    const cancelBtn = document.getElementById("profileMfaCancel");
+    if (cancelBtn) cancelBtn.textContent = "Cancelar";
   } else {
-    statusText.textContent = "Ativar autenticador. Gere o QR Code e informe o código do app.";
-    setupDiv.classList.remove("hidden");
-    disableDiv.classList.add("hidden");
-    saveBtn.textContent = "Ativar";
-    fetch(`${API_BASE}/admin/me/mfa/setup`, { headers: authHeaders(), method: "POST" })
-      .then((r) => r.json())
-      .then((data) => {
-        window._mfaSecret = data.mfa_secret;
-        window._mfaUri = data.otpauth_uri;
-        const canvas = document.getElementById("profileMfaQr");
-        if (canvas && data.otpauth_uri && window.QRious) {
-          new QRious({ element: canvas, value: data.otpauth_uri, size: 180 });
-        }
-      })
-      .catch(() => {});
+    statusText.textContent = "";
+    cadastroBloco?.classList.remove("hidden");
+    const cancelBtn = document.getElementById("profileMfaCancel");
+    if (cancelBtn) cancelBtn.textContent = "Fechar";
   }
 }
 
+function mfaShowDesativar() {
+  document.getElementById("profileMfaChoice").classList.add("hidden");
+  document.getElementById("profileMfaDisable").classList.remove("hidden");
+  const saveBtn = document.getElementById("profileMfaSave");
+  if (saveBtn) {
+    saveBtn.textContent = "Desativar";
+    saveBtn.classList.remove("hidden");
+    saveBtn.dataset.mfaAction = "disable";
+  }
+}
+
+function mfaShowTrocar() {
+  document.getElementById("profileMfaChoice").classList.add("hidden");
+  document.getElementById("profileMfaSetup").classList.remove("hidden");
+  const saveBtn = document.getElementById("profileMfaSave");
+  if (saveBtn) {
+    saveBtn.textContent = "Trocar";
+    saveBtn.classList.remove("hidden");
+    saveBtn.dataset.mfaAction = "trocar";
+  }
+  fetch(`${API_BASE}/admin/me/mfa/setup`, { headers: authHeaders(), method: "POST" })
+    .then((r) => r.json())
+    .then((data) => {
+      window._mfaSecret = data.mfa_secret;
+      window._mfaUri = data.otpauth_uri;
+      const canvas = document.getElementById("profileMfaQr");
+      if (canvas && data.otpauth_uri && window.QRious) {
+        new QRious({ element: canvas, value: data.otpauth_uri, size: 180 });
+      }
+    })
+    .catch(() => {});
+}
+
+document.getElementById("profileMfaBtnDesativar")?.addEventListener("click", mfaShowDesativar);
+document.getElementById("profileMfaBtnTrocar")?.addEventListener("click", mfaShowTrocar);
+
 document.querySelector(".profile-card-save[data-save='mfa']")?.addEventListener("click", async () => {
   const saveBtn = document.getElementById("profileMfaSave");
-  if (meData.mfa_enabled) {
+  const setupDiv = document.getElementById("profileMfaSetup");
+  const disableDiv = document.getElementById("profileMfaDisable");
+  const action = saveBtn?.dataset.mfaAction;
+
+  if (meData.mfa_enabled && (action === "disable" || disableDiv?.classList.contains("hidden") === false)) {
     const senha = document.getElementById("profileMfaSenha")?.value || "";
     if (!senha) return alert("Digite sua senha para desativar o MFA.");
     try {
@@ -190,14 +251,19 @@ document.querySelector(".profile-card-save[data-save='mfa']")?.addEventListener(
       if (!res.ok) throw new Error(data.detail || "Erro ao desativar");
       meData.mfa_enabled = false;
       document.getElementById("profileMfaDisplay").textContent = "Inativo";
+      const mfaHint = document.getElementById("profileMfaHint");
+      if (mfaHint) mfaHint.textContent = "O autenticador em duas etapas é configurado no primeiro acesso.";
       hideEdit("mfa");
     } catch (e) {
       alert(e.message || "Erro ao desativar MFA.");
     }
-  } else {
+    return;
+  }
+
+  if (meData.mfa_enabled && (action === "trocar" || setupDiv?.classList.contains("hidden") === false)) {
     const code = (document.getElementById("profileMfaCode")?.value || "").trim();
     const secret = window._mfaSecret;
-    if (!secret || !code) return alert("Gere o QR Code e informe o código de 6 dígitos.");
+    if (!secret || !code) return alert("Escaneie o QR Code e informe o código de 6 dígitos.");
     try {
       const res = await fetch(`${API_BASE}/admin/me/mfa/confirm`, {
         method: "POST",
@@ -206,8 +272,9 @@ document.querySelector(".profile-card-save[data-save='mfa']")?.addEventListener(
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.detail || "Código inválido");
-      meData.mfa_enabled = true;
       document.getElementById("profileMfaDisplay").textContent = "Ativo";
+      const mfaHint = document.getElementById("profileMfaHint");
+      if (mfaHint) mfaHint.textContent = "Para resetar o autenticador (ex.: perdeu o celular ou trocou de app), clique no lápis para desativar ou trocar por um novo.";
       hideEdit("mfa");
       window._mfaSecret = null;
       window._mfaUri = null;
