@@ -6,7 +6,6 @@ __pycache__
 .deployment
 *.md
 data/
-admin_frontend/
 scripts/
 *.csv
 *.json
