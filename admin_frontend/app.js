@@ -379,7 +379,9 @@ async function carregarFiltros() {
     headers,
   });
   if (!response.ok) {
-    throw new Error("Erro ao carregar filtros.");
+    const status = response.status;
+    const msg = status === 500 ? "Erro no servidor (banco de dados ou API)." : (status === 404 ? "API não encontrada. Verifique o endereço da API." : "Erro ao carregar filtros.");
+    throw new Error(msg + " (HTTP " + status + ")");
   }
   const data = await response.json();
 

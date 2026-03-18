@@ -11,7 +11,14 @@
     localStorage.setItem("admin_client", "tecbis");
   } catch (e) {}
 
-  window.API_BASE_URL = (window.ENV_API_BASE_URL != null && window.ENV_API_BASE_URL !== "") ? window.ENV_API_BASE_URL : "/api";
+  var defaultApiBase = "/api";
+  if (typeof window !== "undefined" && window.location && window.location.hostname) {
+    var h = window.location.hostname;
+    if (h.indexOf("azurewebsites.net") !== -1 && h.indexOf("app-gen360-api") === -1) {
+      defaultApiBase = "https://app-gen360-api.azurewebsites.net";
+    }
+  }
+  window.API_BASE_URL = (window.ENV_API_BASE_URL != null && window.ENV_API_BASE_URL !== "") ? window.ENV_API_BASE_URL : defaultApiBase;
   window.APP_BASE_PATH = window.ENV_APP_BASE_PATH != null ? window.ENV_APP_BASE_PATH : "";
   window.getApiHeaders = function () {
     return { "X-Client": "tecbis" };
