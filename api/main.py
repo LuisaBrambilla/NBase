@@ -197,6 +197,22 @@ def health() -> Dict[str, str]:
     return {"status": "ok"}
 
 
+@app.get("/health/db")
+def health_db() -> Dict[str, Any]:
+    """Diagnóstico: confirma ligação ao PostgreSQL e quantas linhas a API vê na tabela norma."""
+    try:
+        conn = db_module.get_connection()
+        try:
+            with conn.cursor() as cur:
+                cur.execute("SELECT COUNT(*) AS total FROM norma")
+                total = cur.fetchone()["total"]
+            return {"database_connected": True, "norma_count": total}
+        finally:
+            conn.close()
+    except Exception as e:
+        return {"database_connected": False, "error": str(e)}
+
+
 @app.get("/site-config")
 def site_config(request: Request) -> Dict[str, Any]:
     """Layout por cliente: Tecbis (Gen360) ou ARES-PCJ (resolucoes_arespcj)."""
