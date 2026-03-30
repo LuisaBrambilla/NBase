@@ -635,9 +635,15 @@ def admin_verificacao_normas(
     admin: Dict[str, Any] = Depends(require_admin),
 ) -> Dict[str, Any]:
     _ = admin
-    return queries.listar_normas_para_verificacao(
-        limit=limit, offset=offset, somente_pendentes=somente_pendentes, origem=origem
-    )
+    try:
+        return queries.listar_normas_para_verificacao(
+            limit=limit, offset=offset, somente_pendentes=somente_pendentes, origem=origem
+        )
+    except Exception as exc:
+        raise HTTPException(
+            status_code=500,
+            detail=f"listar_normas_para_verificacao: {exc!s}",
+        ) from exc
 
 
 @app.get("/admin/verificacao/resumo")

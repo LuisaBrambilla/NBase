@@ -1,8 +1,11 @@
 from typing import Any, Dict, List, Tuple
 import json
+import logging
 import re
 
 from db.db import get_connection
+
+logger = logging.getLogger(__name__)
 
 BASE_TOTAL_CONSOLIDADO = 229
 BASE_IDADE_MEDIA_ANOS = 5.78
@@ -906,37 +909,48 @@ def listar_audit_log(
         conn.close()
 
 
-def garantir_colunas_verificacao() -> None:
-    conn = get_connection()
+def garantir_colunas_verificacao(*, tolerar_falha: bool = False) -> None:
+    """
+    Cria colunas de verificação se não existirem.
+    Em Azure, o user da app muitas vezes não tem permissão ALTER; use tolerar_falha=True
+    nos pedidos HTTP para continuar quando as colunas já foram criadas por migração/DBA.
+    """
     try:
-        with conn.cursor() as cur:
-            cur.execute(
-                """
-                ALTER TABLE norma
-                ADD COLUMN IF NOT EXISTS verificacao_status TEXT
-                """
-            )
-            cur.execute(
-                """
-                ALTER TABLE norma
-                ADD COLUMN IF NOT EXISTS verificacao_descricao TEXT
-                """
-            )
-            cur.execute(
-                """
-                ALTER TABLE norma
-                ADD COLUMN IF NOT EXISTS verificacao_em TIMESTAMP
-                """
-            )
-            cur.execute(
-                """
-                ALTER TABLE norma
-                ADD COLUMN IF NOT EXISTS verificacao_admin_id UUID
-                """
-            )
-            conn.commit()
-    finally:
-        conn.close()
+        conn = get_connection()
+        try:
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    ALTER TABLE norma
+                    ADD COLUMN IF NOT EXISTS verificacao_status TEXT
+                    """
+                )
+                cur.execute(
+                    """
+                    ALTER TABLE norma
+                    ADD COLUMN IF NOT EXISTS verificacao_descricao TEXT
+                    """
+                )
+                cur.execute(
+                    """
+                    ALTER TABLE norma
+                    ADD COLUMN IF NOT EXISTS verificacao_em TIMESTAMP
+                    """
+                )
+                cur.execute(
+                    """
+                    ALTER TABLE norma
+                    ADD COLUMN IF NOT EXISTS verificacao_admin_id UUID
+                    """
+                )
+                conn.commit()
+        finally:
+            conn.close()
+    except Exception as exc:
+        if tolerar_falha:
+            logger.warning("garantir_colunas_verificacao (ignorado): %s", exc)
+            return
+        raise
 
 
 def listar_normas_para_verificacao(
@@ -946,7 +960,7 @@ def listar_normas_para_verificacao(
     somente_pendentes: bool = True,
     origem: str | None = None,
 ) -> Dict[str, Any]:
-    garantir_colunas_verificacao()
+    garantir_colunas_verificacao(tolerar_falha=True)
 
     # Pendentes = ainda não validadas por um usuário (sem verificacao_admin_id) ou status explícito pendente
     where_pendentes = (
@@ -1010,7 +1024,7 @@ def resumo_verificacoes(
     *, limit: int = 12, dias: int | None = None, origem: str | None = None
 ) -> Dict[str, Any]:
     # Garante colunas mesmo se o lifespan da API falhou (ex.: cold start no Azure).
-    garantir_colunas_verificacao()
+    garantir_colunas_verificacao(tolerar_falha=True)
 
     where_periodo = ""
     where_origem = " AND origem = %s" if origem else ""

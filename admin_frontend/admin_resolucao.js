@@ -156,10 +156,22 @@ async function carregarPendentes() {
     `${API_BASE}/admin/verificacao/normas?${params.toString()}`,
     { headers, cache: "no-store" }
   );
-  if (!response.ok) {
-    throw new Error("Erro ao carregar normas para verificação.");
+  const textNormas = await response.text();
+  let dataNormas = {};
+  try {
+    dataNormas = textNormas ? JSON.parse(textNormas) : {};
+  } catch (_) {
+    dataNormas = {};
   }
-  const data = await response.json();
+  if (!response.ok) {
+    const det = dataNormas.detail || dataNormas.message || textNormas?.slice(0, 300);
+    throw new Error(
+      det
+        ? `Erro ao carregar normas: ${typeof det === "string" ? det : JSON.stringify(det)}`
+        : "Erro ao carregar normas para verificação."
+    );
+  }
+  const data = dataNormas;
   itens = data.itens || [];
   indiceAtual = 0;
   render();
