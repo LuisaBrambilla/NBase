@@ -176,10 +176,22 @@ async function carregarResumo() {
     `${API_BASE}/admin/verificacao/resumo?${params.toString()}`,
     { headers, cache: "no-store" }
   );
-  if (!response.ok) {
-    throw new Error("Erro ao carregar resumo das verificações.");
+  const textResumo = await response.text();
+  let dataResumo = {};
+  try {
+    dataResumo = textResumo ? JSON.parse(textResumo) : {};
+  } catch (_) {
+    dataResumo = {};
   }
-  const data = await response.json();
+  if (!response.ok) {
+    const det = dataResumo.detail || dataResumo.message || textResumo?.slice(0, 200);
+    throw new Error(
+      det
+        ? `Erro ao carregar resumo: ${typeof det === "string" ? det : JSON.stringify(det)}`
+        : "Erro ao carregar resumo das verificações."
+    );
+  }
+  const data = dataResumo;
 
   if (elAprovadasTotal) {
     elAprovadasTotal.textContent = String(data.totais?.aprovado ?? 0);

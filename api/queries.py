@@ -946,6 +946,8 @@ def listar_normas_para_verificacao(
     somente_pendentes: bool = True,
     origem: str | None = None,
 ) -> Dict[str, Any]:
+    garantir_colunas_verificacao()
+
     # Pendentes = ainda não validadas por um usuário (sem verificacao_admin_id) ou status explícito pendente
     where_pendentes = (
         "AND (COALESCE(verificacao_status, 'pendente') = 'pendente' OR verificacao_admin_id IS NULL)"
@@ -1007,6 +1009,9 @@ def listar_normas_para_verificacao(
 def resumo_verificacoes(
     *, limit: int = 12, dias: int | None = None, origem: str | None = None
 ) -> Dict[str, Any]:
+    # Garante colunas mesmo se o lifespan da API falhou (ex.: cold start no Azure).
+    garantir_colunas_verificacao()
+
     where_periodo = ""
     where_origem = " AND origem = %s" if origem else ""
     params_totais: list[Any] = []
@@ -1056,7 +1061,7 @@ def resumo_verificacoes(
                   AND verificacao_admin_id IS NOT NULL
                   {where_origem}
                   {where_periodo}
-                ORDER BY verificacao_em DESC NULLS LAST, atualizado_em DESC
+                ORDER BY verificacao_em DESC NULLS LAST, ano DESC, numero DESC
                 LIMIT %s
                 """.format(where_origem=where_origem, where_periodo=where_periodo),
                 params_lista,
@@ -1079,7 +1084,7 @@ def resumo_verificacoes(
                   AND verificacao_admin_id IS NOT NULL
                   {where_origem}
                   {where_periodo}
-                ORDER BY verificacao_em DESC NULLS LAST, atualizado_em DESC
+                ORDER BY verificacao_em DESC NULLS LAST, ano DESC, numero DESC
                 LIMIT %s
                 """.format(where_origem=where_origem, where_periodo=where_periodo),
                 params_lista,

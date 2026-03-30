@@ -650,7 +650,13 @@ def admin_verificacao_resumo(
     _ = admin
     if dias is not None and dias not in {0, 1, 7, 30}:
         raise HTTPException(status_code=400, detail="Filtro de período inválido.")
-    return queries.resumo_verificacoes(limit=limit, dias=dias, origem=origem)
+    try:
+        return queries.resumo_verificacoes(limit=limit, dias=dias, origem=origem)
+    except Exception as exc:
+        raise HTTPException(
+            status_code=500,
+            detail=f"resumo_verificacoes: {exc!s}",
+        ) from exc
 
 
 @app.get("/admin/audit-log")
