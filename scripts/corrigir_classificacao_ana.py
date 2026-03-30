@@ -1,13 +1,19 @@
 """
 Atualiza em massa status (vigente/nao_vigente/vigente_alterado) e assunto das normas
-ANA (origem govbr) conforme listas fornecidas. Marca as normas como já aprovadas
-(verificacao_status='aprovado') para aparecerem em Verificações aprovadas.
+ANA conforme classificação GEN360 (listas por ano + assuntos 1–9).
+
+Afeta linhas com orgao = 'ANA' e origem em ('govbr', 'manual', 'dou'), para funcionar
+tanto após importação gov.br como com dados de exemplo ou DOU.
+
+Se existir a coluna verificacao_status (migração 004), marca verificacao_status='aprovado'
+nas atualizações de status; caso contrário só altera o campo status.
 
 Uso (na raiz do projeto, venv ativo):
   python scripts/corrigir_classificacao_ana.py
-  python scripts/corrigir_classificacao_ana.py --dry-run   # só mostra o que faria
+  python scripts/corrigir_classificacao_ana.py --dry-run
   python scripts/corrigir_classificacao_ana.py --status-only
   python scripts/corrigir_classificacao_ana.py --assunto-only
+  python scripts/corrigir_classificacao_ana.py --origem govbr   # só uma origem
 """
 
 import argparse
@@ -21,7 +27,55 @@ if str(ROOT) not in sys.path:
 
 from db.db import get_connection
 
-ORIGEM = "govbr"
+ORGAO_ANA = "ANA"
+
+
+def imprimir_diagnostico_sem_match(cur, origens: tuple[str, ...]) -> None:
+    """Quando nenhum (ano,numero) das listas bate no banco, explica o porquê."""
+    print("\n--- Diagnóstico (porque deu 0?) ---")
+    cur.execute(
+        """
+        SELECT orgao, origem, COUNT(*) AS c
+        FROM norma
+        GROUP BY orgao, origem
+        ORDER BY orgao, origem
+        """
+    )
+    rows = cur.fetchall()
+    if not rows:
+        print("A tabela norma está vazia (ou sem acesso).")
+        return
+    print("Normas no banco (orgao × origem):")
+    for r in rows:
+        print(f"  {r['orgao']!r} | {r['origem']!r} | {r['c']} registo(s)")
+    cur.execute(
+        """
+        SELECT COUNT(*) AS c FROM norma
+        WHERE orgao = %s AND origem = ANY(%s)
+        """,
+        (ORGAO_ANA, list(origens)),
+    )
+    n_ana = cur.fetchone()["c"]
+    print(
+        f"\nLinhas com orgao={ORGAO_ANA!r} e origem em {origens}: {n_ana}\n"
+        "O script só atualiza pares (ano, número) que existem nessa combinação.\n"
+        "Se ainda não importaram as resoluções ANA (gov.br/DOU), ou os números/anos\n"
+        "no banco não coincidem com as listas GEN360, o total será 0 — é esperado."
+    )
+
+
+def norma_tem_coluna_verificacao(cur) -> bool:
+    """True se a migração 004 (verificacao_*) foi aplicada na tabela norma."""
+    cur.execute(
+        """
+        SELECT 1 FROM information_schema.columns
+        WHERE table_schema = 'public' AND table_name = 'norma' AND column_name = 'verificacao_status'
+        LIMIT 1
+        """
+    )
+    return cur.fetchone() is not None
+# None = todas estas origens; ou passe --origem X para restringir
+ORIGENS_ANA_DEFAULT = ("govbr", "manual", "dou")
 
 # (ano) -> { "vigente": [números], "nao_vigente": [...], "vigente_alterado": [...] }
 STATUS_POR_ANO = {
@@ -63,7 +117,7 @@ def parse_numero_ano(s: str) -> list[tuple[int, int]]:
     return out
 
 
-# Assunto -> lista de (ano, numero). Texto colado da mensagem do usuário.
+# Assunto -> lista de (ano, numero). Classificação GEN360; editar aqui se mudar no negócio.
 ASSUNTOS_RAW = """
 1) Regulação de Usos de Recursos Hídricos: 961 (2015), 399 (2004), 235 (2024), 156 (2023), 205 (2024), 273 (2025), 101 (2018), 102 (2018), 61 (2019), 1935 (2017), 1058 (2016), 962 (2015), 73 (2018), 72 (2018), 1403 (2013), 78 (2021), 33 (2018), 45 (2018), 25 (2020), 463 (2012), 147 (2012), 683 (2014), 56 (2020), 42 (2020), 436 (2016), 1047 (2016), 1162 (2016), 326 (2012), 223 (2024), 195 (2024), 77 (2021), 214 (2024), 212 (2024), 264 (2025), 202 (2024), 203 (2024), 1254 (2016), 237 (2025), 353 (2013), 193 (2003), 1041 (2013), 213 (2024), 210 (2024), 1047 (2014), 429 (2004), 52 (2008), 51 (2008), 804 (2008), 77 (2010), 219 (2005), 1939 (2017), 82 (2021), 260 (2025), 146 (2023), 779 (2009), 196 (2024), 189 (2024), 170 (2023), 910 (2014), 122 (2006), 21 (2020), 336 (2014), 699 (2014), 66 (2021), 69 (2018), 1098 (2017), 109 (2021), 58 (2019), 75 (2018), 60 (2019), 59 (2019), 1564 (2017), 1470 (2017), 64 (2019), 73 (2019), 49 (2020), 65 (2019), 90 (2021), 50 (2020), 40 (2020), 76 (2018), 101 (2021), 54 (2018), 126 (2022), 56 (2019), 118 (2022), 70 (2018), 52 (2018), 61 (2018), 119 (2022), 590 (2017), 588 (2017), 969 (2017), 55 (2018), 589 (2017), 585 (2017), 584 (2017), 587 (2017), 83 (2021), 1940 (2017), 1175 (2013), 467 (2006), 872 (2011), 127 (2010), 96 (2014), 1937 (2017), 407 (2016), 633 (2015), 30 (2020), 127 (2006), 687 (2004), 236 (2024), 497 (2005), 327 (2004), 210 (2002), 499 (2005), 250 (2004), 31 (2004), 553 (2011), 267 (2010), 43 (2019), 154 (2023), 286 (2026), 135 (2002), 707 (2004), 61 (2005), 1938 (2017), 131 (2003), 1286 (2013), 1163 (2016), 87 (2018), 833 (2011), 466 (2010), 51 (2015), 50 (2015), 960 (2015), 1397 (2016), 100 (2021), 425 (2004), 782 (2009), 1305 (2015), 479 (2007), 25 (2012), 1343 (2013), 221 (2024), 274 (2025), 256 (2025), 44 (2002), 2219 (2017), 562 (2010), 547 (2006), 1 (2017), 1941 (2017), 1399 (2014), 436 (2013), 269 (2003), 2079 (2017), 11 (2018), 1202 (2015), 1932 (2017), 316 (2015), 1043 (2017), 2082 (2017), 66 (2019), 418 (2010), 1292 (2017), 12 (2018), 1290 (2017), 219 (2024), 175 (2024), 206 (2024), 1277 (2017), 317 (2003), 1396 (2016), 1310 (2015), 303 (2006), 597 (2006), 276 (2009), 193 (2002), 78 (2019), 161 (2003), 46 (2020), 11 (2019), 1494 (2015), 640 (2015), 5 (2016), 551 (2004), 1225 (2013), 96 (2018), 204 (2024), 99 (2014), 1201 (2015), 66 (2018), 1 (2018), 1936 (2017), 65 (2018), 1041 (2014), 639 (2015), 148 (2015).
 
@@ -108,22 +162,45 @@ ASSUNTOS_MAP = build_assuntos_map()
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(description="Corrigir status e assunto das normas ANA (govbr)")
+    ap = argparse.ArgumentParser(description="Corrigir status e assunto das normas ANA (govbr/manual/dou)")
     ap.add_argument("--dry-run", action="store_true", help="Não gravar; só mostrar o que faria")
     ap.add_argument("--status-only", action="store_true", help="Só atualizar status")
     ap.add_argument("--assunto-only", action="store_true", help="Só atualizar assunto")
+    ap.add_argument(
+        "--origem",
+        action="append",
+        dest="origens",
+        metavar="ORIGEM",
+        help="Restringir a esta origem (repita para várias). Padrão: govbr, manual, dou.",
+    )
     args = ap.parse_args()
     dry = args.dry_run
+    origens = tuple(args.origens) if args.origens else ORIGENS_ANA_DEFAULT
 
     conn = get_connection()
     try:
         with conn.cursor() as cur:
-            # Obter um admin_id para marcar verificacao_admin_id (normas aprovadas em lote)
-            cur.execute("SELECT id FROM admins WHERE ativo = true LIMIT 1")
-            row = cur.fetchone()
-            admin_id = str(row["id"]) if row else None
-            if not admin_id:
-                print("Aviso: Nenhum admin ativo. verificacao_admin_id ficará NULL (normas podem não aparecer em Verificações aprovadas).")
+            com_verificacao = norma_tem_coluna_verificacao(cur)
+            if not com_verificacao:
+                print(
+                    "Aviso: coluna verificacao_status não existe na tabela norma. "
+                    "Aplique db/migracoes/004_verificacao_normas.sql no PostgreSQL (como postgres). "
+                    "Por agora só serão atualizados status e assunto, sem fluxo de verificação."
+                )
+
+            admin_id = None
+            if com_verificacao:
+                try:
+                    cur.execute("SELECT id FROM admins WHERE ativo = true LIMIT 1")
+                    row = cur.fetchone()
+                    admin_id = str(row["id"]) if row else None
+                except Exception as e:
+                    print(f"Aviso: não foi possível ler admins ({e}). verificacao_admin_id ficará NULL.")
+                if not admin_id:
+                    print(
+                        "Aviso: Nenhum admin ativo. verificacao_admin_id ficará NULL "
+                        "(normas podem não aparecer em Verificações aprovadas)."
+                    )
 
             updated_status = 0
             if not args.assunto_only:
@@ -133,56 +210,109 @@ def main() -> int:
                             continue
                         for numero in numeros:
                             if dry:
-                                print(f"[DRY-RUN] UPDATE norma SET status={status_val!r}, verificacao_status='aprovado' WHERE ano={ano} AND numero={numero} AND origem={ORIGEM!r}")
-                            else:
                                 cur.execute(
                                     """
-                                    UPDATE norma
-                                    SET status = %s, verificacao_status = 'aprovado', verificacao_em = now(),
-                                        verificacao_admin_id = %s
-                                    WHERE ano = %s AND numero = %s AND origem = %s
+                                    SELECT COUNT(*) AS c FROM norma
+                                    WHERE orgao = %s AND ano = %s AND numero = %s AND origem = ANY(%s)
                                     """,
-                                    (status_val, admin_id, ano, numero, ORIGEM),
+                                    (ORGAO_ANA, ano, numero, list(origens)),
                                 )
+                                n = cur.fetchone()["c"]
+                                updated_status += n
+                                if n:
+                                    print(
+                                        f"[DRY-RUN] status={status_val!r} ANA {numero}/{ano} — {n} linha(s) no banco"
+                                    )
+                            else:
+                                if com_verificacao:
+                                    cur.execute(
+                                        """
+                                        UPDATE norma
+                                        SET status = %s, verificacao_status = 'aprovado', verificacao_em = now(),
+                                            verificacao_admin_id = %s
+                                        WHERE orgao = %s AND ano = %s AND numero = %s AND origem = ANY(%s)
+                                        """,
+                                        (status_val, admin_id, ORGAO_ANA, ano, numero, list(origens)),
+                                    )
+                                else:
+                                    cur.execute(
+                                        """
+                                        UPDATE norma SET status = %s
+                                        WHERE orgao = %s AND ano = %s AND numero = %s AND origem = ANY(%s)
+                                        """,
+                                        (status_val, ORGAO_ANA, ano, numero, list(origens)),
+                                    )
                                 updated_status += cur.rowcount
-                print(f"Status atualizados: {updated_status}")
+                if dry:
+                    print(f"[DRY-RUN] Total de linhas que receberiam status: {updated_status}")
+                else:
+                    print(f"Linhas afetadas (status): {updated_status}")
 
-                # Marcar como aprovadas todas as demais normas ANA (govbr) ainda pendentes,
-                # para que as 548 apareçam em Verificações aprovadas (as 8 que não estavam nas listas).
-                if not dry and admin_id:
+                # Demais normas ANA: marcar verificação aprovada (só se migração 004 existir)
+                if dry and admin_id and com_verificacao:
+                    cur.execute(
+                        """
+                        SELECT COUNT(*) AS c FROM norma
+                        WHERE orgao = %s AND origem = ANY(%s)
+                          AND (verificacao_status IS NULL OR verificacao_status = 'pendente')
+                        """,
+                        (ORGAO_ANA, list(origens)),
+                    )
+                    pend = cur.fetchone()["c"]
+                    print(f"[DRY-RUN] Normas ANA com verificação pendente/null (seriam marcadas aprovado): {pend}")
+                elif not dry and admin_id and com_verificacao:
                     cur.execute(
                         """
                         UPDATE norma
                         SET verificacao_status = 'aprovado', verificacao_em = now(), verificacao_admin_id = %s
-                        WHERE origem = %s AND (verificacao_status IS NULL OR verificacao_status = 'pendente')
+                        WHERE orgao = %s AND origem = ANY(%s)
+                          AND (verificacao_status IS NULL OR verificacao_status = 'pendente')
                         """,
-                        (admin_id, ORIGEM),
+                        (admin_id, ORGAO_ANA, list(origens)),
                     )
                     restantes = cur.rowcount
                     if restantes:
-                        print(f"Normas ANA (govbr) restantes marcadas como aprovadas: {restantes}")
+                        print(f"Outras normas ANA (mesmas origens) marcadas como verificação aprovada: {restantes}")
 
             updated_assunto = 0
             if not args.status_only:
                 for assunto_nome, pares in ASSUNTOS_MAP.items():
                     for ano, numero in pares:
                         if dry:
-                            print(f"[DRY-RUN] UPDATE norma SET assunto={assunto_nome[:50]!r} WHERE ano={ano} AND numero={numero} AND origem={ORIGEM!r}")
+                            cur.execute(
+                                """
+                                SELECT COUNT(*) AS c FROM norma
+                                WHERE orgao = %s AND ano = %s AND numero = %s AND origem = ANY(%s)
+                                """,
+                                (ORGAO_ANA, ano, numero, list(origens)),
+                            )
+                            n = cur.fetchone()["c"]
+                            updated_assunto += n
+                            if n:
+                                print(
+                                    f"[DRY-RUN] assunto={assunto_nome[:40]!r}… {numero}/{ano} — {n} linha(s)"
+                                )
                         else:
                             cur.execute(
                                 """
                                 UPDATE norma SET assunto = %s
-                                WHERE ano = %s AND numero = %s AND origem = %s
+                                WHERE orgao = %s AND ano = %s AND numero = %s AND origem = ANY(%s)
                                 """,
-                                (assunto_nome, ano, numero, ORIGEM),
+                                (assunto_nome, ORGAO_ANA, ano, numero, list(origens)),
                             )
                             updated_assunto += cur.rowcount
-                print(f"Assuntos atualizados: {updated_assunto}")
+                if dry:
+                    print(f"[DRY-RUN] Total de linhas que receberiam assunto (soma dos COUNT): {updated_assunto}")
+                else:
+                    print(f"Linhas afetadas (assunto): {updated_assunto}")
 
         if not dry:
             conn.commit()
         else:
-            print("[DRY-RUN] Nada foi gravado.")
+            print("[DRY-RUN] Nenhum UPDATE foi executado; os totais acima vêm de SELECT COUNT no banco.")
+            if updated_status == 0 and updated_assunto == 0:
+                with conn.cursor() as cur2:
+                    imprimir_diagnostico_sem_match(cur2, origens)
     finally:
         conn.close()
 

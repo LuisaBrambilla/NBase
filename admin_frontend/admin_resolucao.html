@@ -57,6 +57,11 @@
         <div class="panel panel-wide verificacao-card">
           <div class="panel-header">
             <span class="panel-title">Revisão manual</span>
+            <span class="verificacao-origem" id="verificacaoBaseWrap">
+              <span class="verificacao-fonte-label">Base:</span>
+              <button type="button" id="verificacaoBaseGen360" class="verificacao-fonte-btn ativo" data-client="tecbis" title="Banco principal (normas ANA)">Gen360 (ANA)</button>
+              <button type="button" id="verificacaoBaseAres" class="verificacao-fonte-btn" data-client="arespcj" title="Banco ARES-PCJ">ARES-PCJ</button>
+            </span>
             <span class="verificacao-origem" id="verificacaoOrigemWrap">
               <span class="verificacao-fonte-label">Origem:</span>
               <button type="button" id="verificacaoOrigemTodas" class="verificacao-fonte-btn" data-origem="" title="Todas as origens">Todas</button>
@@ -130,6 +135,9 @@
           <div class="panel-header">
             <span class="panel-title">Histórico de verificações</span>
             <div class="verificacao-resumo-filtros">
+              <button class="verificacao-filtro-btn" type="button" data-dias="0">
+                Todo o período
+              </button>
               <button class="verificacao-filtro-btn" type="button" data-dias="1">
                 Hoje
               </button>
@@ -172,6 +180,6 @@
     <script src="./admin_header.js"></script>
     <script src="./admin_session.js"></script>
     <script src="./admin_common.js?v=2"></script>
-    <script src="./admin_resolucao.js"></script>
+    <script src="./admin_resolucao.js?v=3"></script>
   </body>
 </html>

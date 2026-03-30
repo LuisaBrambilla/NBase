@@ -18,8 +18,19 @@ const btnRecusar = document.getElementById("btnRecusar");
 const wrapOrigem = document.getElementById("verificacaoOrigemWrap");
 const btnOrigemTodas = document.getElementById("verificacaoOrigemTodas");
 const btnOrigemGovbr = document.getElementById("verificacaoOrigemGovbr");
+const btnBaseGen360 = document.getElementById("verificacaoBaseGen360");
+const btnBaseAres = document.getElementById("verificacaoBaseAres");
 
+/** tecbis = banco principal (ANA); arespcj = banco normas_arespcj (ARES-PCJ) */
+let clientVerificacao = "tecbis";
 let origemFilter = "";
+
+function headersVerificacao() {
+  return Object.assign(
+    { Authorization: `Bearer ${token}` },
+    { "X-Client": clientVerificacao }
+  );
+}
 
 const vData = document.getElementById("vData");
 const vAno = document.getElementById("vAno");
@@ -138,10 +149,7 @@ function render() {
 
 async function carregarPendentes() {
   setMensagem("Carregando normas pendentes...");
-  const headers = Object.assign(
-    { Authorization: `Bearer ${token}` },
-    window.getApiHeaders ? window.getApiHeaders() : {}
-  );
+  const headers = headersVerificacao();
   const params = new URLSearchParams({ limit: "300", offset: "0", somente_pendentes: "true" });
   if (origemFilter) params.set("origem", origemFilter);
   const response = await fetch(
@@ -161,10 +169,7 @@ async function carregarPendentes() {
 }
 
 async function carregarResumo() {
-  const headers = Object.assign(
-    { Authorization: `Bearer ${token}` },
-    window.getApiHeaders ? window.getApiHeaders() : {}
-  );
+  const headers = headersVerificacao();
   const params = new URLSearchParams({ limit: "8", dias: String(filtroResumoDias) });
   if (origemFilter) params.set("origem", origemFilter);
   const response = await fetch(
@@ -207,7 +212,16 @@ function marcarOrigemAtiva() {
   if (btnOrigemGovbr) btnOrigemGovbr.classList.toggle("ativo", origemFilter === "govbr");
 }
 
+function marcarBaseAtiva() {
+  if (btnBaseGen360) btnBaseGen360.classList.toggle("ativo", clientVerificacao === "tecbis");
+  if (btnBaseAres) btnBaseAres.classList.toggle("ativo", clientVerificacao === "arespcj");
+  if (wrapOrigem) {
+    wrapOrigem.classList.toggle("hidden", clientVerificacao === "arespcj");
+  }
+}
+
 async function trocarOrigem(origem) {
+  if (clientVerificacao === "arespcj") return;
   origemFilter = origem || "";
   marcarOrigemAtiva();
   try {
@@ -219,10 +233,33 @@ async function trocarOrigem(origem) {
   }
 }
 
+async function trocarBase(client) {
+  const c = client === "arespcj" ? "arespcj" : "tecbis";
+  if (c === clientVerificacao) return;
+  clientVerificacao = c;
+  if (c === "arespcj") {
+    origemFilter = "";
+  }
+  marcarBaseAtiva();
+  marcarOrigemAtiva();
+  try {
+    setMensagem(c === "arespcj" ? "A carregar normas ARES-PCJ…" : "A carregar normas Gen360…");
+    await Promise.all([carregarPendentes(), carregarResumo()]);
+    setMensagem(
+      c === "arespcj"
+        ? "Base ARES-PCJ: revisão e histórico deste banco."
+        : "Base Gen360 (ANA): use Origem para filtrar gov.br.",
+      "success"
+    );
+  } catch (err) {
+    setMensagem(err.message, "error");
+  }
+}
+
 filtroResumoBtns.forEach((btn) => {
   btn.addEventListener("click", async () => {
-    const dias = Number(btn.dataset.dias || "0");
-    if (!Number.isFinite(dias) || dias <= 0 || dias === filtroResumoDias) return;
+    const dias = Number(btn.dataset.dias ?? "0");
+    if (!Number.isFinite(dias) || dias < 0 || dias === filtroResumoDias) return;
     filtroResumoDias = dias;
     marcarFiltroResumoAtivo();
     try {
@@ -253,8 +290,8 @@ async function decidir(decisao) {
 
   setMensagem("Salvando decisão...");
   const headers = Object.assign(
-    { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-    window.getApiHeaders ? window.getApiHeaders() : {}
+    { "Content-Type": "application/json" },
+    headersVerificacao()
   );
   const response = await fetch(`${API_BASE}/admin/verificacao/${item.id}/decisao`, {
     method: "POST",
@@ -305,8 +342,11 @@ btnRecusar.addEventListener("click", async () => {
 });
 
 marcarOrigemAtiva();
+marcarBaseAtiva();
 if (btnOrigemTodas) btnOrigemTodas.addEventListener("click", () => trocarOrigem(""));
 if (btnOrigemGovbr) btnOrigemGovbr.addEventListener("click", () => trocarOrigem("govbr"));
+if (btnBaseGen360) btnBaseGen360.addEventListener("click", () => trocarBase("tecbis"));
+if (btnBaseAres) btnBaseAres.addEventListener("click", () => trocarBase("arespcj"));
 
 Promise.all([carregarPendentes(), carregarResumo()]).catch((err) =>
   setMensagem(err.message, "error")

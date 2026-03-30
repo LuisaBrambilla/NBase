@@ -11,10 +11,16 @@
     localStorage.setItem("admin_client", "tecbis");
   } catch (e) {}
 
-  // Por defeito: mesma origem (/api). Assim, quando o site está na Gen360 (gen360-....azurewebsites.net),
-  // os pedidos vão para o mesmo host e a API que tem a base de dados responde. Só use outra URL se
-  // ENV_API_BASE_URL estiver definido (ex.: frontend num host, API noutro).
+  // Site Consulta pode estar em gen360-....azurewebsites.net (frontend estático). A API pode estar
+  // na mesma app (então /api) ou em app-gen360-api.azurewebsites.net. ENV_API_BASE_URL tem prioridade.
   var defaultApiBase = "/api";
+  if (typeof window !== "undefined" && window.location && window.location.hostname) {
+    var h = window.location.hostname;
+    // Se o host é gen360-* (e não app-gen360-api), a API pode estar noutra app; use app-gen360-api.
+    if (h.indexOf("azurewebsites.net") !== -1 && h.indexOf("app-gen360-api") === -1) {
+      defaultApiBase = "https://app-gen360-api.azurewebsites.net";
+    }
+  }
   window.API_BASE_URL = (window.ENV_API_BASE_URL != null && window.ENV_API_BASE_URL !== "") ? window.ENV_API_BASE_URL : defaultApiBase;
   window.APP_BASE_PATH = window.ENV_APP_BASE_PATH != null ? window.ENV_APP_BASE_PATH : "";
   window.getApiHeaders = function () {

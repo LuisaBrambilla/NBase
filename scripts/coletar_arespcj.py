@@ -18,6 +18,7 @@ from urllib.parse import urljoin
 
 import requests
 from bs4 import BeautifulSoup
+from psycopg2 import InterfaceError, OperationalError
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
@@ -251,6 +252,19 @@ def inserir_ou_atualizar(conn, dados: dict) -> None:
         conn.commit()
 
 
+def _is_conn_drop_error(exc: Exception) -> bool:
+    """Retorna True quando o erro indica conexão perdida com o PostgreSQL."""
+    msg = str(exc).lower()
+    sinais = (
+        "server closed the connection unexpectedly",
+        "terminating connection due to administrator command",
+        "connection not open",
+        "ssl connection has been closed unexpectedly",
+        "could not receive data from server",
+    )
+    return any(s in msg for s in sinais)
+
+
 def main(
     limit: int | None = None,
     pular_existentes: bool = True,
@@ -360,7 +374,29 @@ def main(
             "caminho_pdf": caminho_pdf,
             "texto_busca": texto_busca,
         }
-        inserir_ou_atualizar(conn, dados)
+        try:
+            inserir_ou_atualizar(conn, dados)
+        except (OperationalError, InterfaceError) as e:
+            if not _is_conn_drop_error(e):
+                raise
+            print(f"  [aviso banco] conexão caiu em {numero}/{ano}; reconectando e repetindo...")
+            try:
+                conn.close()
+            except Exception:
+                pass
+            conn = get_connection()
+            inserir_ou_atualizar(conn, dados)
+        except Exception as e:
+            # Alguns drops podem vir como exceção genérica dependendo do driver/estado.
+            if not _is_conn_drop_error(e):
+                raise
+            print(f"  [aviso banco] conexão caiu em {numero}/{ano}; reconectando e repetindo...")
+            try:
+                conn.close()
+            except Exception:
+                pass
+            conn = get_connection()
+            inserir_ou_atualizar(conn, dados)
         print(f"  OK {numero}/{ano}" + (" + Word" if caminho_docx else ""))
 
     conn.close()

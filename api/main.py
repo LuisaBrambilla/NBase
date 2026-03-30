@@ -1,4 +1,6 @@
+import logging
 import os
+from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Any, Dict, Optional
 
@@ -21,7 +23,25 @@ from api.auth import (
 )
 
 
-app = FastAPI(title="Consulta de Atos")
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Garante colunas de verificação no PostgreSQL principal e no banco ARES-PCJ (se configurado)."""
+    log = logging.getLogger("uvicorn.error")
+    try:
+        queries.garantir_colunas_verificacao()
+    except Exception as exc:
+        log.warning("garantir_colunas_verificacao (principal): %s", exc)
+    try:
+        db_module.set_connection_client("arespcj")
+        queries.garantir_colunas_verificacao()
+    except Exception as exc:
+        log.warning("garantir_colunas_verificacao (ARES-PCJ): %s", exc)
+    finally:
+        db_module.set_connection_client(None)
+    yield
+
+
+app = FastAPI(title="Consulta de Atos", lifespan=lifespan)
 
 origins_env = os.getenv("CORS_ORIGINS", "*")
 allow_origins = [o.strip() for o in origins_env.split(",")] if origins_env else ["*"]
@@ -628,7 +648,7 @@ def admin_verificacao_resumo(
     admin: Dict[str, Any] = Depends(require_admin),
 ) -> Dict[str, Any]:
     _ = admin
-    if dias is not None and dias not in {1, 7, 30}:
+    if dias is not None and dias not in {0, 1, 7, 30}:
         raise HTTPException(status_code=400, detail="Filtro de período inválido.")
     return queries.resumo_verificacoes(limit=limit, dias=dias, origem=origem)
 

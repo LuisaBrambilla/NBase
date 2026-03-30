@@ -38,6 +38,14 @@ const statOrgaos = document.getElementById("statOrgaos");
 
 const PAGE_SIZE = 50;
 let currentPage = 1;
+
+function mensagemErroRede(err) {
+  const msg = (err && err.message) || "";
+  if (/failed to fetch|network error|load failed/i.test(msg)) {
+    return "Não foi possível contactar a API. Verifique: (1) CORS no Azure para este site, (2) URL da API correcta, (3) API no ar.";
+  }
+  return msg;
+}
 let totalPages = 1;
 let lastParams = new URLSearchParams();
 let anosDisponiveis = [];
@@ -368,7 +376,7 @@ async function carregarAtosComParams(params, page) {
     }
     renderAtos(data);
   } catch (err) {
-    tabela.innerHTML = `<tr><td colspan='7'>${err.message}</td></tr>`;
+    tabela.innerHTML = `<tr><td colspan='7'>${mensagemErroRede(err)}</td></tr>`;
   }
 }
 
@@ -553,5 +561,5 @@ carregarFiltros()
     if (resumoChart) return carregarResumo();
   })
   .catch((err) => {
-    tabela.innerHTML = `<tr><td colspan='7'>${err.message}</td></tr>`;
+    tabela.innerHTML = `<tr><td colspan='7'>${mensagemErroRede(err)}</td></tr>`;
   });
