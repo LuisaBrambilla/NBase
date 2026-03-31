@@ -1,11 +1,36 @@
+from datetime import date, datetime
+from decimal import Decimal
 from typing import Any, Dict, List, Tuple
 import json
 import logging
 import re
+from uuid import UUID
 
 from db.db import get_connection
 
 logger = logging.getLogger(__name__)
+
+
+def _valor_json_compat(v: Any) -> Any:
+    """RealDictCursor devolve UUID/date/datetime; json da API não serializa UUID por defeito."""
+    if v is None:
+        return None
+    if isinstance(v, UUID):
+        return str(v)
+    if isinstance(v, datetime):
+        return v.isoformat()
+    if isinstance(v, date):
+        return v.isoformat()
+    if isinstance(v, Decimal):
+        return float(v)
+    if isinstance(v, (bytes, memoryview)):
+        return None
+    return v
+
+
+def _linha_json_compat(row: Any) -> Dict[str, Any]:
+    d = dict(row)
+    return {k: _valor_json_compat(v) for k, v in d.items()}
 
 BASE_TOTAL_CONSOLIDADO = 229
 BASE_IDADE_MEDIA_ANOS = 5.78
@@ -1013,7 +1038,7 @@ def listar_normas_para_verificacao(
             cur.execute(sql_count, params_count)
             total = cur.fetchone()["total"]
             cur.execute(sql_lista, params_lista)
-            itens = cur.fetchall()
+            itens = [_linha_json_compat(r) for r in cur.fetchall()]
     finally:
         conn.close()
 
@@ -1114,8 +1139,8 @@ def resumo_verificacoes(
             "consertado": totais.get("consertado", 0),
             "recusado": totais.get("recusado", 0),
         },
-        "aprovadas": aprovadas,
-        "consertadas": consertadas,
+        "aprovadas": [_linha_json_compat(r) for r in aprovadas],
+        "consertadas": [_linha_json_compat(r) for r in consertadas],
     }
 
 
@@ -1227,6 +1252,6 @@ def registrar_decisao_verificacao(
             )
             atualizado = cur.fetchone()
             conn.commit()
-            return atualizado
+            return _linha_json_compat(atualizado) if atualizado else None
     finally:
         conn.close()

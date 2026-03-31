@@ -32,6 +32,33 @@ function headersVerificacao() {
   );
 }
 
+/** Token rejeitado: 401 ou corpo com mensagem típica de JWT (proxy/Azure por vezes não expõe 401 igual). */
+function redirecionarLoginSe401(response, parsedJson) {
+  const det = parsedJson?.detail;
+  const detStr =
+    typeof det === "string"
+      ? det
+      : Array.isArray(det)
+        ? JSON.stringify(det)
+        : "";
+  const jwtMsg = /assinatura|token expirado|token inválido|formato de token/i.test(detStr);
+  if (response.status !== 401 && !jwtMsg) return false;
+
+  localStorage.removeItem("admin_token");
+  let texto =
+    "Faça login novamente. «Assinatura inválida» = o servidor não reconhece o token: defina JWT_SECRET na MESMA app Azure que recebe os pedidos (veja o URL em F12 → Rede) e entre outra vez.";
+  if (detStr) {
+    texto = jwtMsg
+      ? `${detStr} — faça login outra vez. Se usa dois App Services (site + app-gen360-api), o JWT_SECRET tem de ser IGUAL nos dois que servem a API, ou o site tem de usar só /api no mesmo host.`
+      : `${detStr} — faça login novamente.`;
+  }
+  try {
+    sessionStorage.setItem("admin_login_notice", texto);
+  } catch (_) {}
+  window.location.href = "./admin_login.html";
+  return true;
+}
+
 const vData = document.getElementById("vData");
 const vAno = document.getElementById("vAno");
 const vNumero = document.getElementById("vNumero");
@@ -164,6 +191,7 @@ async function carregarPendentes() {
     dataNormas = {};
   }
   if (!response.ok) {
+    if (redirecionarLoginSe401(response, dataNormas)) return;
     const det = dataNormas.detail || dataNormas.message || textNormas?.slice(0, 300);
     throw new Error(
       det
@@ -196,6 +224,7 @@ async function carregarResumo() {
     dataResumo = {};
   }
   if (!response.ok) {
+    if (redirecionarLoginSe401(response, dataResumo)) return;
     const det = dataResumo.detail || dataResumo.message || textResumo?.slice(0, 200);
     throw new Error(
       det
@@ -323,8 +352,15 @@ async function decidir(decisao) {
     body: JSON.stringify(payloadAtual(decisao)),
   });
 
+  const textDecisao = await response.text();
+  let erro = {};
+  try {
+    erro = textDecisao ? JSON.parse(textDecisao) : {};
+  } catch (_) {
+    erro = {};
+  }
   if (!response.ok) {
-    const erro = await response.json().catch(() => ({}));
+    if (redirecionarLoginSe401(response, erro)) return;
     throw new Error(erro.detail || "Erro ao salvar decisão.");
   }
 

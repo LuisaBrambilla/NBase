@@ -22,6 +22,16 @@ const setMessage = (el, text, type = "info") => {
   if (type === "success") el.classList.add("success");
 };
 
+(() => {
+  try {
+    const notice = sessionStorage.getItem("admin_login_notice");
+    if (notice && loginMsg) {
+      sessionStorage.removeItem("admin_login_notice");
+      setMessage(loginMsg, notice, "error");
+    }
+  } catch (_) {}
+})();
+
 const avaliarSenha = (senha = "") => {
   const hasLower = /[a-z]/.test(senha);
   const hasUpper = /[A-Z]/.test(senha);
