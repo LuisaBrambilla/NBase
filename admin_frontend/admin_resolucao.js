@@ -13,7 +13,9 @@ function baseApiUrl() {
   return b;
 }
 
-const token = localStorage.getItem("admin_token");
+function getAdminToken() {
+  return (localStorage.getItem("admin_token") || "").trim();
+}
 
 const elContador = document.getElementById("verificacaoContador");
 const elPosicao = document.getElementById("verificacaoPosicao");
@@ -41,7 +43,7 @@ let origemFilter = "";
 
 function headersVerificacao() {
   return Object.assign(
-    { Authorization: `Bearer ${token}` },
+    { Authorization: `Bearer ${getAdminToken()}` },
     { "X-Client": clientVerificacao }
   );
 }
