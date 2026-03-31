@@ -1,4 +1,4 @@
-from datetime import date, datetime
+from datetime import date, datetime, time
 from decimal import Decimal
 from typing import Any, Dict, List, Tuple
 import json
@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 
 def _valor_json_compat(v: Any) -> Any:
-    """RealDictCursor devolve UUID/date/datetime; json da API não serializa UUID por defeito."""
+    """RealDictCursor: UUID/date/datetime → JSON (serialização feita no handler com jsonable_encoder também)."""
     if v is None:
         return None
     if isinstance(v, UUID):
@@ -20,6 +20,8 @@ def _valor_json_compat(v: Any) -> Any:
     if isinstance(v, datetime):
         return v.isoformat()
     if isinstance(v, date):
+        return v.isoformat()
+    if isinstance(v, time):
         return v.isoformat()
     if isinstance(v, Decimal):
         return float(v)

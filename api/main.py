@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Any, Dict, Optional
 
 from fastapi import Depends, FastAPI, Header, HTTPException, Request
+from fastapi.encoders import jsonable_encoder
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
@@ -636,10 +637,12 @@ def admin_verificacao_normas(
 ) -> Dict[str, Any]:
     _ = admin
     try:
-        return queries.listar_normas_para_verificacao(
+        data = queries.listar_normas_para_verificacao(
             limit=limit, offset=offset, somente_pendentes=somente_pendentes, origem=origem
         )
+        return jsonable_encoder(data)
     except Exception as exc:
+        logging.exception("admin_verificacao_normas")
         raise HTTPException(
             status_code=500,
             detail=f"listar_normas_para_verificacao: {exc!s}",
@@ -657,8 +660,10 @@ def admin_verificacao_resumo(
     if dias is not None and dias not in {0, 1, 7, 30}:
         raise HTTPException(status_code=400, detail="Filtro de período inválido.")
     try:
-        return queries.resumo_verificacoes(limit=limit, dias=dias, origem=origem)
+        data = queries.resumo_verificacoes(limit=limit, dias=dias, origem=origem)
+        return jsonable_encoder(data)
     except Exception as exc:
+        logging.exception("admin_verificacao_resumo")
         raise HTTPException(
             status_code=500,
             detail=f"resumo_verificacoes: {exc!s}",
@@ -728,7 +733,7 @@ def admin_verificacao_decisao(
         entity_id=norma_id,
         details={"decisao": decisao, "status": payload.status, "ano": payload.ano, "numero": payload.numero},
     )
-    return {"item": atualizado}
+    return jsonable_encoder({"item": atualizado})
 
 
 # Aplicação raiz: API em /api e frontend admin em / (para ver o site com um único comando)
