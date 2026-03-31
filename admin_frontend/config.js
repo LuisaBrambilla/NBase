@@ -11,15 +11,13 @@
     localStorage.setItem("admin_client", "tecbis");
   } catch (e) {}
 
-  // Site Consulta pode estar em gen360-....azurewebsites.net (frontend estático). A API pode estar
-  // na mesma app (então /api) ou em app-gen360-api.azurewebsites.net. ENV_API_BASE_URL tem prioridade.
+  // API em /api (root_app.mount("/api", app)). Por defeito use a MESMA origem do HTML (/api).
+  // Só use outro host se definir window.ENV_API_BASE_URL (ex.: site estático noutro domínio).
   var defaultApiBase = "/api";
-  if (typeof window !== "undefined" && window.location && window.location.hostname) {
+  if (typeof window !== "undefined" && window.location && window.location.origin) {
     var h = window.location.hostname;
-    // Se o host é gen360-* (e não app-gen360-api), a API pode estar noutra app; use app-gen360-api.
-    // A API FastAPI está montada em /api (root_app.mount("/api", app)); o host completo tem de incluir /api.
-    if (h.indexOf("azurewebsites.net") !== -1 && h.indexOf("app-gen360-api") === -1) {
-      defaultApiBase = "https://app-gen360-api.azurewebsites.net/api";
+    if (h.indexOf("azurewebsites.net") !== -1) {
+      defaultApiBase = window.location.origin.replace(/\/+$/, "") + "/api";
     }
   }
   var resolved = (window.ENV_API_BASE_URL != null && window.ENV_API_BASE_URL !== "") ? window.ENV_API_BASE_URL : defaultApiBase;

@@ -1,4 +1,8 @@
-const API_BASE = window.API_BASE_URL || "https://app-gen360-api.azurewebsites.net/api";
+const API_BASE =
+  window.API_BASE_URL ||
+  (typeof window !== "undefined" && window.location && window.location.origin
+    ? `${window.location.origin}/api`
+    : "/api");
 
 function getToken() {
   return localStorage.getItem("admin_token");
