@@ -10,6 +10,7 @@ from uuid import UUID
 
 from fastapi import Depends, FastAPI, Header, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.openapi.utils import get_openapi
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
@@ -806,6 +807,41 @@ def admin_verificacao_decisao(
         details={"decisao": decisao, "status": payload.status, "ano": payload.ano, "numero": payload.numero},
     )
     return json_response_safe({"item": atualizado})
+
+
+def custom_openapi() -> Dict[str, Any]:
+    """Expõe Bearer JWT no Swagger (/api/docs) para testar rotas /admin com Authorize."""
+    if app.openapi_schema:
+        return app.openapi_schema
+    openapi_schema = get_openapi(
+        title=app.title,
+        version="0.1.0",
+        openapi_version="3.1.0",
+        routes=app.routes,
+    )
+    openapi_schema.setdefault("components", {}).setdefault("securitySchemes", {})["HTTPBearer"] = {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Token JWT devolvido por POST /admin/login (campo access_token).",
+    }
+    admin_public = {"/admin/login", "/admin/register", "/admin/register/confirm"}
+    for path, path_item in list(openapi_schema.get("paths", {}).items()):
+        if not path.startswith("/admin"):
+            continue
+        if path in admin_public:
+            continue
+        for method_name, operation in list(path_item.items()):
+            if method_name not in ("get", "post", "put", "patch", "delete", "head", "options"):
+                continue
+            if not isinstance(operation, dict):
+                continue
+            operation["security"] = [{"HTTPBearer": []}]
+    app.openapi_schema = openapi_schema
+    return app.openapi_schema
+
+
+app.openapi = custom_openapi  # type: ignore[method-assign]
 
 
 # Aplicação raiz: API em /api e frontend admin em / (para ver o site com um único comando)
