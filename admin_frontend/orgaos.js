@@ -1,4 +1,4 @@
-const API_BASE_URL = window.API_BASE_URL || "https://app-gen360-api.azurewebsites.net";
+const API_BASE_URL = window.API_BASE_URL || "https://app-gen360-api.azurewebsites.net/api";
 const orgaosAnosList = document.getElementById("orgaosAnosList");
 const orgaoAnoSelect = document.getElementById("orgaoAnoSelect");
 

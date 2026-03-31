@@ -1,4 +1,4 @@
-const API_BASE = window.API_BASE_URL || "https://app-gen360-api.azurewebsites.net";
+const API_BASE = window.API_BASE_URL || "https://app-gen360-api.azurewebsites.net/api";
 
 const token = localStorage.getItem("admin_token");
 if (!token) {

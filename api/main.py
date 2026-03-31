@@ -135,6 +135,12 @@ async def admin_auth_middleware(request: Request, call_next):
             return JSONResponse(
                 status_code=exc.status_code, content={"detail": exc.detail}
             )
+        except Exception as exc:
+            logging.exception("admin_auth_middleware")
+            return JSONResponse(
+                status_code=500,
+                content={"detail": f"auth: {exc!s}"},
+            )
     return await call_next(request)
 
 

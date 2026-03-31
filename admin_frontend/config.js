@@ -17,11 +17,19 @@
   if (typeof window !== "undefined" && window.location && window.location.hostname) {
     var h = window.location.hostname;
     // Se o host é gen360-* (e não app-gen360-api), a API pode estar noutra app; use app-gen360-api.
+    // A API FastAPI está montada em /api (root_app.mount("/api", app)); o host completo tem de incluir /api.
     if (h.indexOf("azurewebsites.net") !== -1 && h.indexOf("app-gen360-api") === -1) {
-      defaultApiBase = "https://app-gen360-api.azurewebsites.net";
+      defaultApiBase = "https://app-gen360-api.azurewebsites.net/api";
     }
   }
-  window.API_BASE_URL = (window.ENV_API_BASE_URL != null && window.ENV_API_BASE_URL !== "") ? window.ENV_API_BASE_URL : defaultApiBase;
+  var resolved = (window.ENV_API_BASE_URL != null && window.ENV_API_BASE_URL !== "") ? window.ENV_API_BASE_URL : defaultApiBase;
+  if (typeof resolved === "string") {
+    var semBarraFinal = resolved.replace(/\/+$/, "");
+    if (semBarraFinal === "https://app-gen360-api.azurewebsites.net") {
+      resolved = semBarraFinal + "/api";
+    }
+  }
+  window.API_BASE_URL = resolved;
   window.APP_BASE_PATH = window.ENV_APP_BASE_PATH != null ? window.ENV_APP_BASE_PATH : "";
   window.getApiHeaders = function () {
     return { "X-Client": "tecbis" };

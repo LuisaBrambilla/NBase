@@ -1,4 +1,4 @@
-const API_BASE_URL = window.API_BASE_URL || "https://app-gen360-api.azurewebsites.net";
+const API_BASE_URL = window.API_BASE_URL || "https://app-gen360-api.azurewebsites.net/api";
 
 const tabela = document.querySelector("#atosTable tbody");
 const openFilters = document.getElementById("openFilters");

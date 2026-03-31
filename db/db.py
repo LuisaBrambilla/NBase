@@ -75,6 +75,19 @@ def get_connection():
     )
 
 
+def get_connection_principal():
+    """Sempre o banco principal (DB_NAME). A tabela `admins` existe só aqui; ignora X-Client / normas_arespcj."""
+    return psycopg2.connect(
+        host=DB_CONFIG["host"],
+        port=DB_CONFIG["port"],
+        dbname=DB_CONFIG["dbname"],
+        user=DB_CONFIG["user"],
+        password=DB_CONFIG["password"],
+        client_encoding="UTF8",
+        cursor_factory=RealDictCursor,
+    )
+
+
 def get_connection_arespcj():
     """Conexão direta ao banco normas_arespcj (para scripts de migração/cópia)."""
     return psycopg2.connect(

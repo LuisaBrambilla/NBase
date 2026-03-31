@@ -6,7 +6,7 @@ import logging
 import re
 from uuid import UUID
 
-from db.db import get_connection
+from db.db import get_connection, get_connection_principal
 
 logger = logging.getLogger(__name__)
 
@@ -687,7 +687,7 @@ def estatisticas_admin(
 
 
 def obter_admin_por_email(email: str) -> Dict[str, Any] | None:
-    conn = get_connection()
+    conn = get_connection_principal()
     try:
         with conn.cursor() as cur:
             cur.execute(
@@ -705,7 +705,7 @@ def obter_admin_por_email(email: str) -> Dict[str, Any] | None:
 
 
 def obter_admin_por_id(admin_id: str) -> Dict[str, Any] | None:
-    conn = get_connection()
+    conn = get_connection_principal()
     try:
         with conn.cursor() as cur:
             cur.execute(
@@ -752,7 +752,7 @@ def criar_admin(
     mfa_secret: str,
     mfa_enabled: bool = True,
 ) -> Dict[str, Any]:
-    conn = get_connection()
+    conn = get_connection_principal()
     try:
         with conn.cursor() as cur:
             cur.execute(
@@ -778,7 +778,7 @@ def atualizar_admin(
 ) -> Dict[str, Any] | None:
     if nome is None and email is None:
         return None
-    conn = get_connection()
+    conn = get_connection_principal()
     try:
         with conn.cursor() as cur:
             if nome is not None and email is not None:
@@ -813,7 +813,7 @@ def atualizar_admin(
 
 
 def atualizar_admin_senha(admin_id: str, senha_hash: str) -> None:
-    conn = get_connection()
+    conn = get_connection_principal()
     try:
         with conn.cursor() as cur:
             cur.execute(
@@ -831,7 +831,7 @@ def atualizar_admin_mfa(
     mfa_secret: str | None = None,
     mfa_enabled: bool = False,
 ) -> None:
-    conn = get_connection()
+    conn = get_connection_principal()
     try:
         with conn.cursor() as cur:
             if mfa_secret is not None:
