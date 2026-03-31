@@ -1,8 +1,18 @@
-const API_BASE =
-  window.API_BASE_URL ||
-  (typeof window !== "undefined" && window.location && window.location.origin
-    ? `${window.location.origin}/api`
-    : "/api");
+/** Base da API lida em tempo de execução (depois do config.js); evita /api duplicado. */
+function baseApiUrl() {
+  let b = window.API_BASE_URL;
+  if (b == null || b === "") {
+    if (typeof window !== "undefined" && window.location && window.location.origin) {
+      b = `${window.location.origin}/api`;
+    } else {
+      b = "/api";
+    }
+  }
+  b = String(b).trim().replace(/\/+$/, "");
+  b = b.replace(/\/api\/api(\/|$)/, "/api$1");
+  return b;
+}
+
 const token = localStorage.getItem("admin_token");
 
 const elContador = document.getElementById("verificacaoContador");
@@ -184,7 +194,7 @@ async function carregarPendentes() {
   const params = new URLSearchParams({ limit: "300", offset: "0", somente_pendentes: "true" });
   if (origemFilter) params.set("origem", origemFilter);
   const response = await fetch(
-    `${API_BASE}/admin/verificacao/normas?${params.toString()}`,
+    `${baseApiUrl()}/admin/verificacao/normas?${params.toString()}`,
     { headers, cache: "no-store" }
   );
   const textNormas = await response.text();
@@ -227,10 +237,8 @@ async function carregarResumo() {
   const headers = headersVerificacao();
   const params = new URLSearchParams({ limit: "8", dias: String(filtroResumoDias) });
   if (origemFilter) params.set("origem", origemFilter);
-  const response = await fetch(
-    `${API_BASE}/admin/verificacao/resumo?${params.toString()}`,
-    { headers, cache: "no-store" }
-  );
+  const urlResumo = `${baseApiUrl()}/admin/verificacao/resumo?${params.toString()}`;
+  const response = await fetch(urlResumo, { headers, cache: "no-store" });
   const textResumo = await response.text();
   let dataResumo = {};
   try {
@@ -240,11 +248,22 @@ async function carregarResumo() {
   }
   if (!response.ok) {
     if (redirecionarLoginSe401(response, dataResumo)) return;
-    const det = dataResumo.detail || dataResumo.message || textResumo?.slice(0, 200);
+    const statusTxt = `${response.status} ${response.statusText || ""}`.trim();
+    const det = dataResumo.detail || dataResumo.message;
+    const htmlHint =
+      textResumo && textResumo.trimStart().startsWith("<")
+        ? " (resposta HTML — confira /api/health e o deploy da API)"
+        : "";
+    const bodySnippet =
+      typeof det === "string"
+        ? det
+        : det
+        ? JSON.stringify(det)
+        : textResumo?.slice(0, 500) || "";
     throw new Error(
-      det
-        ? `Erro ao carregar resumo: ${typeof det === "string" ? det : JSON.stringify(det)}`
-        : "Erro ao carregar resumo das verificações."
+      bodySnippet
+        ? `Erro ao carregar resumo [${statusTxt}]: ${bodySnippet}${htmlHint} — ${urlResumo}`
+        : `Erro ao carregar resumo [${statusTxt}].${htmlHint} — ${urlResumo}`
     );
   }
   const data = dataResumo;
@@ -294,7 +313,14 @@ async function trocarOrigem(origem) {
   marcarOrigemAtiva();
   try {
     setMensagem("A carregar " + (origemFilter === "govbr" ? "normas ANA (govbr)…" : "todas…"));
-    await Promise.all([carregarPendentes(), carregarResumo()]);
+    const settled = await Promise.allSettled([carregarPendentes(), carregarResumo()]);
+    const falhas = settled
+      .filter((r) => r.status === "rejected")
+      .map((r) => (r.reason && r.reason.message ? r.reason.message : String(r.reason)));
+    if (falhas.length) {
+      setMensagem(falhas.join(" | "), "error");
+      return;
+    }
     setMensagem(origemFilter === "govbr" ? "Mostrando só normas ANA (govbr)." : "Mostrando todas as origens.", "success");
   } catch (err) {
     setMensagem(err.message, "error");
@@ -312,7 +338,14 @@ async function trocarBase(client) {
   marcarOrigemAtiva();
   try {
     setMensagem(c === "arespcj" ? "A carregar normas ARES-PCJ…" : "A carregar normas Gen360…");
-    await Promise.all([carregarPendentes(), carregarResumo()]);
+    const settled = await Promise.allSettled([carregarPendentes(), carregarResumo()]);
+    const falhas = settled
+      .filter((r) => r.status === "rejected")
+      .map((r) => (r.reason && r.reason.message ? r.reason.message : String(r.reason)));
+    if (falhas.length) {
+      setMensagem(falhas.join(" | "), "error");
+      return;
+    }
     setMensagem(
       c === "arespcj"
         ? "Base ARES-PCJ: revisão e histórico deste banco."
@@ -361,7 +394,7 @@ async function decidir(decisao) {
     { "Content-Type": "application/json" },
     headersVerificacao()
   );
-  const response = await fetch(`${API_BASE}/admin/verificacao/${item.id}/decisao`, {
+  const response = await fetch(`${baseApiUrl()}/admin/verificacao/${item.id}/decisao`, {
     method: "POST",
     headers,
     body: JSON.stringify(payloadAtual(decisao)),
@@ -423,7 +456,10 @@ if (btnOrigemGovbr) btnOrigemGovbr.addEventListener("click", () => trocarOrigem(
 if (btnBaseGen360) btnBaseGen360.addEventListener("click", () => trocarBase("tecbis"));
 if (btnBaseAres) btnBaseAres.addEventListener("click", () => trocarBase("arespcj"));
 
-Promise.all([carregarPendentes(), carregarResumo()]).catch((err) =>
-  setMensagem(err.message, "error")
-);
+Promise.allSettled([carregarPendentes(), carregarResumo()]).then((results) => {
+  const falhas = results
+    .filter((r) => r.status === "rejected")
+    .map((r) => (r.reason && r.reason.message ? r.reason.message : String(r.reason)));
+  if (falhas.length) setMensagem(falhas.join(" | "), "error");
+});
 marcarFiltroResumoAtivo();

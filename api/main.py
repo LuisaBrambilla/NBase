@@ -720,6 +720,7 @@ def admin_verificacao_diagnostico(
         )
 
 
+@app.get("/admin/verificacao/resumo/")
 @app.get("/admin/verificacao/resumo")
 def admin_verificacao_resumo(
     limit: int = 12,
