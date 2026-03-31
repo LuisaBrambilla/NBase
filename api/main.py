@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 from contextlib import asynccontextmanager
@@ -48,7 +49,28 @@ def encode_for_json(obj: Any) -> Any:
         return [encode_for_json(v) for v in obj]
     if isinstance(obj, (bytes, memoryview)):
         return None
+    try:
+        import numpy as np  # type: ignore
+
+        if isinstance(obj, (np.integer, np.floating, np.bool_)):
+            return obj.item()
+    except ImportError:
+        pass
     return str(obj)
+
+
+def json_response_safe(payload: Any) -> JSONResponse:
+    """Evita 500 genérico do Starlette quando a serialização final falha (tipos exóticos)."""
+    try:
+        enc = encode_for_json(payload)
+        body = json.loads(json.dumps(enc, default=str))
+        return JSONResponse(content=body)
+    except Exception as exc:
+        logging.exception("json_response_safe")
+        return JSONResponse(
+            status_code=500,
+            content={"detail": f"serializacao_resposta: {exc!s}"},
+        )
 
 
 @asynccontextmanager
@@ -661,35 +683,35 @@ def admin_verificacao_normas(
     somente_pendentes: bool = True,
     origem: Optional[str] = None,
     admin: Dict[str, Any] = Depends(require_admin),
-) -> Dict[str, Any]:
+) -> JSONResponse:
     _ = admin
     try:
         data = queries.listar_normas_para_verificacao(
             limit=limit, offset=offset, somente_pendentes=somente_pendentes, origem=origem
         )
-        return encode_for_json(data)
+        return json_response_safe(data)
     except Exception as exc:
         logging.exception("admin_verificacao_normas")
-        raise HTTPException(
+        return JSONResponse(
             status_code=500,
-            detail=f"listar_normas_para_verificacao: {exc!s}",
-        ) from exc
+            content={"detail": f"listar_normas_para_verificacao: {exc!s}"},
+        )
 
 
 @app.get("/admin/verificacao/diagnostico")
 def admin_verificacao_diagnostico(
     admin: Dict[str, Any] = Depends(require_admin),
-) -> Dict[str, Any]:
+) -> JSONResponse:
     """Confirma se a migração 004 (colunas verificacao_*) existe na tabela norma."""
     _ = admin
     try:
-        return encode_for_json(queries.diagnostico_verificacao_banco())
+        return json_response_safe(queries.diagnostico_verificacao_banco())
     except Exception as exc:
         logging.exception("admin_verificacao_diagnostico")
-        raise HTTPException(
+        return JSONResponse(
             status_code=500,
-            detail=f"diagnostico_verificacao_banco: {exc!s}",
-        ) from exc
+            content={"detail": f"diagnostico_verificacao_banco: {exc!s}"},
+        )
 
 
 @app.get("/admin/verificacao/resumo")
@@ -698,19 +720,19 @@ def admin_verificacao_resumo(
     dias: Optional[int] = 30,
     origem: Optional[str] = None,
     admin: Dict[str, Any] = Depends(require_admin),
-) -> Dict[str, Any]:
+) -> JSONResponse:
     _ = admin
     if dias is not None and dias not in {0, 1, 7, 30}:
         raise HTTPException(status_code=400, detail="Filtro de período inválido.")
     try:
         data = queries.resumo_verificacoes(limit=limit, dias=dias, origem=origem)
-        return encode_for_json(data)
+        return json_response_safe(data)
     except Exception as exc:
         logging.exception("admin_verificacao_resumo")
-        raise HTTPException(
+        return JSONResponse(
             status_code=500,
-            detail=f"resumo_verificacoes: {exc!s}",
-        ) from exc
+            content={"detail": f"resumo_verificacoes: {exc!s}"},
+        )
 
 
 @app.get("/admin/audit-log")
@@ -740,7 +762,7 @@ def admin_verificacao_decisao(
     norma_id: str,
     payload: NormaVerificacaoPayload,
     admin: Dict[str, Any] = Depends(require_admin),
-) -> Dict[str, Any]:
+) -> JSONResponse:
     decisao = (payload.decisao or "").strip().lower()
     if decisao not in {"aprovado", "recusado"}:
         raise HTTPException(status_code=400, detail="Decisão inválida.")
@@ -776,7 +798,7 @@ def admin_verificacao_decisao(
         entity_id=norma_id,
         details={"decisao": decisao, "status": payload.status, "ano": payload.ano, "numero": payload.numero},
     )
-    return encode_for_json({"item": atualizado})
+    return json_response_safe({"item": atualizado})
 
 
 # Aplicação raiz: API em /api e frontend admin em / (para ver o site com um único comando)
