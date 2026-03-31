@@ -1,11 +1,13 @@
 import logging
 import os
 from contextlib import asynccontextmanager
+from datetime import date, datetime, time
+from decimal import Decimal
 from pathlib import Path
 from typing import Any, Dict, Optional
+from uuid import UUID
 
 from fastapi import Depends, FastAPI, Header, HTTPException, Request
-from fastapi.encoders import jsonable_encoder
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
@@ -22,6 +24,31 @@ from api.auth import (
     verificar_token,
     verificar_totp,
 )
+
+
+def encode_for_json(obj: Any) -> Any:
+    """Serialização recursiva para resposta JSON (UUID/datetime/etc.)."""
+    if obj is None:
+        return None
+    if isinstance(obj, (str, int, float, bool)):
+        return obj
+    if isinstance(obj, UUID):
+        return str(obj)
+    if isinstance(obj, datetime):
+        return obj.isoformat()
+    if isinstance(obj, date):
+        return obj.isoformat()
+    if isinstance(obj, time):
+        return obj.isoformat()
+    if isinstance(obj, Decimal):
+        return float(obj)
+    if isinstance(obj, dict):
+        return {str(k): encode_for_json(v) for k, v in obj.items()}
+    if isinstance(obj, (list, tuple)):
+        return [encode_for_json(v) for v in obj]
+    if isinstance(obj, (bytes, memoryview)):
+        return None
+    return str(obj)
 
 
 @asynccontextmanager
@@ -640,12 +667,28 @@ def admin_verificacao_normas(
         data = queries.listar_normas_para_verificacao(
             limit=limit, offset=offset, somente_pendentes=somente_pendentes, origem=origem
         )
-        return jsonable_encoder(data)
+        return encode_for_json(data)
     except Exception as exc:
         logging.exception("admin_verificacao_normas")
         raise HTTPException(
             status_code=500,
             detail=f"listar_normas_para_verificacao: {exc!s}",
+        ) from exc
+
+
+@app.get("/admin/verificacao/diagnostico")
+def admin_verificacao_diagnostico(
+    admin: Dict[str, Any] = Depends(require_admin),
+) -> Dict[str, Any]:
+    """Confirma se a migração 004 (colunas verificacao_*) existe na tabela norma."""
+    _ = admin
+    try:
+        return encode_for_json(queries.diagnostico_verificacao_banco())
+    except Exception as exc:
+        logging.exception("admin_verificacao_diagnostico")
+        raise HTTPException(
+            status_code=500,
+            detail=f"diagnostico_verificacao_banco: {exc!s}",
         ) from exc
 
 
@@ -661,7 +704,7 @@ def admin_verificacao_resumo(
         raise HTTPException(status_code=400, detail="Filtro de período inválido.")
     try:
         data = queries.resumo_verificacoes(limit=limit, dias=dias, origem=origem)
-        return jsonable_encoder(data)
+        return encode_for_json(data)
     except Exception as exc:
         logging.exception("admin_verificacao_resumo")
         raise HTTPException(
@@ -733,7 +776,7 @@ def admin_verificacao_decisao(
         entity_id=norma_id,
         details={"decisao": decisao, "status": payload.status, "ano": payload.ano, "numero": payload.numero},
     )
-    return jsonable_encoder({"item": atualizado})
+    return encode_for_json({"item": atualizado})
 
 
 # Aplicação raiz: API em /api e frontend admin em / (para ver o site com um único comando)

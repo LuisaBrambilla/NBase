@@ -980,6 +980,42 @@ def garantir_colunas_verificacao(*, tolerar_falha: bool = False) -> None:
         raise
 
 
+def diagnostico_verificacao_banco() -> Dict[str, Any]:
+    """Lista colunas verificacao_* em norma e total de linhas (para diagnosticar migração 004 no Azure)."""
+    conn = get_connection()
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT column_name, data_type
+                FROM information_schema.columns
+                WHERE table_schema = 'public' AND table_name = 'norma'
+                  AND column_name LIKE 'verificacao%%'
+                ORDER BY column_name
+                """
+            )
+            cols = [dict(r) for r in cur.fetchall()]
+            cur.execute("SELECT COUNT(*) AS c FROM norma")
+            total_normas = cur.fetchone()["c"]
+    finally:
+        conn.close()
+
+    esperadas = (
+        "verificacao_status",
+        "verificacao_descricao",
+        "verificacao_em",
+        "verificacao_admin_id",
+    )
+    nomes = {c["column_name"] for c in cols}
+    faltando = [e for e in esperadas if e not in nomes]
+    return {
+        "colunas_verificacao": cols,
+        "total_normas": int(total_normas) if total_normas is not None else 0,
+        "faltando_migracao_004": faltando,
+        "migracao_ok": len(faltando) == 0,
+    }
+
+
 def listar_normas_para_verificacao(
     *,
     limit: int = 50,

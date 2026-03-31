@@ -192,11 +192,22 @@ async function carregarPendentes() {
   }
   if (!response.ok) {
     if (redirecionarLoginSe401(response, dataNormas)) return;
-    const det = dataNormas.detail || dataNormas.message || textNormas?.slice(0, 300);
+    const statusTxt = `${response.status} ${response.statusText || ""}`.trim();
+    const det = dataNormas.detail || dataNormas.message;
+    const htmlHint =
+      textNormas && textNormas.trimStart().startsWith("<")
+        ? " (resposta HTML — verifique Log stream no Azure ou se o deploy da API está atualizado)"
+        : "";
+    const bodySnippet =
+      typeof det === "string"
+        ? det
+        : det
+        ? JSON.stringify(det)
+        : textNormas?.slice(0, 500) || "";
     throw new Error(
-      det
-        ? `Erro ao carregar normas: ${typeof det === "string" ? det : JSON.stringify(det)}`
-        : "Erro ao carregar normas para verificação."
+      bodySnippet
+        ? `Erro ao carregar normas [${statusTxt}]: ${bodySnippet}${htmlHint}`
+        : `Erro ao carregar normas [${statusTxt}].${htmlHint}`
     );
   }
   const data = dataNormas;
