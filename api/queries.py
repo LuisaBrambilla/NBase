@@ -980,6 +980,70 @@ def garantir_colunas_verificacao(*, tolerar_falha: bool = False) -> None:
         raise
 
 
+DESCRICAO_VERIFICACAO_AUTO_ANA_GOVBR = (
+    "Validação automática — fonte oficial ANA (gov.br)."
+)
+
+
+def primeiro_admin_id_ativo() -> str | None:
+    """Primeiro administrador ativo no banco principal (para verificação automática)."""
+    conn = get_connection_principal()
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT id::text AS id FROM admins
+                WHERE COALESCE(ativo, TRUE) = TRUE
+                ORDER BY criado_em ASC NULLS LAST
+                LIMIT 1
+                """
+            )
+            row = cur.fetchone()
+            return row["id"] if row else None
+    finally:
+        conn.close()
+
+
+def marcar_ana_govbr_aprovadas_automaticamente() -> Dict[str, Any]:
+    """
+    Marca normas ANA (gov.br) como aprovadas na verificação, para histórico e
+    «Verificações aprovadas». Não altera origem arespcj (permanecem para revisão manual).
+    Idempotente: só atualiza linhas ainda pendentes (sem decisão de admin).
+    """
+    garantir_colunas_verificacao(tolerar_falha=True)
+    admin_id = primeiro_admin_id_ativo()
+    if not admin_id:
+        logger.warning(
+            "marcar_ana_govbr_aprovadas_automaticamente: nenhum admin ativo; ignorado."
+        )
+        return {"atualizadas": 0, "motivo": "sem_admin"}
+
+    conn = get_connection()
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                UPDATE norma
+                SET
+                    verificacao_status = 'aprovado',
+                    verificacao_descricao = %s,
+                    verificacao_em = now(),
+                    verificacao_admin_id = %s::uuid
+                WHERE origem = 'govbr'
+                  AND orgao = 'ANA'
+                  AND (verificacao_status IS NULL OR verificacao_status = 'pendente')
+                  AND verificacao_admin_id IS NULL
+                """,
+                (DESCRICAO_VERIFICACAO_AUTO_ANA_GOVBR, admin_id),
+            )
+            n = cur.rowcount
+        conn.commit()
+    finally:
+        conn.close()
+
+    return {"atualizadas": n}
+
+
 def diagnostico_verificacao_banco() -> Dict[str, Any]:
     """Lista colunas verificacao_* em norma e total de linhas (para diagnosticar migração 004 no Azure)."""
     conn = get_connection()

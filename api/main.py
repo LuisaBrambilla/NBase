@@ -82,6 +82,21 @@ async def lifespan(app: FastAPI):
         queries.garantir_colunas_verificacao()
     except Exception as exc:
         log.warning("garantir_colunas_verificacao (principal): %s", exc)
+    if os.getenv("VERIFICACAO_AUTO_ANA_GOVBR", "1").strip().lower() not in (
+        "0",
+        "false",
+        "no",
+    ):
+        try:
+            r = queries.marcar_ana_govbr_aprovadas_automaticamente()
+            n = r.get("atualizadas") or 0
+            if n:
+                log.info(
+                    "ANA (gov.br): %s norma(s) marcadas como verificação aprovada automaticamente.",
+                    n,
+                )
+        except Exception as exc:
+            log.warning("marcar_ana_govbr_aprovadas_automaticamente: %s", exc)
     try:
         db_module.set_connection_client("arespcj")
         queries.garantir_colunas_verificacao()
@@ -202,7 +217,11 @@ def _get_bearer_token(authorization: str | None) -> str:
         raise HTTPException(status_code=401, detail="Token ausente.")
     if not authorization.lower().startswith("bearer "):
         raise HTTPException(status_code=401, detail="Formato de token inválido.")
-    return authorization.split(" ", 1)[1].strip()
+    token = authorization.split(" ", 1)[1].strip()
+    # Swagger UI já envia "Bearer "; se colarem "Bearer eyJ..." no campo, fica "Bearer Bearer eyJ...".
+    while token.lower().startswith("bearer "):
+        token = token[7:].strip()
+    return token
 
 
 def _senha_atende_regras(senha: str) -> bool:
@@ -823,7 +842,7 @@ def custom_openapi() -> Dict[str, Any]:
         "type": "http",
         "scheme": "bearer",
         "bearerFormat": "JWT",
-        "description": "Token JWT devolvido por POST /admin/login (campo access_token).",
+        "description": "Cole só o JWT (access_token), sem a palavra Bearer — o Swagger já envia Bearer.",
     }
     admin_public = {"/admin/login", "/admin/register", "/admin/register/confirm"}
     for path, path_item in list(openapi_schema.get("paths", {}).items()):
