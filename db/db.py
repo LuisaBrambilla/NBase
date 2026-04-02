@@ -29,24 +29,34 @@ def _clean_env(value: str | None) -> str | None:
     return value.strip().strip('"').strip("'")
 
 
+_db_principal = _clean_env(os.getenv("DB_NAME", "normas")) or "normas"
 DB_CONFIG = {
     "host": _clean_env(os.getenv("DB_HOST", "localhost")),
     "port": _clean_env(os.getenv("DB_PORT", "5432")),
-    "dbname": _clean_env(os.getenv("DB_NAME", "normas")),
+    "dbname": _db_principal,
     "user": _clean_env(os.getenv("DB_USER", "postgres")),
     "password": _clean_env(os.getenv("DB_PASSWORD", "Newpr2026@")),
 }
 
-# Segundo banco para isolamento ARES-PCJ (uso noutro servidor no futuro)
+# Segundo banco só se definir DB_NAME_ARESPCJ; por omissão = mesmo banco que o principal (ANA e ARES na mesma BD).
+_db_ares_explicito = _clean_env(os.getenv("DB_NAME_ARESPCJ"))
 DB_CONFIG_ARESPCJ = {
     **DB_CONFIG,
-    "dbname": _clean_env(os.getenv("DB_NAME_ARESPCJ", "normas_arespcj")),
+    "dbname": (_db_ares_explicito if _db_ares_explicito else _db_principal),
 }
 
 # Context var: quando = "arespcj", get_connection() usa o banco normas_arespcj (API define por pedido)
 _connection_client: ContextVar[str | None] = ContextVar("connection_client", default=None)
 
 logger = logging.getLogger(__name__)
+
+
+def _falha_base_inexistente(exc: BaseException) -> bool:
+    """True se o PostgreSQL indicar que o nome da base não existe (SQLSTATE 3D000)."""
+    if isinstance(exc, psycopg2.OperationalError):
+        if getattr(exc, "pgcode", None) == "3D000":
+            return True
+    return "does not exist" in str(exc).lower()
 
 
 def _connect_cfg(cfg: dict):
@@ -76,9 +86,7 @@ def get_connection():
         try:
             return _connect_cfg(DB_CONFIG_ARESPCJ)
         except Exception as exc:
-            err = str(exc).lower()
-            # Servidor sem base `normas_arespcj`: ARES pode estar na mesma BD (`origem = arespcj`).
-            if "does not exist" in err and "database" in err:
+            if DB_CONFIG_ARESPCJ["dbname"] != DB_CONFIG["dbname"] and _falha_base_inexistente(exc):
                 logger.warning(
                     "PostgreSQL: a base %r não existe; a usar o banco principal %r para pedidos ARES-PCJ.",
                     DB_CONFIG_ARESPCJ["dbname"],
@@ -101,8 +109,7 @@ def get_connection_arespcj():
     try:
         return _connect_cfg(DB_CONFIG_ARESPCJ)
     except Exception as exc:
-        err = str(exc).lower()
-        if "does not exist" in err and "database" in err:
+        if DB_CONFIG_ARESPCJ["dbname"] != DB_CONFIG["dbname"] and _falha_base_inexistente(exc):
             logger.warning(
                 "get_connection_arespcj: base %r inexistente; a usar %r.",
                 DB_CONFIG_ARESPCJ["dbname"],
