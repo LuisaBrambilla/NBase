@@ -879,7 +879,7 @@ def inserir_audit_log(
                     action,
                     entity_type,
                     entity_id,
-                    json.dumps(details) if details is not None else None,
+                    json.dumps(details, default=str) if details is not None else None,
                     ip,
                     client,
                 ),
@@ -929,7 +929,8 @@ def listar_audit_log(
         ORDER BY al.created_at DESC
         LIMIT %s OFFSET %s
     """
-    conn = get_connection()
+    # Sempre o banco principal: registos com use_principal=True (acesso_http, login, ações admin).
+    conn = get_connection_principal()
     try:
         with conn.cursor() as cur:
             cur.execute(sql_count, params_count)

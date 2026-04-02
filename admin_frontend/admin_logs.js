@@ -39,6 +39,7 @@
     senha_alterada: "Senha alterada",
     verificacao_norma: "Verificação de norma",
     deploy: "Deploy",
+    acesso_http: "Acesso (HTTP)",
   };
 
   function formatDateTime(iso) {
@@ -69,6 +70,9 @@
       if (details.versao != null) parts.push("versão: " + details.versao);
       if (details.autor != null) parts.push("autor: " + details.autor);
       if (details.nota != null) parts.push(details.nota);
+      if (details.method && details.path) {
+        parts.push(details.method + " " + details.path + (details.status != null ? " → " + details.status : ""));
+      }
       const g = details.git;
       if (g && (g.commit || g.mensagem)) {
         if (g.commit) parts.push("commit " + g.commit);

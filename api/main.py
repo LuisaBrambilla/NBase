@@ -823,15 +823,30 @@ def admin_audit_log(
     desde: Optional[str] = None,
     ate: Optional[str] = None,
     admin: Dict[str, Any] = Depends(require_admin),
-) -> Dict[str, Any]:
-    """Lista o registo de auditoria. Tecbis vê todos; ARES-PCJ vê apenas logs do próprio cliente."""
+) -> JSONResponse:
+    """Lista o registo de auditoria (sempre lido do banco principal). Tecbis vê todos; ARES-PCJ filtra por client."""
+    _ = admin
     client = getattr(request.state, "client", "tecbis")
     if client not in VALID_CLIENTS:
         raise HTTPException(status_code=403, detail="Acesso ao log de auditoria não disponível para este cliente.")
     client_filter = client if client == "arespcj" else None
-    return queries.listar_audit_log(
-        limit=limit, offset=offset, action=action, admin_id=admin_id, desde=desde, ate=ate, client=client_filter
-    )
+    try:
+        data = queries.listar_audit_log(
+            limit=limit,
+            offset=offset,
+            action=action,
+            admin_id=admin_id,
+            desde=desde,
+            ate=ate,
+            client=client_filter,
+        )
+        return json_response_safe(data)
+    except Exception as exc:
+        logging.exception("admin_audit_log")
+        return JSONResponse(
+            status_code=500,
+            content={"detail": f"audit_log: {exc!s}"},
+        )
 
 
 @app.post("/admin/verificacao/{norma_id}/decisao")
