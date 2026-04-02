@@ -144,13 +144,26 @@ def _deve_registar_acesso_http(request: Request) -> bool:
     return True
 
 
+def _area_acesso_http(path: str) -> str:
+    """Classifica o pedido para o log: página pública do site vs área admin (HTML ou API)."""
+    pl = path.lower()
+    if pl.startswith("/api/admin/") or pl.startswith("/admin/"):
+        return "admin"
+    base = pl.split("/")[-1]
+    if base.startswith("admin_") and base.endswith(".html"):
+        return "admin"
+    return "public"
+
+
 def _registar_acesso_http(request: Request, response: Any) -> None:
     """Grava IP e pedido HTTP no audit_log (base principal), visitantes e admins."""
     ip = get_request_ip(request)
     client = getattr(request.state, "client", "tecbis")
+    path = request.url.path
     details: Dict[str, Any] = {
         "method": request.method,
-        "path": request.url.path,
+        "path": path,
+        "area": _area_acesso_http(path),
         "status": getattr(response, "status_code", None),
     }
     q = request.url.query
@@ -167,23 +180,6 @@ def _registar_acesso_http(request: Request, response: Any) -> None:
         ip=ip,
         client=client,
     )
-
-
-@app.middleware("http")
-async def client_middleware(request: Request, call_next):
-    """Lê X-Client: tecbis (banco principal) ou arespcj (banco normas_arespcj)."""
-    raw = (request.headers.get("X-Client") or "").strip().lower()
-    if raw == "ares-pcj":
-        raw = "arespcj"
-    request.state.client = raw if raw in VALID_CLIENTS else "tecbis"
-    db_module.set_connection_client("arespcj" if request.state.client == "arespcj" else None)
-    response = await call_next(request)
-    try:
-        if _deve_registar_acesso_http(request):
-            _registar_acesso_http(request, response)
-    except Exception:
-        pass
-    return response
 
 
 @app.middleware("http")
@@ -937,6 +933,28 @@ app.openapi = custom_openapi  # type: ignore[method-assign]
 _API_DIR = Path(__file__).resolve().parent
 _ADMIN_DIR = _API_DIR.parent / "admin_frontend"
 root_app = FastAPI(title="Consulta de Atos")
+
+
+@root_app.middleware("http")
+async def root_client_e_acesso_http(request: Request, call_next):
+    """
+    X-Client + audit_log de acesso HTTP no root_app: cobre `/` (site estático) e `/api/*`.
+    O middleware só em `app` não corria para páginas HTML servidas em `/`.
+    """
+    raw = (request.headers.get("X-Client") or "").strip().lower()
+    if raw == "ares-pcj":
+        raw = "arespcj"
+    request.state.client = raw if raw in VALID_CLIENTS else "tecbis"
+    db_module.set_connection_client("arespcj" if request.state.client == "arespcj" else None)
+    response = await call_next(request)
+    try:
+        if _deve_registar_acesso_http(request):
+            _registar_acesso_http(request, response)
+    except Exception as exc:
+        logging.warning("acesso_http: %s", exc, exc_info=True)
+    return response
+
+
 root_app.mount("/api", app)
 if _ADMIN_DIR.exists():
     root_app.mount("/", StaticFiles(directory=str(_ADMIN_DIR), html=True), name="admin-static")

@@ -70,6 +70,7 @@
       if (details.versao != null) parts.push("versão: " + details.versao);
       if (details.autor != null) parts.push("autor: " + details.autor);
       if (details.nota != null) parts.push(details.nota);
+      if (details.area) parts.push("área: " + details.area);
       if (details.method && details.path) {
         parts.push(details.method + " " + details.path + (details.status != null ? " → " + details.status : ""));
       }
