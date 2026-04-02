@@ -1,3 +1,4 @@
+import logging
 import os
 import sys
 import io
@@ -45,6 +46,20 @@ DB_CONFIG_ARESPCJ = {
 # Context var: quando = "arespcj", get_connection() usa o banco normas_arespcj (API define por pedido)
 _connection_client: ContextVar[str | None] = ContextVar("connection_client", default=None)
 
+logger = logging.getLogger(__name__)
+
+
+def _connect_cfg(cfg: dict):
+    return psycopg2.connect(
+        host=cfg["host"],
+        port=cfg["port"],
+        dbname=cfg["dbname"],
+        user=cfg["user"],
+        password=cfg["password"],
+        client_encoding="UTF8",
+        cursor_factory=RealDictCursor,
+    )
+
 
 def set_connection_client(client: str | None) -> None:
     """Define qual banco usar neste contexto (tecbis/None = principal; arespcj = normas_arespcj)."""
@@ -55,50 +70,46 @@ def get_connection():
     """Retorna conexão ao banco principal ou ao banco ARES conforme contexto do pedido."""
     client = _connection_client.get()
     if client == "arespcj":
-        return psycopg2.connect(
-            host=DB_CONFIG_ARESPCJ["host"],
-            port=DB_CONFIG_ARESPCJ["port"],
-            dbname=DB_CONFIG_ARESPCJ["dbname"],
-            user=DB_CONFIG_ARESPCJ["user"],
-            password=DB_CONFIG_ARESPCJ["password"],
-            client_encoding="UTF8",
-            cursor_factory=RealDictCursor,
-        )
-    return psycopg2.connect(
-        host=DB_CONFIG["host"],
-        port=DB_CONFIG["port"],
-        dbname=DB_CONFIG["dbname"],
-        user=DB_CONFIG["user"],
-        password=DB_CONFIG["password"],
-        client_encoding="UTF8",
-        cursor_factory=RealDictCursor,
-    )
+        # Mesmo nome que o principal = um único físico (ex.: só existe `normas`).
+        if DB_CONFIG_ARESPCJ["dbname"] == DB_CONFIG["dbname"]:
+            return _connect_cfg(DB_CONFIG)
+        try:
+            return _connect_cfg(DB_CONFIG_ARESPCJ)
+        except Exception as exc:
+            err = str(exc).lower()
+            # Servidor sem base `normas_arespcj`: ARES pode estar na mesma BD (`origem = arespcj`).
+            if "does not exist" in err and "database" in err:
+                logger.warning(
+                    "PostgreSQL: a base %r não existe; a usar o banco principal %r para pedidos ARES-PCJ.",
+                    DB_CONFIG_ARESPCJ["dbname"],
+                    DB_CONFIG["dbname"],
+                )
+                return _connect_cfg(DB_CONFIG)
+            raise
+    return _connect_cfg(DB_CONFIG)
 
 
 def get_connection_principal():
     """Sempre o banco principal (DB_NAME). A tabela `admins` existe só aqui; ignora X-Client / normas_arespcj."""
-    return psycopg2.connect(
-        host=DB_CONFIG["host"],
-        port=DB_CONFIG["port"],
-        dbname=DB_CONFIG["dbname"],
-        user=DB_CONFIG["user"],
-        password=DB_CONFIG["password"],
-        client_encoding="UTF8",
-        cursor_factory=RealDictCursor,
-    )
+    return _connect_cfg(DB_CONFIG)
 
 
 def get_connection_arespcj():
     """Conexão direta ao banco normas_arespcj (para scripts de migração/cópia)."""
-    return psycopg2.connect(
-        host=DB_CONFIG_ARESPCJ["host"],
-        port=DB_CONFIG_ARESPCJ["port"],
-        dbname=DB_CONFIG_ARESPCJ["dbname"],
-        user=DB_CONFIG_ARESPCJ["user"],
-        password=DB_CONFIG_ARESPCJ["password"],
-        client_encoding="UTF8",
-        cursor_factory=RealDictCursor,
-    )
+    if DB_CONFIG_ARESPCJ["dbname"] == DB_CONFIG["dbname"]:
+        return _connect_cfg(DB_CONFIG)
+    try:
+        return _connect_cfg(DB_CONFIG_ARESPCJ)
+    except Exception as exc:
+        err = str(exc).lower()
+        if "does not exist" in err and "database" in err:
+            logger.warning(
+                "get_connection_arespcj: base %r inexistente; a usar %r.",
+                DB_CONFIG_ARESPCJ["dbname"],
+                DB_CONFIG["dbname"],
+            )
+            return _connect_cfg(DB_CONFIG)
+        raise
 
 
 # =========================
