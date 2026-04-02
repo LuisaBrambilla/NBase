@@ -39,6 +39,7 @@ const btnBaseAres = document.getElementById("verificacaoBaseAres");
 
 /** tecbis = banco principal (ANA); arespcj = banco normas_arespcj (ARES-PCJ) */
 let clientVerificacao = "tecbis";
+/** Sempre vazio na Gen360 (API ignora; fila manual = só arespcj). */
 let origemFilter = "";
 
 function headersVerificacao() {
@@ -305,7 +306,8 @@ function marcarBaseAtiva() {
   if (btnBaseGen360) btnBaseGen360.classList.toggle("ativo", clientVerificacao === "tecbis");
   if (btnBaseAres) btnBaseAres.classList.toggle("ativo", clientVerificacao === "arespcj");
   if (wrapOrigem) {
-    wrapOrigem.classList.toggle("hidden", clientVerificacao === "arespcj");
+    // Gen360: filtro «origem» não se aplica (fila manual = só arespcj); ARES: outro banco.
+    wrapOrigem.classList.toggle("hidden", true);
   }
 }
 
@@ -323,7 +325,12 @@ async function trocarOrigem(origem) {
       setMensagem(falhas.join(" | "), "error");
       return;
     }
-    setMensagem(origemFilter === "govbr" ? "Mostrando só normas ANA (govbr)." : "Mostrando todas as origens.", "success");
+    setMensagem(
+      origemFilter === "govbr"
+        ? "Pendentes só com origem gov.br (ANA)."
+        : "Revisão manual: só atos ARES-PCJ (origem arespcj).",
+      "success"
+    );
   } catch (err) {
     setMensagem(err.message, "error");
   }
@@ -351,7 +358,7 @@ async function trocarBase(client) {
     setMensagem(
       c === "arespcj"
         ? "Base ARES-PCJ: revisão e histórico deste banco."
-        : "Base Gen360 (ANA): use Origem para filtrar gov.br.",
+        : "Base Gen360: revisão manual só ARES-PCJ; normas ANA aparecem em «Verificações aprovadas» (aprovação automática). Use Origem para listar pendentes gov.br (caso raro).",
       "success"
     );
   } catch (err) {
@@ -454,7 +461,8 @@ btnRecusar.addEventListener("click", async () => {
 marcarOrigemAtiva();
 marcarBaseAtiva();
 if (btnOrigemTodas) btnOrigemTodas.addEventListener("click", () => trocarOrigem(""));
-if (btnOrigemGovbr) btnOrigemGovbr.addEventListener("click", () => trocarOrigem("govbr"));
+if (btnOrigemGovbr)
+  btnOrigemGovbr.addEventListener("click", () => trocarOrigem("govbr"));
 if (btnBaseGen360) btnBaseGen360.addEventListener("click", () => trocarBase("tecbis"));
 if (btnBaseAres) btnBaseAres.addEventListener("click", () => trocarBase("arespcj"));
 

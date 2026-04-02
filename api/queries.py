@@ -980,8 +980,8 @@ def garantir_colunas_verificacao(*, tolerar_falha: bool = False) -> None:
         raise
 
 
-DESCRICAO_VERIFICACAO_AUTO_ANA_GOVBR = (
-    "Validação automática — fonte oficial ANA (gov.br)."
+DESCRICAO_VERIFICACAO_AUTO_ANA = (
+    "Validação automática — normas ANA (fontes oficiais: gov.br, DOU, manual)."
 )
 
 
@@ -1004,11 +1004,26 @@ def primeiro_admin_id_ativo() -> str | None:
         conn.close()
 
 
+def _norma_e_ana_nao_arespcj_sql() -> str:
+    """Condição SQL: norma ANA (órgão) que não é ARES-PCJ (origem arespcj)."""
+    return """
+        origem IS DISTINCT FROM 'arespcj'
+        AND (
+            UPPER(TRIM(COALESCE(orgao, ''))) = 'ANA'
+            OR UPPER(TRIM(COALESCE(orgao, ''))) LIKE 'ANA %'
+            OR (
+                origem IN ('govbr', 'manual', 'dou', 'dodf', 'ocr')
+                AND (orgao IS NULL OR TRIM(COALESCE(orgao, '')) = '')
+            )
+        )
+    """
+
+
 def marcar_ana_govbr_aprovadas_automaticamente() -> Dict[str, Any]:
     """
-    Marca normas ANA (gov.br) como aprovadas na verificação, para histórico e
-    «Verificações aprovadas». Não altera origem arespcj (permanecem para revisão manual).
-    Idempotente: só atualiza linhas ainda pendentes (sem decisão de admin).
+    Marca normas ANA (todas as origens exceto arespcj) como aprovadas na verificação.
+    Não altera origem arespcj (revisão manual). Idempotente.
+    Usa sempre o banco principal (get_connection_principal).
     """
     garantir_colunas_verificacao(tolerar_falha=True)
     admin_id = primeiro_admin_id_ativo()
@@ -1018,23 +1033,23 @@ def marcar_ana_govbr_aprovadas_automaticamente() -> Dict[str, Any]:
         )
         return {"atualizadas": 0, "motivo": "sem_admin"}
 
-    conn = get_connection()
+    cond_ana = _norma_e_ana_nao_arespcj_sql()
+    conn = get_connection_principal()
     try:
         with conn.cursor() as cur:
             cur.execute(
-                """
+                f"""
                 UPDATE norma
                 SET
                     verificacao_status = 'aprovado',
                     verificacao_descricao = %s,
                     verificacao_em = now(),
                     verificacao_admin_id = %s::uuid
-                WHERE origem = 'govbr'
-                  AND orgao = 'ANA'
+                WHERE {cond_ana}
                   AND (verificacao_status IS NULL OR verificacao_status = 'pendente')
                   AND verificacao_admin_id IS NULL
                 """,
-                (DESCRICAO_VERIFICACAO_AUTO_ANA_GOVBR, admin_id),
+                (DESCRICAO_VERIFICACAO_AUTO_ANA, admin_id),
             )
             n = cur.rowcount
         conn.commit()
@@ -1086,6 +1101,7 @@ def listar_normas_para_verificacao(
     offset: int = 0,
     somente_pendentes: bool = True,
     origem: str | None = None,
+    site_client: str | None = None,
 ) -> Dict[str, Any]:
     garantir_colunas_verificacao(tolerar_falha=True)
 
@@ -1095,12 +1111,19 @@ def listar_normas_para_verificacao(
         if somente_pendentes
         else ""
     )
-    where_origem = " AND origem = %s" if origem else ""
+    # Base principal (Gen360): revisão manual só ARES-PCJ. Ignora filtro «origem» do painel
+    # para não voltar a listar ANA (gov.br) como pendentes.
+    where_fila_manual_principal = ""
+    effective_origem = origem
+    if somente_pendentes and (site_client or "tecbis") != "arespcj":
+        where_fila_manual_principal = " AND origem = 'arespcj' "
+        effective_origem = None
+    where_origem = " AND origem = %s" if effective_origem else ""
     params_count: List[Any] = []
     params_lista: List[Any] = []
-    if origem:
-        params_count.append(origem)
-        params_lista.append(origem)
+    if effective_origem:
+        params_count.append(effective_origem)
+        params_lista.append(effective_origem)
     params_lista.extend([limit, offset])
 
     sql_count = f"""
@@ -1108,6 +1131,7 @@ def listar_normas_para_verificacao(
         FROM norma
         WHERE 1=1
         {where_pendentes}
+        {where_fila_manual_principal}
         {where_origem}
     """
     sql_lista = f"""
@@ -1129,6 +1153,7 @@ def listar_normas_para_verificacao(
         FROM norma
         WHERE 1=1
         {where_pendentes}
+        {where_fila_manual_principal}
         {where_origem}
         ORDER BY ano DESC, numero DESC
         LIMIT %s OFFSET %s

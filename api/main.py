@@ -704,6 +704,7 @@ def admin_stats(
 
 @app.get("/admin/verificacao/normas")
 def admin_verificacao_normas(
+    request: Request,
     limit: int = 50,
     offset: int = 0,
     somente_pendentes: bool = True,
@@ -712,8 +713,13 @@ def admin_verificacao_normas(
 ) -> JSONResponse:
     _ = admin
     try:
+        client = getattr(request.state, "client", "tecbis")
         data = queries.listar_normas_para_verificacao(
-            limit=limit, offset=offset, somente_pendentes=somente_pendentes, origem=origem
+            limit=limit,
+            offset=offset,
+            somente_pendentes=somente_pendentes,
+            origem=origem,
+            site_client=client,
         )
         return json_response_safe(data)
     except Exception as exc:
@@ -737,6 +743,31 @@ def admin_verificacao_diagnostico(
         return JSONResponse(
             status_code=500,
             content={"detail": f"diagnostico_verificacao_banco: {exc!s}"},
+        )
+
+
+@app.post("/admin/verificacao/reaplicar-ana-automatico")
+def admin_verificacao_reaplicar_ana_automatico(
+    admin: Dict[str, Any] = Depends(require_admin),
+) -> JSONResponse:
+    """Reaplica aprovação automática de normas ANA no banco principal (sem reiniciar a app)."""
+    _ = admin
+    if os.getenv("VERIFICACAO_AUTO_ANA_GOVBR", "1").strip().lower() in (
+        "0",
+        "false",
+        "no",
+    ):
+        raise HTTPException(
+            status_code=400,
+            detail="Aprovação automática ANA desativada (VERIFICACAO_AUTO_ANA_GOVBR).",
+        )
+    try:
+        return json_response_safe(queries.marcar_ana_govbr_aprovadas_automaticamente())
+    except Exception as exc:
+        logging.exception("admin_verificacao_reaplicar_ana_automatico")
+        return JSONResponse(
+            status_code=500,
+            content={"detail": f"reaplicar_ana_automatico: {exc!s}"},
         )
 
 
