@@ -942,6 +942,44 @@ def listar_audit_log(
         conn.close()
 
 
+def garantir_tabela_audit_log() -> None:
+    """
+    Cria a tabela audit_log no banco principal se ainda não existir (equivalente à migração 007).
+    Evita 500 na página de logs quando a migração não foi aplicada manualmente no servidor.
+    """
+    conn = get_connection_principal()
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                CREATE TABLE IF NOT EXISTS audit_log (
+                    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+                    admin_id UUID REFERENCES admins(id) ON DELETE SET NULL,
+                    action TEXT NOT NULL,
+                    entity_type TEXT,
+                    entity_id TEXT,
+                    details JSONB,
+                    ip TEXT,
+                    client TEXT,
+                    admin_email TEXT
+                )
+                """
+            )
+            cur.execute(
+                "CREATE INDEX IF NOT EXISTS idx_audit_log_created_at ON audit_log (created_at DESC)"
+            )
+            cur.execute(
+                "CREATE INDEX IF NOT EXISTS idx_audit_log_admin_id ON audit_log (admin_id)"
+            )
+            cur.execute(
+                "CREATE INDEX IF NOT EXISTS idx_audit_log_action ON audit_log (action)"
+            )
+            conn.commit()
+    finally:
+        conn.close()
+
+
 def garantir_colunas_verificacao(*, tolerar_falha: bool = False) -> None:
     """
     Cria colunas de verificação se não existirem.

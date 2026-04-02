@@ -1,6 +1,8 @@
 """
 Aplica a migração 007: tabela audit_log para o registo de atividade (centro Tecbis).
-Execute uma vez na VPS: python scripts/aplicar_migracao_007.py
+Execute uma vez (VPS ou máquina com .env apontando ao PostgreSQL principal/Azure):
+  python scripts/aplicar_migracao_007.py
+A API também cria a tabela no arranque (garantir_tabela_audit_log) se tiver permissão CREATE.
 Usa as credenciais do .env (DB_USER, DB_PASSWORD, etc.) — não é preciso usar psql nem exportar senha no terminal.
 """
 import sys
@@ -9,7 +11,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from db.db import get_connection
+from db.db import get_connection_principal
 
 MIGRACAO = ROOT / "db" / "migracoes" / "007_audit_log.sql"
 
@@ -26,7 +28,7 @@ def _strip_comments(stmt: str) -> str:
 
 def main():
     sql = MIGRACAO.read_text(encoding="utf-8")
-    conn = get_connection()
+    conn = get_connection_principal()
     try:
         for stmt in sql.split(";"):
             stmt = _strip_comments(stmt.strip())

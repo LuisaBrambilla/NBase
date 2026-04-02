@@ -77,8 +77,12 @@ def json_response_safe(payload: Any) -> JSONResponse:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Garante colunas de verificação no PostgreSQL principal e no banco ARES-PCJ (se configurado)."""
+    """Garante tabela audit_log e colunas de verificação no PostgreSQL principal e no banco ARES-PCJ (se configurado)."""
     log = logging.getLogger("uvicorn.error")
+    try:
+        queries.garantir_tabela_audit_log()
+    except Exception as exc:
+        log.warning("garantir_tabela_audit_log: %s", exc)
     try:
         queries.garantir_colunas_verificacao()
     except Exception as exc:
