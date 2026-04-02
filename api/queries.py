@@ -4,11 +4,20 @@ from typing import Any, Dict, List, Tuple
 import json
 import logging
 import re
+import threading
 from uuid import UUID
+
+import psycopg2
 
 from db.db import get_connection, get_connection_principal
 
+# SQLSTATE 42P01 — relation does not exist (PostgreSQL)
+_PG_UNDEFINED_TABLE = "42P01"
+
 logger = logging.getLogger(__name__)
+
+_audit_log_lock = threading.Lock()
+_audit_log_pronto = False
 
 
 def _valor_json_compat(v: Any) -> Any:
@@ -849,6 +858,18 @@ def atualizar_admin_mfa(
         conn.close()
 
 
+def _ensure_audit_log_table() -> None:
+    """Garante que public.audit_log existe (uma vez por processo, com lock)."""
+    global _audit_log_pronto
+    if _audit_log_pronto:
+        return
+    with _audit_log_lock:
+        if _audit_log_pronto:
+            return
+        garantir_tabela_audit_log()
+        _audit_log_pronto = True
+
+
 def inserir_audit_log(
     *,
     admin_id: str | None = None,
@@ -861,6 +882,8 @@ def inserir_audit_log(
     client: str | None = None,
     use_principal: bool = False,
 ) -> None:
+    if use_principal:
+        _ensure_audit_log_table()
     conn = (
         get_connection_principal()
         if use_principal
@@ -900,6 +923,7 @@ def listar_audit_log(
     client: str | None = None,
 ) -> Dict[str, Any]:
     """Lista audit_log. Se client for passado (ex.: 'arespcj'), filtra só entradas desse cliente. Tecbis não passa client e vê todos."""
+    global _audit_log_pronto
     clauses: List[str] = ["1=1"]
     params: List[Any] = []
     if client:
@@ -930,32 +954,45 @@ def listar_audit_log(
         LIMIT %s OFFSET %s
     """
     # Sempre o banco principal: registos com use_principal=True (acesso_http, login, ações admin).
+    _ensure_audit_log_table()
     conn = get_connection_principal()
     try:
         with conn.cursor() as cur:
-            cur.execute(sql_count, params_count)
-            total = cur.fetchone()["total"]
-            cur.execute(sql_list, params)
-            itens = cur.fetchall()
-        return {"total": total, "itens": itens}
+            try:
+                cur.execute(sql_count, params_count)
+                total = cur.fetchone()["total"]
+                cur.execute(sql_list, params)
+                itens = cur.fetchall()
+            except psycopg2.Error as exc:
+                # Arranque pode ter falhado silenciosamente; tenta criar e repetir.
+                if getattr(exc, "pgcode", None) != _PG_UNDEFINED_TABLE:
+                    raise
+                conn.rollback()
+                garantir_tabela_audit_log()
+                _audit_log_pronto = True
+                cur.execute(sql_count, params_count)
+                total = cur.fetchone()["total"]
+                cur.execute(sql_list, params)
+                itens = cur.fetchall()
+        return {"total": total, "itens": [_linha_json_compat(r) for r in itens]}
     finally:
         conn.close()
 
 
 def garantir_tabela_audit_log() -> None:
     """
-    Cria a tabela audit_log no banco principal se ainda não existir (equivalente à migração 007).
-    Evita 500 na página de logs quando a migração não foi aplicada manualmente no servidor.
+    Cria public.audit_log se não existir. Sem REFERENCES admins — evita falha de CREATE em
+    utilizadores Azure sem privilégios sobre a tabela admins (FK exige permissões extra).
     """
     conn = get_connection_principal()
     try:
         with conn.cursor() as cur:
             cur.execute(
                 """
-                CREATE TABLE IF NOT EXISTS audit_log (
+                CREATE TABLE IF NOT EXISTS public.audit_log (
                     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-                    admin_id UUID REFERENCES admins(id) ON DELETE SET NULL,
+                    admin_id UUID,
                     action TEXT NOT NULL,
                     entity_type TEXT,
                     entity_id TEXT,
@@ -967,13 +1004,13 @@ def garantir_tabela_audit_log() -> None:
                 """
             )
             cur.execute(
-                "CREATE INDEX IF NOT EXISTS idx_audit_log_created_at ON audit_log (created_at DESC)"
+                "CREATE INDEX IF NOT EXISTS idx_audit_log_created_at ON public.audit_log (created_at DESC)"
             )
             cur.execute(
-                "CREATE INDEX IF NOT EXISTS idx_audit_log_admin_id ON audit_log (admin_id)"
+                "CREATE INDEX IF NOT EXISTS idx_audit_log_admin_id ON public.audit_log (admin_id)"
             )
             cur.execute(
-                "CREATE INDEX IF NOT EXISTS idx_audit_log_action ON audit_log (action)"
+                "CREATE INDEX IF NOT EXISTS idx_audit_log_action ON public.audit_log (action)"
             )
             conn.commit()
     finally:

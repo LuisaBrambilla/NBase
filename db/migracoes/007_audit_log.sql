@@ -1,10 +1,11 @@
 -- Registo de auditoria: ações na plataforma (layout, normas, perfil, login).
 -- Visível apenas no centro de dados Tecbis.
 
+-- admin_id sem FK: utilizadores da app no Azure por vezes não têm permissão REFERENCES em admins.
 CREATE TABLE IF NOT EXISTS audit_log (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-    admin_id UUID REFERENCES admins(id) ON DELETE SET NULL,
+    admin_id UUID,
     action TEXT NOT NULL,
     entity_type TEXT,
     entity_id TEXT,
