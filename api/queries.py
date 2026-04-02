@@ -859,8 +859,13 @@ def inserir_audit_log(
     details: Dict[str, Any] | None = None,
     ip: str | None = None,
     client: str | None = None,
+    use_principal: bool = False,
 ) -> None:
-    conn = get_connection()
+    conn = (
+        get_connection_principal()
+        if use_principal
+        else get_connection()
+    )
     try:
         with conn.cursor() as cur:
             cur.execute(

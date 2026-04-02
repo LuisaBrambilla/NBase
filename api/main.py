@@ -16,6 +16,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from api import queries
+from api.request_ip import get_request_ip
 from db import db as db_module
 from api.auth import (
     gerar_mfa_secret,
@@ -112,6 +113,57 @@ _ADMIN_PUBLIC_PATHS = {"/admin/login"}
 VALID_CLIENTS = {"tecbis", "arespcj"}
 CLIENT_TO_ORIGEM = {"tecbis": None, "arespcj": "arespcj"}
 
+_STATIC_EXT = (
+    ".css", ".js", ".map", ".png", ".jpg", ".jpeg", ".gif", ".ico", ".svg",
+    ".woff", ".woff2", ".webp", ".ttf", ".eot", ".mp4", ".webm",
+)
+
+
+def _deve_registar_acesso_http(request: Request) -> bool:
+    """Evita poluir audit_log com assets estáticos e health checks."""
+    if request.method == "OPTIONS":
+        return False
+    if os.getenv("ACCESS_LOG_ENABLED", "1").strip().lower() in ("0", "false", "no"):
+        return False
+    path = request.url.path
+    pl = path.lower()
+    if pl in ("/favicon.ico", "/robots.txt"):
+        return False
+    for ext in _STATIC_EXT:
+        if pl.endswith(ext):
+            return False
+    if os.getenv("ACCESS_LOG_SKIP_HEALTH", "1").strip().lower() not in ("0", "false", "no"):
+        if pl in ("/api/health", "/api/health/db"):
+            return False
+    if pl in ("/docs", "/openapi.json", "/redoc"):
+        return False
+    return True
+
+
+def _registar_acesso_http(request: Request, response: Any) -> None:
+    """Grava IP e pedido HTTP no audit_log (base principal), visitantes e admins."""
+    ip = get_request_ip(request)
+    client = getattr(request.state, "client", "tecbis")
+    details: Dict[str, Any] = {
+        "method": request.method,
+        "path": request.url.path,
+        "status": getattr(response, "status_code", None),
+    }
+    q = request.url.query
+    if q and len(q) <= 240:
+        details["query"] = q
+    queries.inserir_audit_log(
+        use_principal=True,
+        admin_id=None,
+        admin_email=None,
+        action="acesso_http",
+        entity_type="request",
+        entity_id=None,
+        details=details,
+        ip=ip,
+        client=client,
+    )
+
 
 @app.middleware("http")
 async def client_middleware(request: Request, call_next):
@@ -121,7 +173,13 @@ async def client_middleware(request: Request, call_next):
         raw = "arespcj"
     request.state.client = raw if raw in VALID_CLIENTS else "tecbis"
     db_module.set_connection_client("arespcj" if request.state.client == "arespcj" else None)
-    return await call_next(request)
+    response = await call_next(request)
+    try:
+        if _deve_registar_acesso_http(request):
+            _registar_acesso_http(request, response)
+    except Exception:
+        pass
+    return response
 
 
 @app.middleware("http")
@@ -241,7 +299,7 @@ def _audit(
     """Regista uma ação no log de auditoria (visível apenas no centro Tecbis)."""
     try:
         client = getattr(request.state, "client", "tecbis")
-        ip = request.client.host if request.client else None
+        ip = get_request_ip(request)
         queries.inserir_audit_log(
             admin_id=admin_id,
             admin_email=admin_email,
@@ -251,6 +309,7 @@ def _audit(
             details=details,
             ip=ip,
             client=client,
+            use_principal=True,
         )
     except Exception:
         pass  # não falhar a request por falha no log
@@ -570,7 +629,7 @@ def admin_login(request: Request, payload: AdminLoginPayload) -> Dict[str, Any]:
     token = gerar_token({"sub": str(admin["id"]), "email": admin["email"]})
     # Log de login (request.state.client pode não estar definido no POST; usamos layout)
     try:
-        ip = request.client.host if request.client else None
+        ip = get_request_ip(request)
         queries.inserir_audit_log(
             admin_id=str(admin["id"]),
             admin_email=admin.get("email"),
@@ -580,6 +639,7 @@ def admin_login(request: Request, payload: AdminLoginPayload) -> Dict[str, Any]:
             details=None,
             ip=ip,
             client=layout,
+            use_principal=True,
         )
     except Exception:
         pass
