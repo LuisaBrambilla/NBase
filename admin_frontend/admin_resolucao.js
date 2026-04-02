@@ -37,9 +37,8 @@ const btnOrigemGovbr = document.getElementById("verificacaoOrigemGovbr");
 const btnBaseGen360 = document.getElementById("verificacaoBaseGen360");
 const btnBaseAres = document.getElementById("verificacaoBaseAres");
 
-/** tecbis = banco principal (ANA); arespcj = banco normas_arespcj (ARES-PCJ) */
+/** tecbis = banco principal (ANA); arespcj = banco ARES-PCJ (ou mesmo BD com origem arespcj) */
 let clientVerificacao = "tecbis";
-/** Sempre vazio na Gen360 (API ignora; fila manual = só arespcj). */
 let origemFilter = "";
 
 function headersVerificacao() {
@@ -306,8 +305,7 @@ function marcarBaseAtiva() {
   if (btnBaseGen360) btnBaseGen360.classList.toggle("ativo", clientVerificacao === "tecbis");
   if (btnBaseAres) btnBaseAres.classList.toggle("ativo", clientVerificacao === "arespcj");
   if (wrapOrigem) {
-    // Gen360: filtro «origem» não se aplica (fila manual = só arespcj); ARES: outro banco.
-    wrapOrigem.classList.toggle("hidden", true);
+    wrapOrigem.classList.toggle("hidden", clientVerificacao === "arespcj");
   }
 }
 
@@ -327,8 +325,8 @@ async function trocarOrigem(origem) {
     }
     setMensagem(
       origemFilter === "govbr"
-        ? "Pendentes só com origem gov.br (ANA)."
-        : "Revisão manual: só atos ARES-PCJ (origem arespcj).",
+        ? "Mostrando só normas ANA (gov.br)."
+        : "Mostrando todas as origens ANA (exceto ARES-PCJ).",
       "success"
     );
   } catch (err) {
@@ -357,8 +355,8 @@ async function trocarBase(client) {
     }
     setMensagem(
       c === "arespcj"
-        ? "Base ARES-PCJ: revisão e histórico deste banco."
-        : "Base Gen360: revisão manual só ARES-PCJ; normas ANA aparecem em «Verificações aprovadas» (aprovação automática). Use Origem para listar pendentes gov.br (caso raro).",
+        ? "Base ARES-PCJ: revisão manual e histórico dos atos ARES."
+        : "Base Gen360 (ANA): revisão manual das normas ANA; use Origem para filtrar gov.br.",
       "success"
     );
   } catch (err) {

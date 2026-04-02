@@ -82,21 +82,6 @@ async def lifespan(app: FastAPI):
         queries.garantir_colunas_verificacao()
     except Exception as exc:
         log.warning("garantir_colunas_verificacao (principal): %s", exc)
-    if os.getenv("VERIFICACAO_AUTO_ANA_GOVBR", "1").strip().lower() not in (
-        "0",
-        "false",
-        "no",
-    ):
-        try:
-            r = queries.marcar_ana_govbr_aprovadas_automaticamente()
-            n = r.get("atualizadas") or 0
-            if n:
-                log.info(
-                    "ANA (gov.br): %s norma(s) marcadas como verificação aprovada automaticamente.",
-                    n,
-                )
-        except Exception as exc:
-            log.warning("marcar_ana_govbr_aprovadas_automaticamente: %s", exc)
     try:
         db_module.set_connection_client("arespcj")
         queries.garantir_colunas_verificacao()
@@ -743,31 +728,6 @@ def admin_verificacao_diagnostico(
         return JSONResponse(
             status_code=500,
             content={"detail": f"diagnostico_verificacao_banco: {exc!s}"},
-        )
-
-
-@app.post("/admin/verificacao/reaplicar-ana-automatico")
-def admin_verificacao_reaplicar_ana_automatico(
-    admin: Dict[str, Any] = Depends(require_admin),
-) -> JSONResponse:
-    """Reaplica aprovação automática de normas ANA no banco principal (sem reiniciar a app)."""
-    _ = admin
-    if os.getenv("VERIFICACAO_AUTO_ANA_GOVBR", "1").strip().lower() in (
-        "0",
-        "false",
-        "no",
-    ):
-        raise HTTPException(
-            status_code=400,
-            detail="Aprovação automática ANA desativada (VERIFICACAO_AUTO_ANA_GOVBR).",
-        )
-    try:
-        return json_response_safe(queries.marcar_ana_govbr_aprovadas_automaticamente())
-    except Exception as exc:
-        logging.exception("admin_verificacao_reaplicar_ana_automatico")
-        return JSONResponse(
-            status_code=500,
-            content={"detail": f"reaplicar_ana_automatico: {exc!s}"},
         )
 
 

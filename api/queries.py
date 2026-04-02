@@ -980,85 +980,6 @@ def garantir_colunas_verificacao(*, tolerar_falha: bool = False) -> None:
         raise
 
 
-DESCRICAO_VERIFICACAO_AUTO_ANA = (
-    "Validação automática — normas ANA (fontes oficiais: gov.br, DOU, manual)."
-)
-
-
-def primeiro_admin_id_ativo() -> str | None:
-    """Primeiro administrador ativo no banco principal (para verificação automática)."""
-    conn = get_connection_principal()
-    try:
-        with conn.cursor() as cur:
-            cur.execute(
-                """
-                SELECT id::text AS id FROM admins
-                WHERE COALESCE(ativo, TRUE) = TRUE
-                ORDER BY criado_em ASC NULLS LAST
-                LIMIT 1
-                """
-            )
-            row = cur.fetchone()
-            return row["id"] if row else None
-    finally:
-        conn.close()
-
-
-def _norma_e_ana_nao_arespcj_sql() -> str:
-    """Condição SQL: norma ANA (órgão) que não é ARES-PCJ (origem arespcj)."""
-    return """
-        origem IS DISTINCT FROM 'arespcj'
-        AND (
-            UPPER(TRIM(COALESCE(orgao, ''))) = 'ANA'
-            OR UPPER(TRIM(COALESCE(orgao, ''))) LIKE 'ANA %'
-            OR (
-                origem IN ('govbr', 'manual', 'dou', 'dodf', 'ocr')
-                AND (orgao IS NULL OR TRIM(COALESCE(orgao, '')) = '')
-            )
-        )
-    """
-
-
-def marcar_ana_govbr_aprovadas_automaticamente() -> Dict[str, Any]:
-    """
-    Marca normas ANA (todas as origens exceto arespcj) como aprovadas na verificação.
-    Não altera origem arespcj (revisão manual). Idempotente.
-    Usa sempre o banco principal (get_connection_principal).
-    """
-    garantir_colunas_verificacao(tolerar_falha=True)
-    admin_id = primeiro_admin_id_ativo()
-    if not admin_id:
-        logger.warning(
-            "marcar_ana_govbr_aprovadas_automaticamente: nenhum admin ativo; ignorado."
-        )
-        return {"atualizadas": 0, "motivo": "sem_admin"}
-
-    cond_ana = _norma_e_ana_nao_arespcj_sql()
-    conn = get_connection_principal()
-    try:
-        with conn.cursor() as cur:
-            cur.execute(
-                f"""
-                UPDATE norma
-                SET
-                    verificacao_status = 'aprovado',
-                    verificacao_descricao = %s,
-                    verificacao_em = now(),
-                    verificacao_admin_id = %s::uuid
-                WHERE {cond_ana}
-                  AND (verificacao_status IS NULL OR verificacao_status = 'pendente')
-                  AND verificacao_admin_id IS NULL
-                """,
-                (DESCRICAO_VERIFICACAO_AUTO_ANA, admin_id),
-            )
-            n = cur.rowcount
-        conn.commit()
-    finally:
-        conn.close()
-
-    return {"atualizadas": n}
-
-
 def diagnostico_verificacao_banco() -> Dict[str, Any]:
     """Lista colunas verificacao_* em norma e total de linhas (para diagnosticar migração 004 no Azure)."""
     conn = get_connection()
@@ -1111,13 +1032,16 @@ def listar_normas_para_verificacao(
         if somente_pendentes
         else ""
     )
-    # Base principal (Gen360): revisão manual só ARES-PCJ. Ignora filtro «origem» do painel
-    # para não voltar a listar ANA (gov.br) como pendentes.
-    where_fila_manual_principal = ""
+    # Gen360 (tecbis): pendentes = normas ANA (exclui origem arespcj). ARES-PCJ: só arespcj.
+    where_por_base = ""
     effective_origem = origem
-    if somente_pendentes and (site_client or "tecbis") != "arespcj":
-        where_fila_manual_principal = " AND origem = 'arespcj' "
-        effective_origem = None
+    if somente_pendentes:
+        sc = site_client or "tecbis"
+        if not effective_origem:
+            if sc == "arespcj":
+                where_por_base = " AND origem = 'arespcj' "
+            else:
+                where_por_base = " AND origem IS DISTINCT FROM 'arespcj' "
     where_origem = " AND origem = %s" if effective_origem else ""
     params_count: List[Any] = []
     params_lista: List[Any] = []
@@ -1131,7 +1055,7 @@ def listar_normas_para_verificacao(
         FROM norma
         WHERE 1=1
         {where_pendentes}
-        {where_fila_manual_principal}
+        {where_por_base}
         {where_origem}
     """
     sql_lista = f"""
@@ -1153,7 +1077,7 @@ def listar_normas_para_verificacao(
         FROM norma
         WHERE 1=1
         {where_pendentes}
-        {where_fila_manual_principal}
+        {where_por_base}
         {where_origem}
         ORDER BY ano DESC, numero DESC
         LIMIT %s OFFSET %s
