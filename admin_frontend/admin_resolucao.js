@@ -120,6 +120,14 @@ function setMensagem(texto, tipo = "") {
   if (tipo) elMensagem.classList.add(tipo);
 }
 
+/** ID da norma no JSON da API (uuid string). */
+function idNormaNoItem(item) {
+  if (!item || typeof item !== "object") return null;
+  const raw = item.id ?? item.norma_id;
+  if (raw == null || String(raw).trim() === "") return null;
+  return String(raw);
+}
+
 function renderListaResumo(elemento, itensResumo, vazio, onEditar) {
   if (!elemento) return;
   elemento.innerHTML = "";
@@ -143,12 +151,18 @@ function renderListaResumo(elemento, itensResumo, vazio, onEditar) {
         <em>${formatarStatus(item.status)}${orgaoLabel}</em>
       </span>
     `;
-    if (typeof onEditar === "function" && item.id) {
+    if (typeof onEditar === "function") {
+      const nid = idNormaNoItem(item);
       const btn = document.createElement("button");
       btn.type = "button";
       btn.className = "btn btn-secondary verificacao-btn-editar";
       btn.textContent = "Editar";
-      btn.addEventListener("click", () => onEditar(item));
+      if (nid) {
+        btn.addEventListener("click", () => onEditar(Object.assign({}, item, { id: nid })));
+      } else {
+        btn.disabled = true;
+        btn.title = "ID da norma indisponível na resposta da API.";
+      }
       li.appendChild(btn);
     }
     elemento.appendChild(li);
@@ -361,19 +375,19 @@ async function carregarResumo() {
   renderListaResumo(
     elAprovadasLista,
     data.aprovadas || [],
-    "Nenhuma verificação aprovada nesse período.",
+    "Nenhuma aprovada neste período (com registos, cada linha tem o botão Editar).",
     editar
   );
   renderListaResumo(
     elConsertadasLista,
     data.consertadas || [],
-    "Nenhuma verificação consertada nesse período.",
+    "Nenhuma consertada neste período (com registos, cada linha tem o botão Editar).",
     editar
   );
   renderListaResumo(
     elRecusadasLista,
     data.recusadas || [],
-    "Nenhuma verificação recusada nesse período.",
+    "Nenhuma recusada neste período (com registos, cada linha tem o botão Editar).",
     editar
   );
 }
