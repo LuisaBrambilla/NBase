@@ -147,7 +147,7 @@ function renderListaResumo(elemento, itensResumo, vazio, onEditar) {
       const btn = document.createElement("button");
       btn.type = "button";
       btn.className = "btn btn-secondary verificacao-btn-editar";
-      btn.textContent = "Editar decisão";
+      btn.textContent = "Editar";
       btn.addEventListener("click", () => onEditar(item));
       li.appendChild(btn);
     }

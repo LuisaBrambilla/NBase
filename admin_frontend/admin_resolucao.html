@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Admin - Verificação de Normas</title>
-    <link rel="stylesheet" href="./styles.css" />
+    <link rel="stylesheet" href="./styles.css?v=12" />
   </head>
   <body class="no-sidebar">
     <header class="gov-header">
@@ -50,6 +50,7 @@
             <h1>Verificação de Normas</h1>
             <p class="subtitle">
               Revise a classificação, faça ajustes e decida se a norma deve ser aprovada ou recusada.
+              Normas já verificadas podem ser reabertas pelo histórico (botão <strong>Editar</strong>).
             </p>
           </div>
         </div>
@@ -71,7 +72,7 @@
           </div>
           <div class="panel-body">
             <div id="verificacaoEdicaoBanner" class="verificacao-edicao-banner hidden" role="status">
-              <span>Está a <strong>corrigir</strong> uma decisão já registada. Altere os campos necessários e escolha Aprovar ou Recusar.</span>
+              <span>Está a <strong>corrigir</strong> uma decisão já registada (inclui normas antes aprovadas). Altere os campos e escolha Aprovar ou Recusar.</span>
               <button id="btnCancelarEdicao" type="button" class="btn btn-secondary btn-sm">Cancelar edição</button>
             </div>
             <div id="verificacaoToolbar" class="verificacao-toolbar">
@@ -158,6 +159,11 @@
             </div>
           </div>
           <div class="panel-body">
+            <p class="verificacao-historico-ajuda">
+              Três colunas: <strong>aprovadas</strong>, <strong>consertadas</strong> (aprovação após corrigir dados) e
+              <strong>recusadas</strong>. Use <strong>Editar</strong> em qualquer linha para ajustar no futuro
+              uma norma já aprovada ou recusada — o formulário acima reabre com os dados atuais.
+            </p>
             <div class="verificacao-resumo-grid">
               <div class="verificacao-resumo-col">
                 <h3 class="verificacao-resumo-titulo">
@@ -191,6 +197,6 @@
     <script src="./admin_header.js"></script>
     <script src="./admin_session.js"></script>
     <script src="./admin_common.js?v=2"></script>
-    <script src="./admin_resolucao.js?v=11"></script>
+    <script src="./admin_resolucao.js?v=13"></script>
   </body>
 </html>
