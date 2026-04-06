@@ -449,6 +449,14 @@ def obter_ato(ato_id: str, request: Request):
     return HTMLResponse(html, status_code=200)
 
 
+def _raiz_projeto() -> Path:
+    return (
+        Path(os.getenv("PROJECT_ROOT", "")).resolve()
+        if os.getenv("PROJECT_ROOT")
+        else Path(__file__).resolve().parent.parent
+    )
+
+
 def _resolver_arquivo_html(caminho_html: str | None) -> Path | None:
     """Resolve o caminho do arquivo HTML (local ou servidor)."""
     if not caminho_html or not caminho_html.strip():
@@ -456,11 +464,35 @@ def _resolver_arquivo_html(caminho_html: str | None) -> Path | None:
     p = Path(caminho_html.strip())
     if p.is_absolute() and p.exists():
         return p
-    # Tenta pelo nome do arquivo na pasta data/html_conteudo do projeto
     nome = p.name
-    raiz = Path(__file__).resolve().parent.parent
+    raiz = _raiz_projeto()
     candidato = raiz / "data" / "html_conteudo" / nome
     return candidato if candidato.exists() else None
+
+
+def _resolver_arquivo_html_de_ato(ato: dict) -> Path | None:
+    """
+    HTML em data/html_conteudo: nome em caminho_html, ou convenção ana_ / arespcj_ (scripts de importação).
+    Em Azure: a pasta data/ tem de existir no disco (ex.: mount); o deploy GitHub Actions exclui data/ do pacote.
+    """
+    caminho = _resolver_arquivo_html(ato.get("caminho_html"))
+    if caminho:
+        return caminho
+    ano, numero = ato.get("ano"), ato.get("numero")
+    if ano is None or numero is None:
+        return None
+    raiz = _raiz_projeto()
+    base = raiz / "data" / "html_conteudo"
+    origem = (ato.get("origem") or "").strip().lower()
+    candidatos: list[Path] = []
+    if origem == "arespcj":
+        candidatos.append(base / f"arespcj_{ano}_{numero}.html")
+    if origem in ("govbr", "gov.br", "ana", ""):
+        candidatos.append(base / f"ana_{ano}_{numero}.html")
+    for c in candidatos:
+        if c.exists():
+            return c
+    return None
 
 
 @app.get("/public/atos/{ato_id}/conteudo", response_class=HTMLResponse)
@@ -472,7 +504,7 @@ def obter_ato_conteudo_html(ato_id: str, request: Request):
     origem_cliente = get_client_origem(request)
     if origem_cliente is not None and ato.get("origem") != origem_cliente:
         raise HTTPException(status_code=404, detail="Ato nao encontrado.")
-    caminho = _resolver_arquivo_html(ato.get("caminho_html"))
+    caminho = _resolver_arquivo_html_de_ato(ato)
     if not caminho:
         raise HTTPException(
             status_code=404,
@@ -493,27 +525,45 @@ def _resolver_arquivo_docx(caminho_docx: str | None) -> Path | None:
     nome = Path(caminho_docx.strip()).name
     if not nome.lower().endswith(".docx"):
         return None
-    raiz = Path(os.getenv("PROJECT_ROOT", "")).resolve() if os.getenv("PROJECT_ROOT") else Path(__file__).resolve().parent.parent
+    raiz = _raiz_projeto()
     candidato = raiz / "data" / "docx_arespcj" / nome
     return candidato if candidato.exists() else None
 
 
 def _resolver_arquivo_pdf(ato: dict) -> Path | None:
-    """Resolve o ficheiro PDF do ato (por caminho na BD ou por convenção ARES-PCJ)."""
-    raiz = Path(os.getenv("PROJECT_ROOT", "")).resolve() if os.getenv("PROJECT_ROOT") else Path(__file__).resolve().parent.parent
+    """
+    PDF em data/pdf_arespcj, data/pdf_govbr ou data/pdf (nome em caminho_pdf ou convenções).
+    ANA (govbr): ana_ano_numero.pdf em pdf_govbr ou pdf. ARES-PCJ: arespcj_ano_numero.pdf em pdf_arespcj.
+    Caminho absoluto na BD: usa se existir.
+    Nota Azure: pasta data/ não vai no deploy por omissão — use ficheiros no VM/mount ou ajuste o pipeline.
+    """
+    raiz = _raiz_projeto()
     caminho_pdf = ato.get("caminho_pdf")
     if caminho_pdf and str(caminho_pdf).strip():
-        nome = Path(caminho_pdf.strip()).name
+        p = Path(caminho_pdf.strip())
+        if p.is_absolute() and p.exists() and p.suffix.lower() == ".pdf":
+            return p
+        nome = p.name
         if nome.lower().endswith(".pdf"):
-            cand = raiz / "data" / "pdf_arespcj" / nome
-            if cand.exists():
-                return cand
-    # Convenção ARES-PCJ: arespcj_ano_numero.pdf
-    if ato.get("origem") == "arespcj" and ato.get("ano") is not None and ato.get("numero") is not None:
-        nome = f"arespcj_{ato['ano']}_{ato['numero']}.pdf"
-        cand = raiz / "data" / "pdf_arespcj" / nome
-        if cand.exists():
-            return cand
+            for sub in ("pdf_arespcj", "pdf_govbr", "pdf"):
+                cand = raiz / "data" / sub / nome
+                if cand.exists():
+                    return cand
+    ano, numero = ato.get("ano"), ato.get("numero")
+    origem = (ato.get("origem") or "").strip().lower()
+    if ano is not None and numero is not None:
+        if origem == "arespcj":
+            nome = f"arespcj_{ano}_{numero}.pdf"
+            for sub in ("pdf_arespcj", "pdf"):
+                cand = raiz / "data" / sub / nome
+                if cand.exists():
+                    return cand
+        if origem in ("govbr", "gov.br", "ana", ""):
+            nome = f"ana_{ano}_{numero}.pdf"
+            for sub in ("pdf_govbr", "pdf_arespcj", "pdf"):
+                cand = raiz / "data" / sub / nome
+                if cand.exists():
+                    return cand
     return None
 
 
