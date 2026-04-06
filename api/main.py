@@ -775,6 +775,30 @@ def admin_verificacao_normas(
         )
 
 
+@app.get("/admin/verificacao/norma/{norma_id}")
+def admin_verificacao_norma_por_id(
+    request: Request,
+    norma_id: str,
+    admin: Dict[str, Any] = Depends(require_admin),
+) -> JSONResponse:
+    """Carrega uma norma para correção de decisão (histórico) ou conferência; respeita X-Client / base."""
+    _ = admin
+    try:
+        client = getattr(request.state, "client", "tecbis")
+        item = queries.obter_norma_verificacao_por_id(norma_id, site_client=client)
+        if not item:
+            raise HTTPException(status_code=404, detail="Norma não encontrada ou fora do âmbito desta base.")
+        return json_response_safe({"item": item})
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logging.exception("admin_verificacao_norma_por_id")
+        return JSONResponse(
+            status_code=500,
+            content={"detail": f"obter_norma_verificacao_por_id: {exc!s}"},
+        )
+
+
 @app.get("/admin/verificacao/diagnostico")
 def admin_verificacao_diagnostico(
     admin: Dict[str, Any] = Depends(require_admin),

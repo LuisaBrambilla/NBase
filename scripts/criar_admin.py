@@ -38,7 +38,7 @@ def _qr_ascii(otpauth_uri: str) -> str:
     """Gera QR Code em ASCII para o terminal (opcional: depende do pacote qrcode)."""
     try:
         import qrcode
-        qr = qrcode.QRCode(box_size=1, border=1)
+        qr = qrcode.QRCode(box_size=2, border=1)
         qr.add_data(otpauth_uri)
         qr.make(fit=True)
         buf = []
@@ -106,6 +106,9 @@ def main() -> int:
     print(_qr_ascii(otpauth_uri))
     print()
     print("Depois disso, o usuário pode fazer login em /admin com email, senha e o código de 6 dígitos.")
+    print()
+    print("Se precisar ver o QR outra vez (admin já existe): pip install qrcode")
+    print('  python -m scripts.mostrar_qr_admin --email "' + email + '"')
     return 0
 
 

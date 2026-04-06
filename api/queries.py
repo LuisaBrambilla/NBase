@@ -1177,6 +1177,50 @@ def listar_normas_para_verificacao(
     return {"total": total, "itens": itens}
 
 
+def obter_norma_verificacao_por_id(
+    norma_id: str,
+    *,
+    site_client: str | None = None,
+) -> Dict[str, Any] | None:
+    """Uma norma para revisão/edição (inclui já verificadas), respeitando o âmbito Gen360 vs ARES-PCJ."""
+    garantir_colunas_verificacao(tolerar_falha=True)
+    sc = site_client or "tecbis"
+    if sc == "arespcj":
+        where_base = " AND origem = 'arespcj' "
+    else:
+        where_base = " AND origem IS DISTINCT FROM 'arespcj' "
+    conn = get_connection()
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                f"""
+                SELECT
+                    id,
+                    data_publicacao,
+                    ano,
+                    numero,
+                    ementa,
+                    assunto,
+                    status,
+                    url_oficial,
+                    orgao,
+                    origem,
+                    COALESCE(verificacao_status, 'pendente') AS verificacao_status,
+                    verificacao_descricao,
+                    verificacao_em,
+                    verificacao_admin_id
+                FROM norma
+                WHERE id = %s
+                {where_base}
+                """,
+                (norma_id,),
+            )
+            row = cur.fetchone()
+            return _linha_json_compat(row) if row else None
+    finally:
+        conn.close()
+
+
 def resumo_verificacoes(
     *, limit: int = 12, dias: int | None = None, origem: str | None = None
 ) -> Dict[str, Any]:
@@ -1261,6 +1305,29 @@ def resumo_verificacoes(
                 params_lista,
             )
             consertadas = cur.fetchall()
+
+            cur.execute(
+                """
+                SELECT
+                    id,
+                    data_publicacao,
+                    ano,
+                    numero,
+                    status,
+                    orgao,
+                    verificacao_descricao,
+                    verificacao_em
+                FROM norma
+                WHERE verificacao_status = 'recusado'
+                  AND verificacao_admin_id IS NOT NULL
+                {where_origem}
+                {where_periodo}
+                ORDER BY verificacao_em DESC NULLS LAST, ano DESC, numero DESC
+                LIMIT %s
+                """.format(where_origem=where_origem, where_periodo=where_periodo),
+                params_lista,
+            )
+            recusadas = cur.fetchall()
     finally:
         conn.close()
 
@@ -1273,6 +1340,7 @@ def resumo_verificacoes(
         },
         "aprovadas": [_linha_json_compat(r) for r in aprovadas],
         "consertadas": [_linha_json_compat(r) for r in consertadas],
+        "recusadas": [_linha_json_compat(r) for r in recusadas],
     }
 
 

@@ -24,6 +24,11 @@ const elAprovadasTotal = document.getElementById("verificacaoAprovadasTotal");
 const elConsertadasTotal = document.getElementById("verificacaoConsertadasTotal");
 const elAprovadasLista = document.getElementById("verificacaoAprovadasLista");
 const elConsertadasLista = document.getElementById("verificacaoConsertadasLista");
+const elRecusadasTotal = document.getElementById("verificacaoRecusadasTotal");
+const elRecusadasLista = document.getElementById("verificacaoRecusadasLista");
+const elEdicaoBanner = document.getElementById("verificacaoEdicaoBanner");
+const elToolbar = document.getElementById("verificacaoToolbar");
+const btnCancelarEdicao = document.getElementById("btnCancelarEdicao");
 const filtroResumoBtns = Array.from(
   document.querySelectorAll(".verificacao-filtro-btn")
 );
@@ -87,6 +92,9 @@ const vDescricao = document.getElementById("vDescricao");
 let itens = [];
 let indiceAtual = 0;
 let filtroResumoDias = 30;
+/** Edição de decisão já registada (carregada do histórico). */
+let modoEdicao = false;
+let itemEdicao = null;
 const STATUS_LABELS = {
   vigente: "Vigente",
   vigente_alterado: "Vigente alterado",
@@ -112,7 +120,7 @@ function setMensagem(texto, tipo = "") {
   if (tipo) elMensagem.classList.add(tipo);
 }
 
-function renderListaResumo(elemento, itensResumo, vazio) {
+function renderListaResumo(elemento, itensResumo, vazio, onEditar) {
   if (!elemento) return;
   elemento.innerHTML = "";
   if (!itensResumo || !itensResumo.length) {
@@ -135,6 +143,14 @@ function renderListaResumo(elemento, itensResumo, vazio) {
         <em>${formatarStatus(item.status)}${orgaoLabel}</em>
       </span>
     `;
+    if (typeof onEditar === "function" && item.id) {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "btn btn-secondary verificacao-btn-editar";
+      btn.textContent = "Editar decisão";
+      btn.addEventListener("click", () => onEditar(item));
+      li.appendChild(btn);
+    }
     elemento.appendChild(li);
   });
 }
@@ -170,6 +186,14 @@ function atualizarNavegacao() {
   if (elContador) {
     elContador.textContent = `${total} pendentes`;
   }
+  if (modoEdicao) {
+    if (elPosicao) elPosicao.textContent = "Edição de registo já verificado";
+    btnAnterior.disabled = true;
+    btnProxima.disabled = true;
+    btnAprovar.disabled = false;
+    btnRecusar.disabled = false;
+    return;
+  }
   if (elPosicao) {
     elPosicao.textContent = total
       ? `Registro ${indiceAtual + 1} de ${total}`
@@ -182,12 +206,62 @@ function atualizarNavegacao() {
 }
 
 function render() {
-  const item = itens[indiceAtual];
+  const item = modoEdicao ? itemEdicao : itens[indiceAtual];
   preencherFormulario(item);
   atualizarNavegacao();
-  if (!item) {
+  if (!modoEdicao && !item) {
     setMensagem("Nenhuma norma pendente de verificação.", "success");
   }
+}
+
+function cancelarEdicao() {
+  modoEdicao = false;
+  itemEdicao = null;
+  if (elEdicaoBanner) elEdicaoBanner.classList.add("hidden");
+  if (elToolbar) elToolbar.classList.remove("hidden");
+  render();
+  setMensagem("", "");
+}
+
+async function abrirEdicaoDesdeHistorico(resumoItem) {
+  const id = resumoItem && resumoItem.id;
+  if (!id) return;
+  setMensagem("A carregar norma…");
+  const headers = headersVerificacao();
+  const response = await fetch(`${baseApiUrl()}/admin/verificacao/norma/${id}`, {
+    headers,
+    cache: "no-store",
+  });
+  const text = await response.text();
+  let data = {};
+  try {
+    data = text ? JSON.parse(text) : {};
+  } catch (_) {
+    data = {};
+  }
+  if (!response.ok) {
+    if (redirecionarLoginSe401(response, data)) return;
+    const det = data.detail || data.message || text?.slice(0, 200);
+    setMensagem(typeof det === "string" ? det : "Erro ao carregar norma.", "error");
+    return;
+  }
+  const item = data.item;
+  if (!item) {
+    setMensagem("Norma não encontrada.", "error");
+    return;
+  }
+  modoEdicao = true;
+  itemEdicao = item;
+  if (elEdicaoBanner) elEdicaoBanner.classList.remove("hidden");
+  if (elToolbar) elToolbar.classList.add("hidden");
+  preencherFormulario(item);
+  atualizarNavegacao();
+  setMensagem(
+    "Corrija os dados se necessário e registe nova decisão (Aprovar ou Recusar).",
+    "success"
+  );
+  const form = document.getElementById("verificacaoForm");
+  if (form && form.scrollIntoView) form.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 async function carregarPendentes() {
@@ -276,16 +350,31 @@ async function carregarResumo() {
   if (elConsertadasTotal) {
     elConsertadasTotal.textContent = String(data.totais?.consertado ?? 0);
   }
+  if (elRecusadasTotal) {
+    elRecusadasTotal.textContent = String(data.totais?.recusado ?? 0);
+  }
+
+  const editar = (item) => {
+    abrirEdicaoDesdeHistorico(item).catch((err) => setMensagem(err.message, "error"));
+  };
 
   renderListaResumo(
     elAprovadasLista,
     data.aprovadas || [],
-    "Nenhuma verificação aprovada nesse período."
+    "Nenhuma verificação aprovada nesse período.",
+    editar
   );
   renderListaResumo(
     elConsertadasLista,
     data.consertadas || [],
-    "Nenhuma verificação consertada nesse período."
+    "Nenhuma verificação consertada nesse período.",
+    editar
+  );
+  renderListaResumo(
+    elRecusadasLista,
+    data.recusadas || [],
+    "Nenhuma verificação recusada nesse período.",
+    editar
   );
 }
 
@@ -311,6 +400,7 @@ function marcarBaseAtiva() {
 
 async function trocarOrigem(origem) {
   if (clientVerificacao === "arespcj") return;
+  if (modoEdicao) cancelarEdicao();
   origemFilter = origem || "";
   marcarOrigemAtiva();
   try {
@@ -337,6 +427,7 @@ async function trocarOrigem(origem) {
 async function trocarBase(client) {
   const c = client === "arespcj" ? "arespcj" : "tecbis";
   if (c === clientVerificacao) return;
+  if (modoEdicao) cancelarEdicao();
   clientVerificacao = c;
   if (c === "arespcj") {
     origemFilter = "";
@@ -368,6 +459,7 @@ filtroResumoBtns.forEach((btn) => {
   btn.addEventListener("click", async () => {
     const dias = Number(btn.dataset.dias ?? "0");
     if (!Number.isFinite(dias) || dias < 0 || dias === filtroResumoDias) return;
+    if (modoEdicao) cancelarEdicao();
     filtroResumoDias = dias;
     marcarFiltroResumoAtivo();
     try {
@@ -393,8 +485,8 @@ function payloadAtual(decisao) {
 }
 
 async function decidir(decisao) {
-  const item = itens[indiceAtual];
-  if (!item) return;
+  const item = modoEdicao && itemEdicao ? itemEdicao : itens[indiceAtual];
+  if (!item || !item.id) return;
 
   setMensagem("Salvando decisão...");
   const headers = Object.assign(
@@ -417,6 +509,13 @@ async function decidir(decisao) {
   if (!response.ok) {
     if (redirecionarLoginSe401(response, erro)) return;
     throw new Error(erro.detail || "Erro ao salvar decisão.");
+  }
+
+  if (modoEdicao) {
+    cancelarEdicao();
+    await Promise.allSettled([carregarPendentes(), carregarResumo()]);
+    setMensagem("Decisão atualizada com sucesso.", "success");
+    return;
   }
 
   itens.splice(indiceAtual, 1);
@@ -463,6 +562,7 @@ if (btnOrigemGovbr)
   btnOrigemGovbr.addEventListener("click", () => trocarOrigem("govbr"));
 if (btnBaseGen360) btnBaseGen360.addEventListener("click", () => trocarBase("tecbis"));
 if (btnBaseAres) btnBaseAres.addEventListener("click", () => trocarBase("arespcj"));
+if (btnCancelarEdicao) btnCancelarEdicao.addEventListener("click", () => cancelarEdicao());
 
 Promise.allSettled([carregarPendentes(), carregarResumo()]).then((results) => {
   const falhas = results

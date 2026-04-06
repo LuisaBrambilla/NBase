@@ -70,7 +70,11 @@
             <span id="verificacaoContador" class="panel-tag">0 pendentes</span>
           </div>
           <div class="panel-body">
-            <div class="verificacao-toolbar">
+            <div id="verificacaoEdicaoBanner" class="verificacao-edicao-banner hidden" role="status">
+              <span>Está a <strong>corrigir</strong> uma decisão já registada. Altere os campos necessários e escolha Aprovar ou Recusar.</span>
+              <button id="btnCancelarEdicao" type="button" class="btn btn-secondary btn-sm">Cancelar edição</button>
+            </div>
+            <div id="verificacaoToolbar" class="verificacao-toolbar">
               <button id="verificacaoAnterior" class="btn btn-secondary" type="button">Anterior</button>
               <span id="verificacaoPosicao" class="page-info">Registro 0 de 0</span>
               <button id="verificacaoProxima" class="btn btn-secondary" type="button">Próxima</button>
@@ -169,6 +173,13 @@
                 </h3>
                 <ul id="verificacaoConsertadasLista" class="verificacao-resumo-lista"></ul>
               </div>
+              <div class="verificacao-resumo-col">
+                <h3 class="verificacao-resumo-titulo">
+                  Verificações recusadas
+                  <span id="verificacaoRecusadasTotal" class="verificacao-resumo-total">0</span>
+                </h3>
+                <ul id="verificacaoRecusadasLista" class="verificacao-resumo-lista"></ul>
+              </div>
             </div>
           </div>
         </div>
@@ -180,6 +191,6 @@
     <script src="./admin_header.js"></script>
     <script src="./admin_session.js"></script>
     <script src="./admin_common.js?v=2"></script>
-    <script src="./admin_resolucao.js?v=10"></script>
+    <script src="./admin_resolucao.js?v=11"></script>
   </body>
 </html>

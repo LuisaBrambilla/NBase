@@ -22,7 +22,8 @@ def _qr_ascii(otpauth_uri: str) -> str:
     """QR Code em ASCII para o terminal."""
     try:
         import qrcode
-        qr = qrcode.QRCode(box_size=1, border=1)
+        # box_size 2 legível no Windows Terminal / PowerShell (1 era quase invisível)
+        qr = qrcode.QRCode(box_size=2, border=1)
         qr.add_data(otpauth_uri)
         qr.make(fit=True)
         return "\n".join(

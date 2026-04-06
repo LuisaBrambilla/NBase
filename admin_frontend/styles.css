@@ -1748,10 +1748,36 @@ body.light .filter-group select {
   color: #ffffff;
 }
 
+.verificacao-edicao-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(42, 131, 107, 0.45);
+  background: rgba(42, 131, 107, 0.12);
+  font-size: 14px;
+  color: #024053;
+}
+
+.verificacao-edicao-banner.hidden {
+  display: none;
+}
+
 .verificacao-resumo-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 14px;
+}
+
+.verificacao-btn-editar {
+  align-self: flex-end;
+  margin-top: 4px;
+  font-size: 12px;
+  padding: 6px 12px;
 }
 
 .verificacao-resumo-col {
@@ -1789,6 +1815,9 @@ body.light .filter-group select {
 }
 
 .verificacao-resumo-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
   border: 1px solid var(--border-soft);
   border-radius: 10px;
   padding: 8px 10px;
