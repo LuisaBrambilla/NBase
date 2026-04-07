@@ -16,7 +16,9 @@ Uso (raiz do projeto, venv ativo):
   python -m scripts.coletar_ana_govbr --limite 20
   python -m scripts.coletar_ana_govbr --ano-min 2020 --ano-max 2025
   python -m scripts.coletar_ana_govbr --sem-html   # só BD (sem ficheiro em html_conteudo)
+  python -m scripts.coletar_ana_govbr --baixar-pdf  # também PDF em data/pdf_govbr/ana_ANO_NUM.pdf (botão PDF no site)
   python -m scripts.coletar_ana_govbr --reenriquecer-ementa   # corrigir só ementa (BD já carregada)
+  python -m scripts.baixar_pdf_ana_govbr   # só PDF para normas ANA já na BD
 """
 from __future__ import annotations
 
@@ -70,6 +72,7 @@ MESES_PT = {
 }
 
 HTML_CONTEUDO_DIR = ROOT / "data" / "html_conteudo"
+PDF_GOVBR_DIR = ROOT / "data" / "pdf_govbr"
 PAUSA_ENTRE_PEDIDOS_S = 0.35
 
 
@@ -227,7 +230,79 @@ def extrair_pagina_resolucao(html_text: str, url: str) -> dict:
         "texto_busca": (texto_busca[:500000] if texto_busca else None),
         "data_publicacao": data_pub,
         "url_oficial": url,
+        "url_pdf": extrair_url_pdf_govbr(soup, url),
     }
+
+
+def extrair_url_pdf_govbr(soup: BeautifulSoup, base_url: str) -> str | None:
+    """Procura link para PDF na página da resolução (gov.br / ANA)."""
+    for link in soup.find_all("link", href=True):
+        t = (link.get("type") or "").lower()
+        if "pdf" in t:
+            u = urljoin(base_url, link["href"].strip())
+            if u.startswith("http"):
+                return u
+    candidatos: list[tuple[int, str]] = []
+    for a in soup.find_all("a", href=True):
+        href = (a.get("href") or "").strip()
+        if not href or ".pdf" not in href.lower():
+            continue
+        u = urljoin(base_url, href)
+        if not u.startswith("http"):
+            continue
+        low = u.lower()
+        pr = 0
+        if "gov.br" in low:
+            pr += 3
+        if "ana" in low or "legislacao" in low or "resoluc" in low:
+            pr += 2
+        rot = ((a.get_text() or "") + " " + (a.get("title") or "")).lower()
+        if re.search(r"pdf|baixar|download|arquivo", rot):
+            pr += 2
+        candidatos.append((pr, u))
+    if candidatos:
+        candidatos.sort(key=lambda x: -x[0])
+        return candidatos[0][1]
+    for tag in soup.find_all(["iframe", "embed"], src=True):
+        src = (tag.get("src") or "").strip()
+        if ".pdf" in src.lower():
+            u = urljoin(base_url, src)
+            if u.startswith("http"):
+                return u
+    return None
+
+
+def baixar_pdf_sess(sess: requests.Session, url_pdf: str, dest: Path) -> bool:
+    """Grava o PDF em disco. Devolve False se resposta inválida ou ficheiro demasiado pequeno."""
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    r = sess.get(url_pdf, headers=HEADERS, timeout=120, stream=True, allow_redirects=True)
+    r.raise_for_status()
+    ct = (r.headers.get("content-type") or "").lower()
+    if "text/html" in ct and "pdf" not in ct:
+        return False
+    tmp = dest.with_suffix(dest.suffix + ".part")
+    try:
+        with open(tmp, "wb") as f:
+            for chunk in r.iter_content(chunk_size=65536):
+                if chunk:
+                    f.write(chunk)
+        sz = tmp.stat().st_size
+        if sz < 256:
+            tmp.unlink(missing_ok=True)
+            return False
+        with open(tmp, "rb") as rf:
+            head = rf.read(5)
+        if head != b"%PDF-":
+            tmp.unlink(missing_ok=True)
+            return False
+        tmp.replace(dest)
+        return True
+    finally:
+        if tmp.exists():
+            try:
+                tmp.unlink()
+            except OSError:
+                pass
 
 
 def _html_conteudo_simples(titulo: str | None, corpo_texto: str) -> str:
@@ -257,16 +332,17 @@ def inserir_ou_atualizar(
     texto_busca: str | None,
     url_oficial: str,
     caminho_html: str | None,
+    caminho_pdf: str | None = None,
 ) -> bool:
     """True se inseriu novo registo, False se atualizou existente."""
     cur.execute(
         """
         INSERT INTO norma (
             orgao, tipo, numero, ano, data_publicacao, titulo, ementa,
-            origem, status, url_oficial, caminho_html, texto_busca
+            origem, status, url_oficial, caminho_html, caminho_pdf, texto_busca
         )
         VALUES (
-            %s, %s, %s, %s, %s, %s, %s, %s, 'vigente', %s, %s, %s
+            %s, %s, %s, %s, %s, %s, %s, %s, 'vigente', %s, %s, %s, %s
         )
         ON CONFLICT (orgao, tipo, ano, numero, origem)
         DO UPDATE SET
@@ -275,6 +351,7 @@ def inserir_ou_atualizar(
             ementa = COALESCE(EXCLUDED.ementa, norma.ementa),
             url_oficial = COALESCE(EXCLUDED.url_oficial, norma.url_oficial),
             caminho_html = COALESCE(EXCLUDED.caminho_html, norma.caminho_html),
+            caminho_pdf = COALESCE(EXCLUDED.caminho_pdf, norma.caminho_pdf),
             texto_busca = COALESCE(EXCLUDED.texto_busca, norma.texto_busca),
             atualizado_em = now()
         RETURNING (xmax = 0) AS inserted
@@ -290,6 +367,7 @@ def inserir_ou_atualizar(
             ORIGEM,
             url_oficial,
             caminho_html,
+            caminho_pdf,
             texto_busca,
         ),
     )
@@ -382,6 +460,11 @@ def main() -> int:
         action="store_true",
         help="Não importar listagem: só atualizar ementa na BD para linhas ANA com origem govbr.",
     )
+    ap.add_argument(
+        "--baixar-pdf",
+        action="store_true",
+        help="Descarregar PDF oficial (link na página) para data/pdf_govbr/ana_ANO_NUM.pdf e gravar caminho_pdf na BD.",
+    )
     args = ap.parse_args()
 
     precisa_bd = args.reenriquecer_ementa or not args.dry_run
@@ -424,6 +507,8 @@ def main() -> int:
         return 0
 
     HTML_CONTEUDO_DIR.mkdir(parents=True, exist_ok=True)
+    if args.baixar_pdf:
+        PDF_GOVBR_DIR.mkdir(parents=True, exist_ok=True)
 
     inseridos = 0
     atualizados = 0
@@ -452,6 +537,23 @@ def main() -> int:
                     out.write_text(html_doc, encoding="utf-8")
                     caminho_html_val = nome_html
 
+                nome_pdf = f"ana_{ano}_{numero}.pdf"
+                caminho_pdf_val: str | None = None
+                if args.baixar_pdf:
+                    url_pdf = meta.get("url_pdf")
+                    if url_pdf:
+                        dest_pdf = PDF_GOVBR_DIR / nome_pdf
+                        try:
+                            time.sleep(max(0.0, args.pausa))
+                            if baixar_pdf_sess(sess, url_pdf, dest_pdf):
+                                caminho_pdf_val = nome_pdf
+                            else:
+                                print(f"  [aviso] {numero}/{ano}: PDF não gravado (resposta inválida ou sem bytes).")
+                        except Exception as ex:
+                            print(f"  [aviso] {numero}/{ano}: falha ao baixar PDF — {ex}")
+                    else:
+                        print(f"  [aviso] {numero}/{ano}: sem link .pdf na página gov.br.")
+
                 with conn.cursor() as cur:
                     novo = inserir_ou_atualizar(
                         cur,
@@ -463,6 +565,7 @@ def main() -> int:
                         texto_busca=meta["texto_busca"],
                         url_oficial=meta["url_oficial"] or item.url,
                         caminho_html=caminho_html_val,
+                        caminho_pdf=caminho_pdf_val,
                     )
                 conn.commit()
                 if novo:
