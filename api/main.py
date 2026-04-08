@@ -457,6 +457,35 @@ def _raiz_projeto() -> Path:
     )
 
 
+def _ano_numero_int(ano: Any, numero: Any) -> tuple[int, int] | None:
+    """Garante int para nomes ana_/arespcj_ (evita Decimal/str da BD)."""
+    if ano is None or numero is None:
+        return None
+    try:
+        return int(ano), int(numero)
+    except (TypeError, ValueError):
+        return None
+
+
+def _ficheiro_em_pasta(pasta: Path, nome_esperado: str) -> Path | None:
+    """
+    Resolve ficheiro em pasta; no Linux, nomes diferem em maiúsculas (ex.: FTPS desde Windows).
+    """
+    if not pasta.is_dir():
+        return None
+    direto = pasta / nome_esperado
+    if direto.is_file():
+        return direto
+    alvo = nome_esperado.lower()
+    try:
+        for f in pasta.iterdir():
+            if f.is_file() and f.name.lower() == alvo:
+                return f
+    except OSError:
+        return None
+    return None
+
+
 def _resolver_arquivo_html(caminho_html: str | None) -> Path | None:
     """Resolve o caminho do arquivo HTML (local ou servidor)."""
     if not caminho_html or not caminho_html.strip():
@@ -466,8 +495,7 @@ def _resolver_arquivo_html(caminho_html: str | None) -> Path | None:
         return p
     nome = p.name
     raiz = _raiz_projeto()
-    candidato = raiz / "data" / "html_conteudo" / nome
-    return candidato if candidato.exists() else None
+    return _ficheiro_em_pasta(raiz / "data" / "html_conteudo", nome)
 
 
 def _resolver_arquivo_html_de_ato(ato: dict) -> Path | None:
@@ -478,20 +506,22 @@ def _resolver_arquivo_html_de_ato(ato: dict) -> Path | None:
     caminho = _resolver_arquivo_html(ato.get("caminho_html"))
     if caminho:
         return caminho
-    ano, numero = ato.get("ano"), ato.get("numero")
-    if ano is None or numero is None:
+    pair = _ano_numero_int(ato.get("ano"), ato.get("numero"))
+    if not pair:
         return None
+    ano, numero = pair
     raiz = _raiz_projeto()
     base = raiz / "data" / "html_conteudo"
     origem = (ato.get("origem") or "").strip().lower()
-    candidatos: list[Path] = []
+    nomes: list[str] = []
     if origem == "arespcj":
-        candidatos.append(base / f"arespcj_{ano}_{numero}.html")
+        nomes.append(f"arespcj_{ano}_{numero}.html")
     if origem in ("govbr", "gov.br", "ana", ""):
-        candidatos.append(base / f"ana_{ano}_{numero}.html")
-    for c in candidatos:
-        if c.exists():
-            return c
+        nomes.append(f"ana_{ano}_{numero}.html")
+    for nome in nomes:
+        found = _ficheiro_em_pasta(base, nome)
+        if found:
+            return found
     return None
 
 
@@ -546,24 +576,25 @@ def _resolver_arquivo_pdf(ato: dict) -> Path | None:
         nome = p.name
         if nome.lower().endswith(".pdf"):
             for sub in ("pdf_arespcj", "pdf_govbr", "pdf"):
-                cand = raiz / "data" / sub / nome
-                if cand.exists():
-                    return cand
-    ano, numero = ato.get("ano"), ato.get("numero")
+                found = _ficheiro_em_pasta(raiz / "data" / sub, nome)
+                if found:
+                    return found
+    pair = _ano_numero_int(ato.get("ano"), ato.get("numero"))
     origem = (ato.get("origem") or "").strip().lower()
-    if ano is not None and numero is not None:
+    if pair:
+        ano, numero = pair
         if origem == "arespcj":
             nome = f"arespcj_{ano}_{numero}.pdf"
             for sub in ("pdf_arespcj", "pdf"):
-                cand = raiz / "data" / sub / nome
-                if cand.exists():
-                    return cand
+                found = _ficheiro_em_pasta(raiz / "data" / sub, nome)
+                if found:
+                    return found
         if origem in ("govbr", "gov.br", "ana", ""):
             nome = f"ana_{ano}_{numero}.pdf"
             for sub in ("pdf_govbr", "pdf_arespcj", "pdf"):
-                cand = raiz / "data" / sub / nome
-                if cand.exists():
-                    return cand
+                found = _ficheiro_em_pasta(raiz / "data" / sub, nome)
+                if found:
+                    return found
     return None
 
 
