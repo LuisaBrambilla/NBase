@@ -495,13 +495,18 @@ def _resolver_arquivo_html(caminho_html: str | None) -> Path | None:
         return p
     nome = p.name
     raiz = _raiz_projeto()
-    return _ficheiro_em_pasta(raiz / "data" / "html_conteudo", nome)
+    for sub in ("html_conteudo", "html_completo"):
+        found = _ficheiro_em_pasta(raiz / "data" / sub, nome)
+        if found:
+            return found
+    return None
 
 
 def _resolver_arquivo_html_de_ato(ato: dict) -> Path | None:
     """
-    HTML em data/html_conteudo: nome em caminho_html, ou convenção ana_ / arespcj_ (scripts de importação).
-    Em Azure: a pasta data/ tem de existir no disco (ex.: mount); o deploy GitHub Actions exclui data/ do pacote.
+    HTML em data/html_conteudo ou data/html_completo (importação ARES usa ambas).
+    Nome em caminho_html, ou convenção ana_ / arespcj_ (scripts).
+    Em Azure: data/ no disco (FTPS); o deploy GitHub exclui data/ do ZIP.
     """
     caminho = _resolver_arquivo_html(ato.get("caminho_html"))
     if caminho:
@@ -511,17 +516,19 @@ def _resolver_arquivo_html_de_ato(ato: dict) -> Path | None:
         return None
     ano, numero = pair
     raiz = _raiz_projeto()
-    base = raiz / "data" / "html_conteudo"
     origem = (ato.get("origem") or "").strip().lower()
     nomes: list[str] = []
     if origem == "arespcj":
         nomes.append(f"arespcj_{ano}_{numero}.html")
     if origem in ("govbr", "gov.br", "ana", ""):
         nomes.append(f"ana_{ano}_{numero}.html")
-    for nome in nomes:
-        found = _ficheiro_em_pasta(base, nome)
-        if found:
-            return found
+    # Scripts ARES gravam também em html_completo; a API prioriza html_conteudo.
+    for sub in ("html_conteudo", "html_completo"):
+        base = raiz / "data" / sub
+        for nome in nomes:
+            found = _ficheiro_em_pasta(base, nome)
+            if found:
+                return found
     return None
 
 
