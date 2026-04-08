@@ -38,3 +38,6 @@ Thumbs.db
 
 # Opcional: descomente se a pasta data tiver muitos HTML gerados
 # data/*.html
+
+# Pasta aninhada duplicada (não é submódulo válido; versionar quebrava actions/checkout no CI)
+Gen360/
