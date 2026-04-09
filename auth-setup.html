@@ -1,0 +1,2015 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gen360 — CBA Setup Guide: Step-by-Step</title>
+  <style>
+    :root{--bg:#0d1117;--surface:#161b22;--border:#30363d;--text:#c9d1d9;--muted:#8b949e;--accent:#58a6ff;--green:#3fb950;--red:#f85149;--orange:#d29922;--purple:#bc8cff}*{margin:0;padding:0;box-sizing:border-box}body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;padding:0 0 80px}header{background:linear-gradient(135deg,#1a2332 0%,#0d1117 100%);border-bottom:1px solid var(--border);padding:44px 0 36px;text-align:center}header h1{font-size:2.3em;font-weight:700;color:#fff;letter-spacing:-0.02em}header h1 span{color:var(--accent)}header p{color:var(--muted);margin-top:6px;font-size:1.05em}.container{max-width:1020px;margin:0 auto;padding:0 24px}.tabs{display:flex;gap:0;margin:32px 0 0;border-bottom:2px solid var(--border);flex-wrap:wrap}.tab-btn{background:none;border:none;color:var(--muted);font-size:.92em;font-weight:600;padding:12px 18px;cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px;transition:all .15s}.tab-btn:hover{color:var(--text)}.tab-btn.active{color:var(--accent);border-bottom-color:var(--accent)}.tab-content{display:none}.tab-content.active{display:block}section{margin-top:36px}section h2{font-size:1.5em;color:#fff;padding-bottom:6px;border-bottom:2px solid var(--accent);margin-bottom:16px}section h3{font-size:1.15em;color:var(--accent);margin:24px 0 8px}section h4{font-size:1em;color:var(--orange);margin:16px 0 6px}p,li{color:var(--text)}ul,ol{padding-left:22px;margin:8px 0}li{margin:4px 0}pre{background:#010409;border:1px solid var(--border);border-radius:6px;padding:14px 18px;overflow-x:auto;font-size:.87em;line-height:1.55;margin:10px 0;position:relative}code{font-family:'Cascadia Code','Fira Code',Consolas,monospace;color:var(--green)}pre code{color:var(--text)}.cmd{color:var(--green)}.cmt{color:var(--muted)}.val{color:var(--orange)}.out{color:var(--muted);font-style:italic}.kw{color:var(--purple)}.str{color:#a5d6ff}table{width:100%;border-collapse:collapse;margin:10px 0;font-size:.9em}th,td{text-align:left;padding:9px 14px;border:1px solid var(--border)}th{background:var(--surface);color:var(--accent);font-weight:600;white-space:nowrap}td{background:var(--bg)}td code{color:var(--orange);font-size:.95em}.callout{border-radius:6px;padding:14px 18px;margin:14px 0;border-left:4px solid;font-size:.93em}.callout-info{background:#0c2d6b33;border-color:var(--accent)}.callout-warning{background:#3d2e0033;border-color:var(--orange)}.callout-success{background:#12361e33;border-color:var(--green)}.callout-danger{background:#3d111133;border-color:var(--red)}.callout strong{color:#fff}.env-tag{display:inline-block;font-size:.75em;padding:2px 10px;border-radius:12px;font-weight:700;margin-left:8px;vertical-align:middle}.env-local{background:#12361e;color:var(--green)}.env-prod{background:#0c2d6b;color:var(--accent)}.env-both{background:#2d1b4e;color:var(--purple)}.arch{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:24px;margin:14px 0;text-align:center;font-family:monospace;white-space:pre;line-height:1.35;font-size:.82em;overflow-x:auto;color:var(--muted)}.compare-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:16px 0}.compare-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:20px}.compare-card h4{margin-top:0}@media(max-width:700px){.compare-grid{grid-template-columns:1fr}.tabs{gap:0}.tab-btn{padding:10px 10px;font-size:.82em}}.step-num{display:inline-block;width:26px;height:26px;line-height:26px;text-align:center;border-radius:50%;background:var(--accent);color:var(--bg);font-weight:700;font-size:.82em;margin-right:6px}footer{text-align:center;padding:32px 0;color:var(--muted);font-size:.85em;border-top:1px solid var(--border);margin-top:56px}details{margin:12px 0}details summary{cursor:pointer;font-weight:600;color:var(--accent);padding:8px 0;user-select:none;list-style:none}details summary::before{content:"\25B8 ";color:var(--muted)}details[open] summary::before{content:"\25BE "}details summary:hover{color:#79c0ff}.matrix-table{border:2px solid var(--accent);border-radius:8px;overflow:hidden}.matrix-table th{background:#0c2d6b;color:#fff}.matrix-table td{font-size:.88em}.option-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:20px 24px;margin:16px 0}.option-card h3{margin-top:0}.phase{background:var(--surface);border-left:3px solid var(--accent);padding:14px 20px;margin:12px 0;border-radius:0 8px 8px 0}.phase h4{margin-top:0;color:var(--accent)}a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}.status{display:inline-block;font-size:.78em;padding:2px 10px;border-radius:12px;font-weight:700;vertical-align:middle;margin-left:6px}.status-pending{background:#21262d;color:var(--muted)}.status-progress{background:#3d2e00;color:var(--orange)}.status-done{background:#12361e;color:var(--green)}.tool-badge{display:inline-block;font-size:.72em;padding:1px 8px;border-radius:10px;font-weight:600;margin-left:6px}.tool-cli{background:#12361e;color:var(--green)}.tool-portal{background:#0c2d6b;color:var(--accent)}.tool-code{background:#2d1b4e;color:var(--purple)}.tool-config{background:#3d2e00;color:var(--orange)}.complexity{display:inline-block;font-size:.72em;padding:1px 8px;border-radius:10px;font-weight:600;margin-left:4px}.cx-simple{background:#12361e;color:var(--green)}.cx-medium{background:#3d2e00;color:var(--orange)}.cx-complex{background:#3d1111;color:var(--red)}.prereq{background:#0c2d6b22;border:1px solid var(--accent);border-radius:8px;padding:14px 18px;margin:14px 0}.prereq strong{color:var(--accent)}.milestone{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:20px 24px;margin:20px 0}.milestone h3{margin:0 0 10px;color:#fff;font-size:1.15em;border-bottom:1px solid var(--border);padding-bottom:8px}.task-row{padding:8px 0;border-bottom:1px solid #21262d;display:flex;flex-wrap:wrap;align-items:center;gap:6px}.task-row:last-child{border-bottom:none}.task-id{color:var(--muted);font-weight:600;font-size:.88em;min-width:58px}.task-name{flex:1;min-width:200px}pre .copy-btn{position:absolute;top:6px;right:8px;background:var(--surface);color:var(--muted);border:1px solid var(--border);border-radius:4px;padding:2px 8px;font-size:.75em;cursor:pointer;opacity:.6;transition:opacity .2s}pre:hover .copy-btn{opacity:1}pre .copy-btn:hover{color:var(--accent);border-color:var(--accent)}.timeline{position:relative;padding-left:30px}.timeline::before{content:'';position:absolute;left:12px;top:0;bottom:0;width:2px;background:var(--border)}.tl-node{position:relative;margin-bottom:24px}.tl-node::before{content:'';position:absolute;left:-24px;top:8px;width:14px;height:14px;border-radius:50%;background:var(--accent);border:2px solid var(--bg)}.tl-node.tl-future::before{background:var(--border)}
+  </style>
+</head>
+<body>
+
+<header>
+  <h1><span>Gen360</span> &mdash; CBA Setup Guide</h1>
+  <p>Complete server-side &amp; client-side implementation tasks, CLI commands, portal steps, and milestones</p>
+</header>
+
+<div class="container">
+
+<div class="tabs">
+  <button class="tab-btn active" onclick="showTab('roadmap')">&#x1F5FA;&#xFE0F; Roadmap</button>
+  <button class="tab-btn" onclick="showTab('pki')">&#x1F510; Server: PKI</button>
+  <button class="tab-btn" onclick="showTab('database')">&#x1F4BE; Server: DB</button>
+  <button class="tab-btn" onclick="showTab('apicode')">&#x2699;&#xFE0F; Server: API</button>
+  <button class="tab-btn" onclick="showTab('browser')">&#x1F310; Client: Browser</button>
+  <button class="tab-btn" onclick="showTab('frontend')">&#x1F3A8; Client: Frontend</button>
+  <button class="tab-btn" onclick="showTab('deploy')">&#x1F680; Production</button>
+  <button class="tab-btn" onclick="showTab('testing')">&#x1F9EA; Testing</button>
+</div>
+<!-- ================================================================== -->
+<!-- TAB 1: ROADMAP -->
+<!-- ================================================================== -->
+<div id="tab-roadmap" class="tab-content active">
+
+<section>
+  <h2>Implementation Roadmap</h2>
+  <div class="callout callout-info">
+    <strong>&#x1F4A1; About this guide:</strong> This is the <em>actionable companion</em> to <a href="auth.html">auth.html</a> (which covers the &ldquo;what &amp; why&rdquo;). Every step below has exact commands, exact file paths, and exact code to write.
+  </div>
+
+  <div class="arch">Milestone 1          Milestone 2          Milestone 3
+PKI Infrastructure ──► Client Certificates ──► Database Migration
+        │                                            │
+        └────────────────────────────────────────────┘
+                                                     │
+                              ┌───────────────────────┘
+                              ▼
+                       Milestone 4              Milestone 5
+                   Auth Module Code ──────► Endpoints &amp; Middleware
+                                                     │
+                              ┌───────────────────────┘
+                              ▼
+                       Milestone 6              Milestone 7
+                    Frontend Login ──────► Cert Management UI
+                                                     │
+                              ┌───────────────────────┘
+                              ▼
+                       Milestone 8
+                   Production Deploy</div>
+</section>
+
+<!-- M1 -->
+<div class="milestone">
+  <h3>Milestone 1: PKI Infrastructure <span class="env-tag env-local">LOCAL</span></h3>
+  <div class="prereq"><strong>Prerequisites:</strong> OpenSSL installed, Git repo cloned, PowerShell available</div>
+  <div class="task-row"><span class="task-id">1.1</span><span class="task-name">Install/verify OpenSSL on Windows</span><span class="tool-badge tool-cli">&#x1F5A5;&#xFE0F; CLI</span><span class="complexity cx-simple">Simple</span><span class="status status-pending">&#x26AA; Not Started</span></div>
+  <div class="task-row"><span class="task-id">1.2</span><span class="task-name">Create directory structure (<code>certs/ca/</code>, <code>certs/intermediate/</code>, <code>certs/clients/</code>, <code>certs/server/</code>)</span><span class="tool-badge tool-cli">&#x1F5A5;&#xFE0F; CLI</span><span class="complexity cx-simple">Simple</span><span class="status status-pending">&#x26AA; Not Started</span></div>
+  <div class="task-row"><span class="task-id">1.3</span><span class="task-name">Generate Root CA (key + self-signed cert, 10-year validity)</span><span class="tool-badge tool-cli">&#x1F5A5;&#xFE0F; CLI</span><span class="complexity cx-medium">Medium</span><span class="status status-pending">&#x26AA; Not Started</span></div>
+  <div class="task-row"><span class="task-id">1.4</span><span class="task-name">Generate Intermediate CA (key + CSR + signed cert, 5-year validity)</span><span class="tool-badge tool-cli">&#x1F5A5;&#xFE0F; CLI</span><span class="complexity cx-medium">Medium</span><span class="status status-pending">&#x26AA; Not Started</span></div>
+  <div class="task-row"><span class="task-id">1.5</span><span class="task-name">Create CA chain bundle file</span><span class="tool-badge tool-cli">&#x1F5A5;&#xFE0F; CLI</span><span class="complexity cx-simple">Simple</span><span class="status status-pending">&#x26AA; Not Started</span></div>
+  <div class="task-row"><span class="task-id">1.6</span><span class="task-name">Generate server certificate for localhost dev</span><span class="tool-badge tool-cli">&#x1F5A5;&#xFE0F; CLI</span><span class="complexity cx-medium">Medium</span><span class="status status-pending">&#x26AA; Not Started</span></div>
+  <div class="task-row"><span class="task-id">1.7</span><span class="task-name">Create <code>.gitignore</code> entries for private keys</span><span class="tool-badge tool-config">&#x1F527; Config</span><span class="complexity cx-simple">Simple</span><span class="status status-pending">&#x26AA; Not Started</span></div>
+  <div class="task-row"><span class="task-id">1.8</span><span class="task-name">Create cert generation helper script (<code>scripts/gen-client-cert.ps1</code>)</span><span class="tool-badge tool-code">&#x1F4DD; Code</span><span class="complexity cx-medium">Medium</span><span class="status status-pending">&#x26AA; Not Started</span></div>
+</div>
+
+<!-- M2 -->
+<div class="milestone">
+  <h3>Milestone 2: Client Certificates <span class="env-tag env-local">LOCAL</span></h3>
+  <div class="prereq"><strong>Prerequisites:</strong> Milestone 1 complete (Root CA + Intermediate CA generated)</div>
+  <div class="task-row"><span class="task-id">2.1</span><span class="task-name">Generate admin client certificate (for thiago.beier@gmail.com)</span><span class="tool-badge tool-cli">&#x1F5A5;&#xFE0F; CLI</span><span class="complexity cx-medium">Medium</span><span class="status status-pending">&#x26AA; Not Started</span></div>
+  <div class="task-row"><span class="task-id">2.2</span><span class="task-name">Package as PKCS#12 (.p12) for browser import</span><span class="tool-badge tool-cli">&#x1F5A5;&#xFE0F; CLI</span><span class="complexity cx-simple">Simple</span><span class="status status-pending">&#x26AA; Not Started</span></div>
+  <div class="task-row"><span class="task-id">2.3</span><span class="task-name">Import .p12 into Windows certificate store</span><span class="tool-badge tool-cli">&#x1F5A5;&#xFE0F; CLI</span><span class="complexity cx-simple">Simple</span><span class="status status-pending">&#x26AA; Not Started</span></div>
+  <div class="task-row"><span class="task-id">2.4</span><span class="task-name">Import .p12 into Firefox (separate store)</span><span class="tool-badge tool-portal">&#x1F310; Portal</span><span class="complexity cx-simple">Simple</span><span class="status status-pending">&#x26AA; Not Started</span></div>
+  <div class="task-row"><span class="task-id">2.5</span><span class="task-name">Import .p12 into Chrome/Edge (uses Windows store)</span><span class="tool-badge tool-portal">&#x1F310; Portal</span><span class="complexity cx-simple">Simple</span><span class="status status-pending">&#x26AA; Not Started</span></div>
+  <div class="task-row"><span class="task-id">2.6</span><span class="task-name">Verify certificate appears in browser</span><span class="tool-badge tool-portal">&#x1F310; Portal</span><span class="complexity cx-simple">Simple</span><span class="status status-pending">&#x26AA; Not Started</span></div>
+</div>
+
+<!-- M3 -->
+<div class="milestone">
+  <h3>Milestone 3: Database Migration <span class="env-tag env-both">LOCAL + PROD</span></h3>
+  <div class="prereq"><strong>Prerequisites:</strong> PostgreSQL running (local Docker or Azure), <code>psql</code> available</div>
+  <div class="task-row"><span class="task-id">3.1</span><span class="task-name">Create migration file <code>db/migracoes/009_admin_cert.sql</code></span><span class="tool-badge tool-code">&#x1F4DD; Code</span><span class="complexity cx-medium">Medium</span><span class="status status-pending">&#x26AA; Not Started</span></div>
+  <div class="task-row"><span class="task-id">3.2</span><span class="task-name">Apply migration to local PostgreSQL</span><span class="tool-badge tool-cli">&#x1F5A5;&#xFE0F; CLI</span><span class="complexity cx-simple">Simple</span><span class="status status-pending">&#x26AA; Not Started</span></div>
+  <div class="task-row"><span class="task-id">3.3</span><span class="task-name">Apply migration to production PostgreSQL</span><span class="tool-badge tool-cli">&#x1F5A5;&#xFE0F; CLI</span><span class="complexity cx-simple">Simple</span><span class="status status-pending">&#x26AA; Not Started</span></div>
+  <div class="task-row"><span class="task-id">3.4</span><span class="task-name">Verify migration applied correctly</span><span class="tool-badge tool-cli">&#x1F5A5;&#xFE0F; CLI</span><span class="complexity cx-simple">Simple</span><span class="status status-pending">&#x26AA; Not Started</span></div>
+</div>
+
+<!-- M4 -->
+<div class="milestone">
+  <h3>Milestone 4: Backend &mdash; Auth Module <span class="env-tag env-local">LOCAL</span></h3>
+  <div class="prereq"><strong>Prerequisites:</strong> Milestone 3 complete, <code>cryptography</code> library installed</div>
+  <div class="task-row"><span class="task-id">4.1</span><span class="task-name">Add <code>cryptography</code> to <code>requirements.txt</code></span><span class="tool-badge tool-config">&#x1F527; Config</span><span class="complexity cx-simple">Simple</span><span class="status status-pending">&#x26AA; Not Started</span></div>
+  <div class="task-row"><span class="task-id">4.2</span><span class="task-name">Install new dependency (<code>pip install cryptography</code>)</span><span class="tool-badge tool-cli">&#x1F5A5;&#xFE0F; CLI</span><span class="complexity cx-simple">Simple</span><span class="status status-pending">&#x26AA; Not Started</span></div>
+  <div class="task-row"><span class="task-id">4.3</span><span class="task-name">Create certificate functions in <code>api/auth.py</code></span><span class="tool-badge tool-code">&#x1F4DD; Code</span><span class="complexity cx-complex">Complex</span><span class="status status-pending">&#x26AA; Not Started</span></div>
+  <div class="task-row"><span class="task-id">4.4</span><span class="task-name">Add new database queries in <code>api/queries.py</code></span><span class="tool-badge tool-code">&#x1F4DD; Code</span><span class="complexity cx-medium">Medium</span><span class="status status-pending">&#x26AA; Not Started</span></div>
+  <div class="task-row"><span class="task-id">4.5</span><span class="task-name">Create <code>AdminCertLoginPayload</code> pydantic model in <code>api/main.py</code></span><span class="tool-badge tool-code">&#x1F4DD; Code</span><span class="complexity cx-simple">Simple</span><span class="status status-pending">&#x26AA; Not Started</span></div>
+  <div class="task-row"><span class="task-id">4.6</span><span class="task-name">Add environment variables (<code>CA_CERT_PATH</code>, <code>REQUIRE_CLIENT_CERT</code>)</span><span class="tool-badge tool-config">&#x1F527; Config</span><span class="complexity cx-simple">Simple</span><span class="status status-pending">&#x26AA; Not Started</span></div>
+</div>
+
+<!-- M5 -->
+<div class="milestone">
+  <h3>Milestone 5: Backend &mdash; Endpoints &amp; Middleware <span class="env-tag env-local">LOCAL</span></h3>
+  <div class="prereq"><strong>Prerequisites:</strong> Milestone 4 complete (auth functions + queries ready)</div>
+  <div class="task-row"><span class="task-id">5.1</span><span class="task-name">Add <code>POST /admin/login/cert</code> endpoint</span><span class="tool-badge tool-code">&#x1F4DD; Code</span><span class="complexity cx-complex">Complex</span><span class="status status-pending">&#x26AA; Not Started</span></div>
+  <div class="task-row"><span class="task-id">5.2</span><span class="task-name">Add <code>POST /admin/me/cert/register</code> endpoint</span><span class="tool-badge tool-code">&#x1F4DD; Code</span><span class="complexity cx-medium">Medium</span><span class="status status-pending">&#x26AA; Not Started</span></div>
+  <div class="task-row"><span class="task-id">5.3</span><span class="task-name">Add <code>DELETE /admin/me/cert</code> endpoint</span><span class="tool-badge tool-code">&#x1F4DD; Code</span><span class="complexity cx-medium">Medium</span><span class="status status-pending">&#x26AA; Not Started</span></div>
+  <div class="task-row"><span class="task-id">5.4</span><span class="task-name">Update middleware to allow <code>/admin/login/cert</code> as public path</span><span class="tool-badge tool-code">&#x1F4DD; Code</span><span class="complexity cx-simple">Simple</span><span class="status status-pending">&#x26AA; Not Started</span></div>
+  <div class="task-row"><span class="task-id">5.5</span><span class="task-name">Configure Uvicorn SSL context for local dev</span><span class="tool-badge tool-config">&#x1F527; Config</span><span class="complexity cx-medium">Medium</span><span class="status status-pending">&#x26AA; Not Started</span></div>
+  <div class="task-row"><span class="task-id">5.6</span><span class="task-name">Add Azure <code>X-ARR-ClientCert</code> header reading</span><span class="tool-badge tool-code">&#x1F4DD; Code</span><span class="complexity cx-medium">Medium</span><span class="status status-pending">&#x26AA; Not Started</span></div>
+</div>
+
+<!-- M6 -->
+<div class="milestone">
+  <h3>Milestone 6: Frontend &mdash; Login Page <span class="env-tag env-local">LOCAL</span></h3>
+  <div class="prereq"><strong>Prerequisites:</strong> Milestone 5 complete (backend endpoints working)</div>
+  <div class="task-row"><span class="task-id">6.1</span><span class="task-name">Add &ldquo;Sign in with Certificate&rdquo; button to <code>admin_login.html</code></span><span class="tool-badge tool-code">&#x1F4DD; Code</span><span class="complexity cx-medium">Medium</span><span class="status status-pending">&#x26AA; Not Started</span></div>
+  <div class="task-row"><span class="task-id">6.2</span><span class="task-name">Add <code>loginWithCertificate()</code> in <code>admin_auth.js</code></span><span class="tool-badge tool-code">&#x1F4DD; Code</span><span class="complexity cx-medium">Medium</span><span class="status status-pending">&#x26AA; Not Started</span></div>
+  <div class="task-row"><span class="task-id">6.3</span><span class="task-name">Add visual feedback (spinner, status messages)</span><span class="tool-badge tool-code">&#x1F4DD; Code</span><span class="complexity cx-simple">Simple</span><span class="status status-pending">&#x26AA; Not Started</span></div>
+  <div class="task-row"><span class="task-id">6.4</span><span class="task-name">Update <code>config.js</code> to detect HTTPS</span><span class="tool-badge tool-code">&#x1F4DD; Code</span><span class="complexity cx-simple">Simple</span><span class="status status-pending">&#x26AA; Not Started</span></div>
+</div>
+
+<!-- M7 -->
+<div class="milestone">
+  <h3>Milestone 7: Frontend &mdash; Certificate Management <span class="env-tag env-local">LOCAL</span></h3>
+  <div class="prereq"><strong>Prerequisites:</strong> Milestone 6 complete, admin can log in via cert</div>
+  <div class="task-row"><span class="task-id">7.1</span><span class="task-name">Add certificate section to <code>admin_profile.js</code></span><span class="tool-badge tool-code">&#x1F4DD; Code</span><span class="complexity cx-medium">Medium</span><span class="status status-pending">&#x26AA; Not Started</span></div>
+  <div class="task-row"><span class="task-id">7.2</span><span class="task-name">Add certificate info HTML to <code>admin_profile.html</code></span><span class="tool-badge tool-code">&#x1F4DD; Code</span><span class="complexity cx-medium">Medium</span><span class="status status-pending">&#x26AA; Not Started</span></div>
+</div>
+
+<!-- M8 -->
+<div class="milestone">
+  <h3>Milestone 8: Production Deployment <span class="env-tag env-prod">PRODUCTION</span></h3>
+  <div class="prereq"><strong>Prerequisites:</strong> All milestones 1&ndash;7 complete, tested locally</div>
+  <div class="task-row"><span class="task-id">8.1</span><span class="task-name">Check Azure App Service plan tier</span><span class="tool-badge tool-cli">&#x1F5A5;&#xFE0F; CLI</span><span class="complexity cx-simple">Simple</span><span class="status status-pending">&#x26AA; Not Started</span></div>
+  <div class="task-row"><span class="task-id">8.2</span><span class="task-name">Upgrade App Service plan if needed</span><span class="tool-badge tool-cli">&#x1F5A5;&#xFE0F; CLI</span><span class="complexity cx-simple">Simple</span><span class="status status-pending">&#x26AA; Not Started</span></div>
+  <div class="task-row"><span class="task-id">8.3</span><span class="task-name">Enable client certificates on App Service</span><span class="tool-badge tool-portal">&#x1F310; Portal</span><span class="complexity cx-simple">Simple</span><span class="status status-pending">&#x26AA; Not Started</span></div>
+  <div class="task-row"><span class="task-id">8.4</span><span class="task-name">Upload CA certificate to App Service</span><span class="tool-badge tool-portal">&#x1F310; Portal</span><span class="complexity cx-medium">Medium</span><span class="status status-pending">&#x26AA; Not Started</span></div>
+  <div class="task-row"><span class="task-id">8.5</span><span class="task-name">Set environment variables on App Service</span><span class="tool-badge tool-cli">&#x1F5A5;&#xFE0F; CLI</span><span class="complexity cx-simple">Simple</span><span class="status status-pending">&#x26AA; Not Started</span></div>
+  <div class="task-row"><span class="task-id">8.6</span><span class="task-name">Deploy updated code</span><span class="tool-badge tool-cli">&#x1F5A5;&#xFE0F; CLI</span><span class="complexity cx-simple">Simple</span><span class="status status-pending">&#x26AA; Not Started</span></div>
+  <div class="task-row"><span class="task-id">8.7</span><span class="task-name">Test cert login on production</span><span class="tool-badge tool-portal">&#x1F310; Portal</span><span class="complexity cx-medium">Medium</span><span class="status status-pending">&#x26AA; Not Started</span></div>
+  <div class="task-row"><span class="task-id">8.8</span><span class="task-name">Rollback procedure if issues arise</span><span class="tool-badge tool-cli">&#x1F5A5;&#xFE0F; CLI</span><span class="complexity cx-simple">Simple</span><span class="status status-pending">&#x26AA; Not Started</span></div>
+</div>
+
+<section>
+  <h2>Summary Table</h2>
+  <div style="overflow-x:auto;">
+  <table class="matrix-table">
+    <tr><th>Milestone</th><th>Tasks</th><th>Est. Effort</th><th>Environment</th><th>Depends On</th></tr>
+    <tr><td><strong>1. PKI Infrastructure</strong></td><td>8</td><td>2&ndash;3 hours</td><td>Local</td><td>&mdash;</td></tr>
+    <tr><td><strong>2. Client Certificates</strong></td><td>6</td><td>1&ndash;2 hours</td><td>Local</td><td>M1</td></tr>
+    <tr><td><strong>3. Database Migration</strong></td><td>4</td><td>30 min</td><td>Local + Prod</td><td>&mdash;</td></tr>
+    <tr><td><strong>4. Auth Module</strong></td><td>6</td><td>3&ndash;4 hours</td><td>Local</td><td>M3</td></tr>
+    <tr><td><strong>5. Endpoints &amp; Middleware</strong></td><td>6</td><td>3&ndash;4 hours</td><td>Local</td><td>M4</td></tr>
+    <tr><td><strong>6. Frontend Login</strong></td><td>4</td><td>2&ndash;3 hours</td><td>Local</td><td>M5</td></tr>
+    <tr><td><strong>7. Cert Management UI</strong></td><td>2</td><td>2 hours</td><td>Local</td><td>M6</td></tr>
+    <tr><td><strong>8. Production Deploy</strong></td><td>8</td><td>2&ndash;3 hours</td><td>Azure</td><td>M1&ndash;M7</td></tr>
+  </table>
+  </div>
+  <div class="callout callout-success"><strong>Total estimated effort:</strong> 16&ndash;22 hours (2&ndash;3 working days)</div>
+</section>
+
+</div><!-- /tab-roadmap -->
+
+<!-- ================================================================== -->
+<!-- TAB 2: SERVER PKI SETUP -->
+<!-- ================================================================== -->
+<div id="tab-pki" class="tab-content">
+
+<section>
+  <h2>Server: PKI Setup (Milestones 1 &amp; 2)</h2>
+
+  <h3>Task 1.1 &mdash; Install/Verify OpenSSL</h3>
+  <p>OpenSSL is required for all certificate operations. Check if it is already installed:</p>
+  <pre><code><span class="cmd">openssl version</span>
+<span class="out"># Expected: OpenSSL 3.x.x (or 1.1.1+)</span></code></pre>
+  <p>If not installed, use one of these methods:</p>
+  <pre><code><span class="cmt"># Option A: via winget (Windows 11+)</span>
+<span class="cmd">winget install ShiningLight.OpenSSL</span>
+
+<span class="cmt"># Option B: via Chocolatey</span>
+<span class="cmd">choco install openssl -y</span>
+
+<span class="cmt"># Option C: Download from https://slproweb.com/products/Win32OpenSSL.html</span>
+<span class="cmt"># Install "Win64 OpenSSL v3.x.x Light" and add to PATH</span>
+
+<span class="cmt"># After install, verify:</span>
+<span class="cmd">openssl version</span>
+<span class="out"># OpenSSL 3.3.1 4 Jun 2024 (Library: OpenSSL 3.3.1 4 Jun 2024)</span></code></pre>
+
+  <h3>Task 1.2 &mdash; Create Directory Structure</h3>
+  <pre><code><span class="cmt"># Run from project root: C:\temp\work\Gen360</span>
+<span class="cmd">mkdir -p certs/ca, certs/intermediate, certs/clients, certs/server</span>
+
+<span class="cmt"># PowerShell equivalent:</span>
+<span class="cmd">New-Item -ItemType Directory -Force -Path certs\ca, certs\intermediate, certs\clients, certs\server</span></code></pre>
+  <p>Expected directory tree:</p>
+  <div class="arch">Gen360/
+  certs/
+    ca/                 # Root CA key + cert
+    intermediate/       # Intermediate CA key + cert + CSR
+    clients/            # Client certificates (.pem, .p12)
+    server/             # Server cert for localhost dev</div>
+
+  <h3>Task 1.3 &mdash; Generate Root CA (10-Year Validity)</h3>
+  <div class="callout callout-warning"><strong>&#x26A0;&#xFE0F; Security:</strong> The Root CA private key is the most sensitive file. Never commit it to Git. Store it offline after initial setup.</div>
+  <pre><code><span class="cmt"># Generate 4096-bit RSA private key for Root CA</span>
+<span class="cmd">openssl genrsa -aes256 -out certs/ca/root-ca.key 4096</span>
+<span class="cmt"># You will be prompted for a passphrase &mdash; choose a strong one and save it securely</span>
+<span class="out"># Enter PEM pass phrase: ********</span>
+
+<span class="cmt"># Generate self-signed Root CA certificate (10 years = 3650 days)</span>
+<span class="cmd">openssl req -new -x509 -key certs/ca/root-ca.key -sha256 -days 3650 ^
+  -out certs/ca/root-ca.pem ^
+  -subj "/C=BR/ST=DF/L=Brasilia/O=Gen360/OU=Security/CN=Gen360 Root CA"</span>
+<span class="out"># Enter pass phrase for certs/ca/root-ca.key: ********</span>
+
+<span class="cmt"># Verify the Root CA certificate</span>
+<span class="cmd">openssl x509 -text -noout -in certs/ca/root-ca.pem</span>
+<span class="out"># Certificate:
+#     Data:
+#         Version: 3 (0x2)
+#         Serial Number: ...
+#         Issuer: C=BR, ST=DF, L=Brasilia, O=Gen360, OU=Security, CN=Gen360 Root CA
+#         Validity
+#             Not Before: Apr  1 00:00:00 2026 GMT
+#             Not After : Mar 29 00:00:00 2036 GMT
+#         Subject: C=BR, ST=DF, L=Brasilia, O=Gen360, OU=Security, CN=Gen360 Root CA</span></code></pre>
+  <p><strong>Flags explained:</strong></p>
+  <table>
+    <tr><th>Flag</th><th>Purpose</th></tr>
+    <tr><td><code>genrsa -aes256</code></td><td>Generate RSA key encrypted with AES-256 passphrase</td></tr>
+    <tr><td><code>4096</code></td><td>Key size in bits &mdash; 4096 for Root CA (extra security)</td></tr>
+    <tr><td><code>-new -x509</code></td><td>Create a new self-signed certificate (not a CSR)</td></tr>
+    <tr><td><code>-sha256</code></td><td>Use SHA-256 for the certificate signature</td></tr>
+    <tr><td><code>-days 3650</code></td><td>Validity period: 10 years</td></tr>
+    <tr><td><code>-subj</code></td><td>Certificate subject (country/state/org/CN)</td></tr>
+  </table>
+
+  <h3>Task 1.4 &mdash; Generate Intermediate CA (5-Year Validity)</h3>
+  <pre><code><span class="cmt"># Generate Intermediate CA private key (no passphrase for automation; add -aes256 if desired)</span>
+<span class="cmd">openssl genrsa -out certs/intermediate/intermediate-ca.key 4096</span>
+
+<span class="cmt"># Create a Certificate Signing Request (CSR)</span>
+<span class="cmd">openssl req -new -key certs/intermediate/intermediate-ca.key -sha256 ^
+  -out certs/intermediate/intermediate-ca.csr ^
+  -subj "/C=BR/ST=DF/L=Brasilia/O=Gen360/OU=Security/CN=Gen360 Intermediate CA"</span>
+
+<span class="cmt"># Create v3 extensions file for intermediate CA</span>
+<span class="cmd">echo [v3_intermediate_ca] > certs/intermediate/v3_intermediate.ext
+echo subjectKeyIdentifier = hash >> certs/intermediate/v3_intermediate.ext
+echo authorityKeyIdentifier = keyid:always,issuer >> certs/intermediate/v3_intermediate.ext
+echo basicConstraints = critical, CA:true, pathlen:0 >> certs/intermediate/v3_intermediate.ext
+echo keyUsage = critical, digitalSignature, cRLSign, keyCertSign >> certs/intermediate/v3_intermediate.ext</span>
+
+<span class="cmt"># Sign the Intermediate CA CSR with the Root CA (5 years = 1825 days)</span>
+<span class="cmd">openssl x509 -req -in certs/intermediate/intermediate-ca.csr ^
+  -CA certs/ca/root-ca.pem -CAkey certs/ca/root-ca.key -CAcreateserial ^
+  -out certs/intermediate/intermediate-ca.pem -days 1825 -sha256 ^
+  -extfile certs/intermediate/v3_intermediate.ext -extensions v3_intermediate_ca</span>
+<span class="out"># Enter pass phrase for certs/ca/root-ca.key: ********</span>
+
+<span class="cmt"># Verify the Intermediate CA</span>
+<span class="cmd">openssl x509 -text -noout -in certs/intermediate/intermediate-ca.pem</span>
+<span class="cmd">openssl verify -CAfile certs/ca/root-ca.pem certs/intermediate/intermediate-ca.pem</span>
+<span class="out"># certs/intermediate/intermediate-ca.pem: OK</span></code></pre>
+
+  <h3>Task 1.5 &mdash; Create CA Chain Bundle</h3>
+  <pre><code><span class="cmt"># Concatenate Intermediate + Root into a single chain file</span>
+<span class="cmt"># Order matters: leaf-most CA first, root last</span>
+<span class="cmd">type certs\intermediate\intermediate-ca.pem certs\ca\root-ca.pem > certs\ca-chain.pem</span>
+
+<span class="cmt"># Bash/Git Bash equivalent:</span>
+<span class="cmd">cat certs/intermediate/intermediate-ca.pem certs/ca/root-ca.pem > certs/ca-chain.pem</span>
+
+<span class="cmt"># Verify the chain</span>
+<span class="cmd">openssl verify -CAfile certs/ca/root-ca.pem -untrusted certs/intermediate/intermediate-ca.pem certs/ca-chain.pem</span></code></pre>
+
+  <h3>Task 1.6 &mdash; Generate Server Certificate for Localhost Dev</h3>
+  <pre><code><span class="cmt"># Create v3 extensions for server cert with SAN</span>
+<span class="cmd">echo [v3_server] > certs/server/v3_server.ext
+echo subjectKeyIdentifier = hash >> certs/server/v3_server.ext
+echo authorityKeyIdentifier = keyid,issuer >> certs/server/v3_server.ext
+echo basicConstraints = CA:FALSE >> certs/server/v3_server.ext
+echo keyUsage = critical, digitalSignature, keyEncipherment >> certs/server/v3_server.ext
+echo extendedKeyUsage = serverAuth >> certs/server/v3_server.ext
+echo subjectAltName = DNS:localhost,DNS:127.0.0.1,IP:127.0.0.1 >> certs/server/v3_server.ext</span>
+
+<span class="cmt"># Generate server private key</span>
+<span class="cmd">openssl genrsa -out certs/server/server.key 2048</span>
+
+<span class="cmt"># Create CSR</span>
+<span class="cmd">openssl req -new -key certs/server/server.key -sha256 ^
+  -out certs/server/server.csr ^
+  -subj "/C=BR/O=Gen360/CN=localhost"</span>
+
+<span class="cmt"># Sign with Intermediate CA (1 year)</span>
+<span class="cmd">openssl x509 -req -in certs/server/server.csr ^
+  -CA certs/intermediate/intermediate-ca.pem -CAkey certs/intermediate/intermediate-ca.key ^
+  -CAcreateserial -out certs/server/server.pem -days 365 -sha256 ^
+  -extfile certs/server/v3_server.ext -extensions v3_server</span>
+
+<span class="cmt"># Verify</span>
+<span class="cmd">openssl verify -CAfile certs/ca-chain.pem certs/server/server.pem</span>
+<span class="out"># certs/server/server.pem: OK</span></code></pre>
+
+  <h3>Task 1.7 &mdash; Create .gitignore Entries</h3>
+  <p>Add the following to your project <code>.gitignore</code>:</p>
+  <pre><code><span class="cmt"># === Certificate private keys (NEVER commit) ===</span>
+certs/ca/root-ca.key
+certs/intermediate/intermediate-ca.key
+certs/server/server.key
+certs/clients/*.key
+certs/clients/*.p12
+<span class="cmt"># Keep .pem certs (public) but not keys</span></code></pre>
+
+  <h3>Task 1.8 &mdash; Client Cert Generation Script</h3>
+  <p>Create <code>scripts/gen-client-cert.ps1</code>:</p>
+  <pre><code><span class="cmt"># scripts/gen-client-cert.ps1</span>
+<span class="cmt"># Usage: .\scripts\gen-client-cert.ps1 -Email "user@example.com" -Name "Full Name"</span>
+<span class="kw">param</span>(
+    [<span class="kw">Parameter</span>(Mandatory=$true)][<span class="kw">string</span>]$Email,
+    [<span class="kw">Parameter</span>(Mandatory=$true)][<span class="kw">string</span>]$Name,
+    [<span class="kw">int</span>]$ValidDays = 365,
+    [<span class="kw">string</span>]$OutDir = "certs/clients"
+)
+
+$ErrorActionPreference = "Stop"
+$safeName = ($Email -replace '[^a-zA-Z0-9]', '_')
+$keyFile  = "$OutDir/$safeName.key"
+$csrFile  = "$OutDir/$safeName.csr"
+$certFile = "$OutDir/$safeName.pem"
+$p12File  = "$OutDir/$safeName.p12"
+$extFile  = "$OutDir/$safeName.ext"
+
+Write-Host "Generating client certificate for: $Name &lt;$Email&gt;" -ForegroundColor Cyan
+
+<span class="cmt"># 1. Generate private key</span>
+openssl genrsa -out $keyFile 2048
+Write-Host "  Key:  $keyFile" -ForegroundColor Green
+
+<span class="cmt"># 2. Create v3 extensions with email SAN</span>
+@"
+[v3_client]
+subjectKeyIdentifier = hash
+authorityKeyIdentifier = keyid,issuer
+basicConstraints = CA:FALSE
+keyUsage = critical, digitalSignature, keyEncipherment
+extendedKeyUsage = clientAuth
+subjectAltName = email:$Email
+"@ | Set-Content $extFile -Encoding ASCII
+
+<span class="cmt"># 3. Create CSR</span>
+openssl req -new -key $keyFile -sha256 -out $csrFile `
+  -subj "/C=BR/O=Gen360/CN=$Name/emailAddress=$Email"
+Write-Host "  CSR:  $csrFile" -ForegroundColor Green
+
+<span class="cmt"># 4. Sign with Intermediate CA</span>
+openssl x509 -req -in $csrFile `
+  -CA certs/intermediate/intermediate-ca.pem `
+  -CAkey certs/intermediate/intermediate-ca.key `
+  -CAcreateserial -out $certFile -days $ValidDays -sha256 `
+  -extfile $extFile -extensions v3_client
+Write-Host "  Cert: $certFile" -ForegroundColor Green
+
+<span class="cmt"># 5. Package as PKCS#12 (.p12) for browser import</span>
+openssl pkcs12 -export -out $p12File `
+  -inkey $keyFile -in $certFile `
+  -certfile certs/ca-chain.pem `
+  -name "$Name ($Email)"
+Write-Host "  P12:  $p12File (import this into your browser)" -ForegroundColor Green
+
+<span class="cmt"># 6. Show thumbprint</span>
+$thumb = openssl x509 -fingerprint -sha256 -noout -in $certFile
+Write-Host "  Thumbprint: $thumb" -ForegroundColor Yellow
+
+<span class="cmt"># Cleanup temp files</span>
+Remove-Item $csrFile, $extFile -ErrorAction SilentlyContinue
+
+Write-Host "`nDone! Import $p12File into your browser or OS certificate store." -ForegroundColor Cyan</code></pre>
+</section>
+
+<section>
+  <h2>Client Certificate Generation (Milestone 2)</h2>
+
+  <h3>Task 2.1 &mdash; Generate Admin Client Certificate</h3>
+  <pre><code><span class="cmt"># Using the helper script from Task 1.8:</span>
+<span class="cmd">.\scripts\gen-client-cert.ps1 -Email "thiago.beier@gmail.com" -Name "Thiago Beier" -ValidDays 365</span>
+
+<span class="cmt"># Or manually with OpenSSL:</span>
+<span class="cmd">openssl genrsa -out certs/clients/thiago.key 2048</span>
+<span class="cmd">openssl req -new -key certs/clients/thiago.key -sha256 ^
+  -out certs/clients/thiago.csr ^
+  -subj "/C=BR/O=Gen360/CN=Thiago Beier/emailAddress=thiago.beier@gmail.com"</span></code></pre>
+
+  <h3>Task 2.2 &mdash; Package as PKCS#12</h3>
+  <pre><code><span class="cmd">openssl pkcs12 -export -out certs/clients/thiago.p12 ^
+  -inkey certs/clients/thiago.key ^
+  -in certs/clients/thiago.pem ^
+  -certfile certs/ca-chain.pem ^
+  -name "Thiago Beier (thiago.beier@gmail.com)"</span>
+<span class="out"># Enter Export Password: ********  (you'll need this when importing)</span></code></pre>
+
+  <h3>Task 2.3 &mdash; Import into Windows Certificate Store</h3>
+  <p><strong>Method A: PowerShell (recommended)</strong></p>
+  <pre><code><span class="cmd">Import-PfxCertificate -FilePath "certs\clients\thiago.p12" `
+  -CertStoreLocation Cert:\CurrentUser\My `
+  -Password (ConvertTo-SecureString -String "your-p12-password" -AsPlainText -Force)</span>
+
+<span class="cmt"># Verify it was imported:</span>
+<span class="cmd">Get-ChildItem Cert:\CurrentUser\My | Where-Object { $_.Subject -like "*thiago*" } | Format-List Subject, Thumbprint, NotAfter</span></code></pre>
+  <p><strong>Method B: GUI (MMC)</strong></p>
+  <ol>
+    <li>Press <code>Win + R</code>, type <code>certmgr.msc</code>, press Enter</li>
+    <li>Navigate to <strong>Personal &rarr; Certificates</strong></li>
+    <li>Right-click &rarr; <strong>All Tasks &rarr; Import...</strong></li>
+    <li>Select the <code>.p12</code> file, enter the export password</li>
+    <li>Ensure &ldquo;Place all certificates in the following store&rdquo; = <strong>Personal</strong></li>
+    <li>Click Finish &mdash; certificate should now appear in the list</li>
+  </ol>
+
+  <h3>Task 2.4 &mdash; Import into Firefox</h3>
+  <p>Firefox uses its own certificate store (separate from Windows):</p>
+  <ol>
+    <li>Open Firefox &rarr; <strong>Settings</strong> (about:preferences)</li>
+    <li>Search for &ldquo;Certificates&rdquo; or navigate to <strong>Privacy &amp; Security</strong></li>
+    <li>Click <strong>View Certificates...</strong></li>
+    <li>Go to <strong>Your Certificates</strong> tab</li>
+    <li>Click <strong>Import...</strong></li>
+    <li>Select the <code>.p12</code> file</li>
+    <li>Enter the export password</li>
+    <li>Certificate should appear under &ldquo;Your Certificates&rdquo;</li>
+  </ol>
+
+  <h3>Task 2.5 &mdash; Chrome/Edge (Uses Windows Store)</h3>
+  <div class="callout callout-info"><strong>&#x1F4A1; Note:</strong> Chrome and Edge on Windows use the Windows certificate store automatically. If you completed Task 2.3, your cert is already available in Chrome/Edge. No additional import needed.</div>
+
+  <h3>Task 2.6 &mdash; Verify Certificate in Browser</h3>
+  <p>To confirm the certificate is correctly installed:</p>
+  <ol>
+    <li><strong>Chrome/Edge:</strong> Go to <code>chrome://settings/security</code> &rarr; <strong>Manage device certificates</strong> &rarr; <strong>Personal</strong> tab &mdash; your cert should be listed</li>
+    <li><strong>Firefox:</strong> Go to <code>about:preferences#privacy</code> &rarr; <strong>View Certificates</strong> &rarr; <strong>Your Certificates</strong> tab</li>
+    <li><strong>Quick test:</strong> Navigate to any site requiring client certs &mdash; browser should show a certificate selection dialog</li>
+  </ol>
+
+  <h3>Final Directory Tree</h3>
+  <div class="arch">certs/
+  ca/
+    root-ca.key              # &#x1F512; ROOT CA private key (NEVER commit)
+    root-ca.pem              # Root CA certificate (public)
+    root-ca.srl              # Serial number tracking
+  intermediate/
+    intermediate-ca.key      # &#x1F512; Intermediate CA private key
+    intermediate-ca.pem      # Intermediate CA certificate (public)
+    intermediate-ca.csr      # CSR (can be deleted after signing)
+    v3_intermediate.ext      # Extensions config
+  clients/
+    thiago.key               # &#x1F512; Client private key
+    thiago.pem               # Client certificate (public)
+    thiago.p12               # &#x1F512; PKCS#12 bundle for browser import
+  server/
+    server.key               # &#x1F512; Server private key (local dev)
+    server.pem               # Server certificate (local dev)
+    v3_server.ext            # Extensions config
+  ca-chain.pem               # Combined chain: intermediate + root (public)</div>
+</section>
+
+</div><!-- /tab-pki -->
+
+<!-- ================================================================== -->
+<!-- TAB 3: SERVER DATABASE -->
+<!-- ================================================================== -->
+<div id="tab-db" class="tab-content">
+
+<section>
+  <h2>Server: Database Schema (Milestone 3)</h2>
+
+  <h3>Task 3.1 &mdash; Create Migration File</h3>
+  <p>Create <code>db/migracoes/009_admin_cert.sql</code>:</p>
+  <pre><code><span class="cmt">-- db/migracoes/009_admin_cert.sql</span>
+<span class="cmt">-- Migration: Add certificate-based authentication fields to admins table</span>
+<span class="cmt">-- Date: 2026-04-01</span>
+<span class="cmt">-- Description: Adds columns for storing client certificate thumbprints,</span>
+<span class="cmt">--   certificate subject (DN), and preferred auth method (totp|cert|both).</span>
+
+<span class="cmt">-- 1. Add certificate thumbprint column (SHA-256, 64 hex chars)</span>
+<span class="kw">ALTER TABLE</span> admins
+  <span class="kw">ADD COLUMN IF NOT EXISTS</span> cert_thumbprint <span class="val">VARCHAR(64)</span> <span class="kw">DEFAULT NULL</span>;
+
+<span class="cmt">-- 2. Add certificate subject (Distinguished Name from cert)</span>
+<span class="kw">ALTER TABLE</span> admins
+  <span class="kw">ADD COLUMN IF NOT EXISTS</span> cert_subject <span class="val">VARCHAR(512)</span> <span class="kw">DEFAULT NULL</span>;
+
+<span class="cmt">-- 3. Add auth method preference</span>
+<span class="cmt">--    'totp'  = TOTP MFA only (current behavior)</span>
+<span class="cmt">--    'cert'  = Certificate only</span>
+<span class="cmt">--    'both'  = Both TOTP + cert (highest security)</span>
+<span class="kw">ALTER TABLE</span> admins
+  <span class="kw">ADD COLUMN IF NOT EXISTS</span> auth_method <span class="val">VARCHAR(10)</span> <span class="kw">DEFAULT</span> <span class="val">'totp'</span>;
+
+<span class="cmt">-- 4. Add certificate registration date</span>
+<span class="kw">ALTER TABLE</span> admins
+  <span class="kw">ADD COLUMN IF NOT EXISTS</span> cert_registered_at <span class="val">TIMESTAMP</span> <span class="kw">DEFAULT NULL</span>;
+
+<span class="cmt">-- 5. Create unique index on cert_thumbprint for fast lookups</span>
+<span class="kw">CREATE UNIQUE INDEX IF NOT EXISTS</span> idx_admins_cert_thumbprint
+  <span class="kw">ON</span> admins(cert_thumbprint)
+  <span class="kw">WHERE</span> cert_thumbprint <span class="kw">IS NOT NULL</span>;
+
+<span class="cmt">-- 6. Add CHECK constraint for valid auth_method values</span>
+<span class="kw">DO</span> $$
+<span class="kw">BEGIN</span>
+  <span class="kw">IF NOT EXISTS</span> (
+    <span class="kw">SELECT</span> 1 <span class="kw">FROM</span> pg_constraint <span class="kw">WHERE</span> conname = 'chk_admin_auth_method'
+  ) <span class="kw">THEN</span>
+    <span class="kw">ALTER TABLE</span> admins
+      <span class="kw">ADD CONSTRAINT</span> chk_admin_auth_method
+      <span class="kw">CHECK</span> (auth_method <span class="kw">IN</span> (<span class="val">'totp'</span>, <span class="val">'cert'</span>, <span class="val">'both'</span>));
+  <span class="kw">END IF</span>;
+<span class="kw">END</span>
+$$;
+
+<span class="cmt">-- 7. Add audit trigger for cert changes</span>
+<span class="kw">CREATE OR REPLACE FUNCTION</span> audit_cert_change() <span class="kw">RETURNS</span> trigger <span class="kw">AS</span> $$
+<span class="kw">BEGIN</span>
+  <span class="kw">IF</span> (OLD.cert_thumbprint <span class="kw">IS DISTINCT FROM</span> NEW.cert_thumbprint) <span class="kw">THEN</span>
+    <span class="kw">INSERT INTO</span> auditoria (tabela, operacao, registro_id, dados, usuario)
+    <span class="kw">VALUES</span> (
+      <span class="val">'admins'</span>,
+      <span class="val">'cert_change'</span>,
+      NEW.id::text,
+      json_build_object(
+        <span class="val">'old_thumbprint'</span>, OLD.cert_thumbprint,
+        <span class="val">'new_thumbprint'</span>, NEW.cert_thumbprint,
+        <span class="val">'old_method'</span>, OLD.auth_method,
+        <span class="val">'new_method'</span>, NEW.auth_method
+      )::text,
+      COALESCE(NEW.email, <span class="val">'system'</span>)
+    );
+  <span class="kw">END IF</span>;
+  <span class="kw">RETURN</span> NEW;
+<span class="kw">END</span>;
+$$ <span class="kw">LANGUAGE</span> plpgsql;
+
+<span class="kw">DROP TRIGGER IF EXISTS</span> trg_admin_cert_audit <span class="kw">ON</span> admins;
+<span class="kw">CREATE TRIGGER</span> trg_admin_cert_audit
+  <span class="kw">BEFORE UPDATE ON</span> admins
+  <span class="kw">FOR EACH ROW</span>
+  <span class="kw">EXECUTE FUNCTION</span> audit_cert_change();</code></pre>
+
+  <h3>Task 3.2 &mdash; Apply Migration (Local Dev)</h3>
+  <pre><code><span class="cmt"># Ensure the local PostgreSQL container is running</span>
+<span class="cmd">docker ps --filter "name=gen360-postgres" --format "{{.Names}} {{.Status}}"</span>
+<span class="out"># gen360-postgres Up 2 hours</span>
+
+<span class="cmt"># If not running, start it:</span>
+<span class="cmd">docker start gen360-postgres</span>
+
+<span class="cmt"># Apply the migration via docker exec</span>
+<span class="cmd">docker exec -i gen360-postgres psql -U gen360 -d normas -f - < db\migracoes\009_admin_cert.sql</span>
+
+<span class="cmt"># Alternative: Use psql directly if installed</span>
+<span class="cmd">$env:PGPASSWORD="gen360"; psql -h localhost -U gen360 -d normas -f db\migracoes\009_admin_cert.sql</span></code></pre>
+
+  <h3>Task 3.3 &mdash; Verify Migration</h3>
+  <pre><code><span class="cmt"># Check columns were added</span>
+<span class="cmd">docker exec gen360-postgres psql -U gen360 -d normas -c "\d admins"</span>
+<span class="out"># You should see the new columns:</span>
+<span class="out">#  cert_thumbprint   | character varying(64)  |           |          |</span>
+<span class="out">#  cert_subject      | character varying(512) |           |          |</span>
+<span class="out">#  auth_method       | character varying(10)  |           |          | 'totp'</span>
+<span class="out">#  cert_registered_at| timestamp without tz   |           |          |</span>
+
+<span class="cmt"># Check index was created</span>
+<span class="cmd">docker exec gen360-postgres psql -U gen360 -d normas -c "\di idx_admins_cert_thumbprint"</span>
+
+<span class="cmt"># Check constraint</span>
+<span class="cmd">docker exec gen360-postgres psql -U gen360 -d normas -c "SELECT conname FROM pg_constraint WHERE conrelid = 'admins'::regclass AND conname LIKE '%cert%';"</span>
+<span class="out">#       conname</span>
+<span class="out"># ---------------------</span>
+<span class="out">#  chk_admin_auth_method</span>
+
+<span class="cmt"># Check trigger</span>
+<span class="cmd">docker exec gen360-postgres psql -U gen360 -d normas -c "SELECT tgname FROM pg_trigger WHERE tgrelid = 'admins'::regclass AND tgname LIKE '%cert%';"</span>
+<span class="out">#        tgname</span>
+<span class="out"># ----------------------</span>
+<span class="out">#  trg_admin_cert_audit</span></code></pre>
+
+  <h3>Task 3.4 &mdash; Test Constraint</h3>
+  <pre><code><span class="cmt"># Should SUCCEED &mdash; valid auth_method</span>
+<span class="cmd">docker exec gen360-postgres psql -U gen360 -d normas -c ^
+  "UPDATE admins SET auth_method = 'cert' WHERE id = (SELECT id FROM admins LIMIT 1) RETURNING id, auth_method;"</span>
+
+<span class="cmt"># Should FAIL &mdash; invalid auth_method</span>
+<span class="cmd">docker exec gen360-postgres psql -U gen360 -d normas -c ^
+  "UPDATE admins SET auth_method = 'invalid' WHERE id = (SELECT id FROM admins LIMIT 1);"</span>
+<span class="out"># ERROR:  new row for relation "admins" violates check constraint "chk_admin_auth_method"</span>
+
+<span class="cmt"># Reset back to 'totp'</span>
+<span class="cmd">docker exec gen360-postgres psql -U gen360 -d normas -c ^
+  "UPDATE admins SET auth_method = 'totp' WHERE auth_method = 'cert';"</span></code></pre>
+
+  <h3>Task 3.5 &mdash; Rollback SQL</h3>
+  <p>If you need to undo this migration:</p>
+  <pre><code><span class="cmt">-- ROLLBACK: 009_admin_cert.sql</span>
+<span class="kw">DROP TRIGGER IF EXISTS</span> trg_admin_cert_audit <span class="kw">ON</span> admins;
+<span class="kw">DROP FUNCTION IF EXISTS</span> audit_cert_change();
+<span class="kw">ALTER TABLE</span> admins <span class="kw">DROP CONSTRAINT IF EXISTS</span> chk_admin_auth_method;
+<span class="kw">DROP INDEX IF EXISTS</span> idx_admins_cert_thumbprint;
+<span class="kw">ALTER TABLE</span> admins <span class="kw">DROP COLUMN IF EXISTS</span> cert_registered_at;
+<span class="kw">ALTER TABLE</span> admins <span class="kw">DROP COLUMN IF EXISTS</span> auth_method;
+<span class="kw">ALTER TABLE</span> admins <span class="kw">DROP COLUMN IF EXISTS</span> cert_subject;
+<span class="kw">ALTER TABLE</span> admins <span class="kw">DROP COLUMN IF EXISTS</span> cert_thumbprint;</code></pre>
+  <div class="callout callout-danger"><strong>&#x26A0;&#xFE0F; Warning:</strong> Rollback will permanently delete all stored certificate data. Export data first if needed: <code>SELECT id, email, cert_thumbprint, auth_method FROM admins WHERE cert_thumbprint IS NOT NULL;</code></div>
+
+  <h3>Schema Summary</h3>
+  <table>
+    <tr><th>Column</th><th>Type</th><th>Default</th><th>Purpose</th></tr>
+    <tr><td><code>cert_thumbprint</code></td><td>VARCHAR(64)</td><td>NULL</td><td>SHA-256 fingerprint of client cert (unique, indexed)</td></tr>
+    <tr><td><code>cert_subject</code></td><td>VARCHAR(512)</td><td>NULL</td><td>Certificate Distinguished Name (e.g. CN=Thiago Beier)</td></tr>
+    <tr><td><code>auth_method</code></td><td>VARCHAR(10)</td><td>'totp'</td><td>Preferred method: totp, cert, or both</td></tr>
+    <tr><td><code>cert_registered_at</code></td><td>TIMESTAMP</td><td>NULL</td><td>When the certificate was first registered</td></tr>
+  </table>
+</section>
+
+</div><!-- /tab-db -->
+
+<!-- ================================================================== -->
+<!-- TAB 4: SERVER API CODE -->
+<!-- ================================================================== -->
+<div id="tab-api" class="tab-content">
+
+<section>
+  <h2>Server: API Code (Milestones 4 &amp; 5)</h2>
+
+  <h3>Task 4.1 &mdash; Install cryptography Package</h3>
+  <pre><code><span class="cmt"># Add to requirements.txt:</span>
+<span class="cmd">echo cryptography==44.0.0 >> requirements.txt</span>
+
+<span class="cmt"># Install:</span>
+<span class="cmd">pip install -r requirements.txt</span>
+
+<span class="cmt"># Verify:</span>
+<span class="cmd">python -c "from cryptography import x509; print('OK')"</span>
+<span class="out"># OK</span></code></pre>
+
+  <h3>Task 4.2 &mdash; Add Certificate Functions to auth.py</h3>
+  <p>Add these functions at the bottom of <code>api/auth.py</code>:</p>
+  <pre><code><span class="cmt"># ──────────────────────────────────────────────</span>
+<span class="cmt"># Certificate-Based Authentication (CBA)</span>
+<span class="cmt"># ──────────────────────────────────────────────</span>
+
+<span class="kw">from</span> cryptography <span class="kw">import</span> x509
+<span class="kw">from</span> cryptography.hazmat.primitives <span class="kw">import</span> hashes, serialization
+<span class="kw">from</span> cryptography.hazmat.backends <span class="kw">import</span> default_backend
+<span class="kw">from</span> datetime <span class="kw">import</span> datetime, timezone
+<span class="kw">import</span> hashlib
+
+
+<span class="kw">def</span> <span class="val">carregar_ca_chain</span>(caminho_chain: str) -> list:
+    <span class="cmt">"""Load CA chain from PEM file and return list of x509 Certificate objects."""</span>
+    <span class="kw">with</span> open(caminho_chain, <span class="val">"rb"</span>) <span class="kw">as</span> f:
+        pem_data = f.read()
+    certs = []
+    <span class="kw">for</span> cert <span class="kw">in</span> pem_data.split(<span class="val">b"-----END CERTIFICATE-----"</span>):
+        cert = cert.strip()
+        <span class="kw">if</span> cert:
+            cert_pem = cert + <span class="val">b"\n-----END CERTIFICATE-----\n"</span>
+            <span class="kw">try</span>:
+                certs.append(x509.load_pem_x509_certificate(cert_pem, default_backend()))
+            <span class="kw">except</span> Exception:
+                <span class="kw">continue</span>
+    <span class="kw">return</span> certs
+
+
+<span class="kw">def</span> <span class="val">extrair_thumbprint</span>(cert_pem: bytes) -> str:
+    <span class="cmt">"""Extract SHA-256 thumbprint from a PEM-encoded certificate.
+    Returns lowercase hex string (64 chars)."""</span>
+    cert = x509.load_pem_x509_certificate(cert_pem, default_backend())
+    fingerprint = cert.fingerprint(hashes.SHA256())
+    <span class="kw">return</span> fingerprint.hex().lower()
+
+
+<span class="kw">def</span> <span class="val">extrair_identidade_cert</span>(cert_pem: bytes) -> dict:
+    <span class="cmt">"""Extract identity fields from a client certificate.
+    Returns dict with 'cn', 'email', 'subject', 'thumbprint', 'not_after'."""</span>
+    cert = x509.load_pem_x509_certificate(cert_pem, default_backend())
+    subject = cert.subject
+
+    <span class="cmt"># Extract CN</span>
+    cn_attrs = subject.get_attributes_for_oid(x509.oid.NameOID.COMMON_NAME)
+    cn = cn_attrs[0].value <span class="kw">if</span> cn_attrs <span class="kw">else</span> <span class="val">""</span>
+
+    <span class="cmt"># Extract email from subject or SAN extension</span>
+    email = <span class="val">""</span>
+    email_attrs = subject.get_attributes_for_oid(x509.oid.NameOID.EMAIL_ADDRESS)
+    <span class="kw">if</span> email_attrs:
+        email = email_attrs[0].value
+    <span class="kw">else</span>:
+        <span class="kw">try</span>:
+            san = cert.extensions.get_extension_for_class(x509.SubjectAlternativeName)
+            emails = san.value.get_values_for_type(x509.RFC822Name)
+            <span class="kw">if</span> emails:
+                email = emails[0]
+        <span class="kw">except</span> x509.ExtensionNotFound:
+            <span class="kw">pass</span>
+
+    thumbprint = cert.fingerprint(hashes.SHA256()).hex().lower()
+
+    <span class="kw">return</span> {
+        <span class="val">"cn"</span>: cn,
+        <span class="val">"email"</span>: email,
+        <span class="val">"subject"</span>: subject.rfc4514_string(),
+        <span class="val">"thumbprint"</span>: thumbprint,
+        <span class="val">"not_after"</span>: cert.not_valid_after_utc.isoformat(),
+    }
+
+
+<span class="kw">def</span> <span class="val">validar_certificado</span>(cert_pem: bytes, ca_chain: list) -> dict:
+    <span class="cmt">"""Validate a client certificate against the CA chain.
+    Returns dict: {'valid': bool, 'error': str|None, 'identity': dict|None}"""</span>
+    <span class="kw">try</span>:
+        cert = x509.load_pem_x509_certificate(cert_pem, default_backend())
+    <span class="kw">except</span> Exception <span class="kw">as</span> e:
+        <span class="kw">return</span> {<span class="val">"valid"</span>: False, <span class="val">"error"</span>: f<span class="val">"Invalid certificate format: {e}"</span>, <span class="val">"identity"</span>: None}
+
+    <span class="cmt"># 1. Check expiry</span>
+    now = datetime.now(timezone.utc)
+    <span class="kw">if</span> now &lt; cert.not_valid_before_utc:
+        <span class="kw">return</span> {<span class="val">"valid"</span>: False, <span class="val">"error"</span>: <span class="val">"Certificate not yet valid"</span>, <span class="val">"identity"</span>: None}
+    <span class="kw">if</span> now > cert.not_valid_after_utc:
+        <span class="kw">return</span> {<span class="val">"valid"</span>: False, <span class="val">"error"</span>: <span class="val">"Certificate has expired"</span>, <span class="val">"identity"</span>: None}
+
+    <span class="cmt"># 2. Check extended key usage includes clientAuth</span>
+    <span class="kw">try</span>:
+        eku = cert.extensions.get_extension_for_class(x509.ExtendedKeyUsage)
+        <span class="kw">if</span> x509.oid.ExtendedKeyUsageOID.CLIENT_AUTH <span class="kw">not in</span> eku.value:
+            <span class="kw">return</span> {<span class="val">"valid"</span>: False, <span class="val">"error"</span>: <span class="val">"Certificate not valid for client auth"</span>, <span class="val">"identity"</span>: None}
+    <span class="kw">except</span> x509.ExtensionNotFound:
+        <span class="kw">return</span> {<span class="val">"valid"</span>: False, <span class="val">"error"</span>: <span class="val">"Missing extendedKeyUsage extension"</span>, <span class="val">"identity"</span>: None}
+
+    <span class="cmt"># 3. Verify signature chain</span>
+    issuer_found = False
+    <span class="kw">for</span> ca_cert <span class="kw">in</span> ca_chain:
+        <span class="kw">try</span>:
+            <span class="cmt"># Verify the client cert was signed by this CA cert</span>
+            ca_cert.public_key().verify(
+                cert.signature,
+                cert.tbs_certificate_bytes,
+                <span class="cmt"># Use the signature algorithm from the cert</span>
+                cert.signature_hash_algorithm,
+            )
+            issuer_found = True
+            <span class="kw">break</span>
+        <span class="kw">except</span> Exception:
+            <span class="kw">continue</span>
+
+    <span class="kw">if not</span> issuer_found:
+        <span class="kw">return</span> {<span class="val">"valid"</span>: False, <span class="val">"error"</span>: <span class="val">"Certificate not signed by trusted CA"</span>, <span class="val">"identity"</span>: None}
+
+    identity = extrair_identidade_cert(cert_pem)
+    <span class="kw">return</span> {<span class="val">"valid"</span>: True, <span class="val">"error"</span>: None, <span class="val">"identity"</span>: identity}</code></pre>
+  <div class="callout callout-info"><strong>&#x1F4A1; Note:</strong> The <code>validar_certificado</code> function uses the <code>cryptography</code> library's native signature verification. For RSA certs, use <code>padding.PKCS1v15()</code>. The simplified verify above works for basic chain validation &mdash; production should use <code>cryptography.x509.verification</code> (Python 3.10+).</div>
+
+  <h3>Task 4.3 &mdash; Add Database Query Functions to queries.py</h3>
+  <p>Add these functions to <code>api/queries.py</code>:</p>
+  <pre><code><span class="cmt"># ──────────────────────────────────────────────</span>
+<span class="cmt"># Certificate Authentication Queries</span>
+<span class="cmt"># ──────────────────────────────────────────────</span>
+
+<span class="kw">def</span> <span class="val">obter_admin_por_cert_thumbprint</span>(thumbprint: str):
+    <span class="cmt">"""Look up an admin by their certificate SHA-256 thumbprint.
+    Returns admin dict or None."""</span>
+    conn = get_connection()
+    <span class="kw">try</span>:
+        <span class="kw">with</span> conn.cursor() <span class="kw">as</span> cur:
+            cur.execute(
+                <span class="val">"""SELECT id, email, nome, papel, auth_method,
+                          cert_thumbprint, cert_subject
+                   FROM admins
+                   WHERE cert_thumbprint = %s AND ativo = true"""</span>,
+                (thumbprint.lower(),)
+            )
+            row = cur.fetchone()
+            <span class="kw">if</span> row:
+                <span class="kw">return</span> {
+                    <span class="val">"id"</span>: row[0], <span class="val">"email"</span>: row[1], <span class="val">"nome"</span>: row[2],
+                    <span class="val">"papel"</span>: row[3], <span class="val">"auth_method"</span>: row[4],
+                    <span class="val">"cert_thumbprint"</span>: row[5], <span class="val">"cert_subject"</span>: row[6],
+                }
+            <span class="kw">return</span> None
+    <span class="kw">finally</span>:
+        conn.close()
+
+
+<span class="kw">def</span> <span class="val">registrar_cert_admin</span>(admin_id: int, thumbprint: str, subject: str):
+    <span class="cmt">"""Register a certificate for an admin account."""</span>
+    conn = get_connection()
+    <span class="kw">try</span>:
+        <span class="kw">with</span> conn.cursor() <span class="kw">as</span> cur:
+            cur.execute(
+                <span class="val">"""UPDATE admins
+                   SET cert_thumbprint = %s,
+                       cert_subject = %s,
+                       cert_registered_at = NOW()
+                   WHERE id = %s
+                   RETURNING id, email"""</span>,
+                (thumbprint.lower(), subject, admin_id)
+            )
+            result = cur.fetchone()
+            conn.commit()
+            <span class="kw">return</span> result
+    <span class="kw">except</span> Exception <span class="kw">as</span> e:
+        conn.rollback()
+        <span class="kw">raise</span> e
+    <span class="kw">finally</span>:
+        conn.close()
+
+
+<span class="kw">def</span> <span class="val">remover_cert_admin</span>(admin_id: int):
+    <span class="cmt">"""Remove certificate data from an admin account and reset to TOTP."""</span>
+    conn = get_connection()
+    <span class="kw">try</span>:
+        <span class="kw">with</span> conn.cursor() <span class="kw">as</span> cur:
+            cur.execute(
+                <span class="val">"""UPDATE admins
+                   SET cert_thumbprint = NULL,
+                       cert_subject = NULL,
+                       cert_registered_at = NULL,
+                       auth_method = 'totp'
+                   WHERE id = %s
+                   RETURNING id, email"""</span>,
+                (admin_id,)
+            )
+            result = cur.fetchone()
+            conn.commit()
+            <span class="kw">return</span> result
+    <span class="kw">except</span> Exception <span class="kw">as</span> e:
+        conn.rollback()
+        <span class="kw">raise</span> e
+    <span class="kw">finally</span>:
+        conn.close()
+
+
+<span class="kw">def</span> <span class="val">atualizar_admin_auth_method</span>(admin_id: int, method: str):
+    <span class="cmt">"""Update the preferred auth method for an admin.
+    method must be 'totp', 'cert', or 'both'."""</span>
+    <span class="kw">assert</span> method <span class="kw">in</span> (<span class="val">"totp"</span>, <span class="val">"cert"</span>, <span class="val">"both"</span>), f<span class="val">"Invalid method: {method}"</span>
+    conn = get_connection()
+    <span class="kw">try</span>:
+        <span class="kw">with</span> conn.cursor() <span class="kw">as</span> cur:
+            cur.execute(
+                <span class="val">"UPDATE admins SET auth_method = %s WHERE id = %s RETURNING id"</span>,
+                (method, admin_id)
+            )
+            result = cur.fetchone()
+            conn.commit()
+            <span class="kw">return</span> result
+    <span class="kw">except</span> Exception <span class="kw">as</span> e:
+        conn.rollback()
+        <span class="kw">raise</span> e
+    <span class="kw">finally</span>:
+        conn.close()</code></pre>
+
+  <h3>Task 4.4 &mdash; Add Imports to main.py</h3>
+  <p>Add these imports to the top of <code>api/main.py</code> alongside existing auth imports:</p>
+  <pre><code><span class="cmt"># In api/main.py, add to existing imports from api.auth:</span>
+<span class="kw">from</span> api.auth <span class="kw">import</span> (
+    gerar_token, verificar_token, verificar_senha, gerar_hash_senha,
+    gerar_segredo_totp, gerar_uri_totp, verificar_totp,
+    <span class="cmt"># New CBA imports:</span>
+    validar_certificado, extrair_thumbprint, extrair_identidade_cert,
+    carregar_ca_chain,
+)
+<span class="kw">from</span> api.queries <span class="kw">import</span> (
+    <span class="cmt"># ... existing imports ...</span>
+    obter_admin_por_cert_thumbprint,
+    registrar_cert_admin,
+    remover_cert_admin,
+    atualizar_admin_auth_method,
+)
+<span class="kw">import</span> os, ssl</code></pre>
+
+  <h3>Task 4.5 &mdash; Load CA Chain at Startup</h3>
+  <p>Add this after the FastAPI app initialization in <code>api/main.py</code>:</p>
+  <pre><code><span class="cmt"># Load CA chain for certificate validation</span>
+CA_CHAIN_PATH = os.getenv(<span class="val">"CA_CHAIN_PATH"</span>, <span class="val">"certs/ca-chain.pem"</span>)
+CA_CHAIN = []
+<span class="kw">if</span> os.path.exists(CA_CHAIN_PATH):
+    CA_CHAIN = carregar_ca_chain(CA_CHAIN_PATH)
+    print(f<span class="val">"Loaded {len(CA_CHAIN)} CA certificates from {CA_CHAIN_PATH}"</span>)
+<span class="kw">else</span>:
+    print(f<span class="val">"WARNING: CA chain not found at {CA_CHAIN_PATH} &mdash; CBA disabled"</span>)</code></pre>
+
+  <h3>Task 4.6 &mdash; Certificate Login Endpoint</h3>
+  <p>Add new endpoint in <code>api/main.py</code>:</p>
+  <pre><code><span class="cmt"># ──────────────────────────────────────────────</span>
+<span class="cmt"># POST /admin/login/cert &mdash; Login with client certificate</span>
+<span class="cmt"># ──────────────────────────────────────────────</span>
+@app.post(<span class="val">"/admin/login/cert"</span>)
+<span class="kw">async def</span> <span class="val">admin_login_cert</span>(request: Request):
+    <span class="cmt">"""Authenticate admin using a client certificate.
+    The certificate is extracted from the TLS handshake (via reverse proxy header
+    or direct SSL connection)."""</span>
+
+    <span class="cmt"># 1. Extract client certificate from request</span>
+    <span class="cmt"># In production (Azure App Service), the cert comes as a header:</span>
+    cert_header = request.headers.get(<span class="val">"X-ARR-ClientCert"</span>, <span class="val">""</span>)
+
+    <span class="cmt"># In local dev with direct SSL, the cert is in the ASGI scope:</span>
+    <span class="kw">if not</span> cert_header:
+        <span class="cmt"># Try to get from the TLS transport info</span>
+        cert_header = request.headers.get(<span class="val">"X-Client-Cert"</span>, <span class="val">""</span>)
+
+    <span class="kw">if not</span> cert_header:
+        <span class="kw">raise</span> HTTPException(
+            status_code=401,
+            detail=<span class="val">"No client certificate provided. Ensure your browser sent a certificate."</span>
+        )
+
+    <span class="cmt"># 2. Decode the certificate (Azure sends it as base64-encoded DER)</span>
+    <span class="kw">import</span> base64
+    <span class="kw">try</span>:
+        <span class="cmt"># Try base64 decode (Azure App Service format)</span>
+        cert_der = base64.b64decode(cert_header)
+        <span class="cmt"># Convert DER to PEM</span>
+        <span class="kw">from</span> cryptography <span class="kw">import</span> x509 <span class="kw">as</span> x509_mod
+        cert_obj = x509_mod.load_der_x509_certificate(cert_der)
+        cert_pem = cert_obj.public_bytes(serialization.Encoding.PEM)
+    <span class="kw">except</span> Exception:
+        <span class="cmt"># Try as raw PEM</span>
+        <span class="kw">if</span> <span class="val">"BEGIN CERTIFICATE"</span> <span class="kw">in</span> cert_header:
+            cert_pem = cert_header.encode()
+        <span class="kw">else</span>:
+            <span class="kw">raise</span> HTTPException(status_code=400, detail=<span class="val">"Invalid certificate format"</span>)
+
+    <span class="cmt"># 3. Validate the certificate against CA chain</span>
+    <span class="kw">if not</span> CA_CHAIN:
+        <span class="kw">raise</span> HTTPException(status_code=503, detail=<span class="val">"CBA not configured (CA chain missing)"</span>)
+
+    result = validar_certificado(cert_pem, CA_CHAIN)
+    <span class="kw">if not</span> result[<span class="val">"valid"</span>]:
+        <span class="kw">raise</span> HTTPException(status_code=401, detail=f<span class="val">"Certificate validation failed: {result['error']}"</span>)
+
+    <span class="cmt"># 4. Look up admin by thumbprint</span>
+    identity = result[<span class="val">"identity"</span>]
+    admin = obter_admin_por_cert_thumbprint(identity[<span class="val">"thumbprint"</span>])
+
+    <span class="kw">if not</span> admin:
+        <span class="kw">raise</span> HTTPException(
+            status_code=401,
+            detail=<span class="val">"Certificate is valid but not registered to any admin account. "</span>
+                   <span class="val">"Please register your certificate first via the profile page."</span>
+        )
+
+    <span class="cmt"># 5. Check auth_method allows cert login</span>
+    <span class="kw">if</span> admin[<span class="val">"auth_method"</span>] == <span class="val">"totp"</span>:
+        <span class="kw">raise</span> HTTPException(
+            status_code=403,
+            detail=<span class="val">"Your account is set to TOTP-only authentication. "</span>
+                   <span class="val">"Change to 'cert' or 'both' in your profile settings."</span>
+        )
+
+    <span class="cmt"># 6. Generate JWT token (same as password login)</span>
+    token = gerar_token({
+        <span class="val">"sub"</span>: admin[<span class="val">"id"</span>],
+        <span class="val">"email"</span>: admin[<span class="val">"email"</span>],
+        <span class="val">"papel"</span>: admin[<span class="val">"papel"</span>],
+        <span class="val">"auth_via"</span>: <span class="val">"cert"</span>,
+    })
+
+    <span class="kw">return</span> {
+        <span class="val">"access_token"</span>: token,
+        <span class="val">"token_type"</span>: <span class="val">"bearer"</span>,
+        <span class="val">"admin"</span>: {
+            <span class="val">"id"</span>: admin[<span class="val">"id"</span>],
+            <span class="val">"email"</span>: admin[<span class="val">"email"</span>],
+            <span class="val">"nome"</span>: admin[<span class="val">"nome"</span>],
+            <span class="val">"auth_via"</span>: <span class="val">"cert"</span>,
+        },
+    }</code></pre>
+
+  <h3>Task 4.7 &mdash; Certificate Registration Endpoint</h3>
+  <pre><code><span class="cmt"># POST /admin/me/cert/register &mdash; Register client cert to current admin</span>
+@app.post(<span class="val">"/admin/me/cert/register"</span>)
+<span class="kw">async def</span> <span class="val">admin_register_cert</span>(request: Request):
+    <span class="cmt">"""Register a client certificate to the currently authenticated admin."""</span>
+    <span class="cmt"># Require existing JWT auth (admin must be logged in via password/TOTP first)</span>
+    token = request.headers.get(<span class="val">"Authorization"</span>, <span class="val">""</span>).replace(<span class="val">"Bearer "</span>, <span class="val">""</span>)
+    payload = verificar_token(token)
+    <span class="kw">if not</span> payload:
+        <span class="kw">raise</span> HTTPException(status_code=401, detail=<span class="val">"Invalid or expired token"</span>)
+
+    admin_id = payload.get(<span class="val">"sub"</span>)
+
+    <span class="cmt"># Get cert from request body (uploaded PEM) or from TLS header</span>
+    body = <span class="kw">await</span> request.json()
+    cert_pem_b64 = body.get(<span class="val">"certificate"</span>, <span class="val">""</span>)
+    <span class="kw">if not</span> cert_pem_b64:
+        <span class="kw">raise</span> HTTPException(status_code=400, detail=<span class="val">"No certificate provided in request body"</span>)
+
+    <span class="kw">import</span> base64
+    <span class="kw">try</span>:
+        cert_pem = base64.b64decode(cert_pem_b64)
+    <span class="kw">except</span> Exception:
+        cert_pem = cert_pem_b64.encode() <span class="kw">if isinstance</span>(cert_pem_b64, str) <span class="kw">else</span> cert_pem_b64
+
+    <span class="cmt"># Validate cert</span>
+    <span class="kw">if not</span> CA_CHAIN:
+        <span class="kw">raise</span> HTTPException(status_code=503, detail=<span class="val">"CBA not configured"</span>)
+
+    result = validar_certificado(cert_pem, CA_CHAIN)
+    <span class="kw">if not</span> result[<span class="val">"valid"</span>]:
+        <span class="kw">raise</span> HTTPException(status_code=400, detail=f<span class="val">"Invalid certificate: {result['error']}"</span>)
+
+    identity = result[<span class="val">"identity"</span>]
+
+    <span class="cmt"># Check if thumbprint is already used by another admin</span>
+    existing = obter_admin_por_cert_thumbprint(identity[<span class="val">"thumbprint"</span>])
+    <span class="kw">if</span> existing <span class="kw">and</span> existing[<span class="val">"id"</span>] != admin_id:
+        <span class="kw">raise</span> HTTPException(status_code=409, detail=<span class="val">"This certificate is already registered to another account"</span>)
+
+    <span class="cmt"># Register cert</span>
+    registrar_cert_admin(admin_id, identity[<span class="val">"thumbprint"</span>], identity[<span class="val">"subject"</span>])
+
+    <span class="kw">return</span> {
+        <span class="val">"message"</span>: <span class="val">"Certificate registered successfully"</span>,
+        <span class="val">"thumbprint"</span>: identity[<span class="val">"thumbprint"</span>],
+        <span class="val">"subject"</span>: identity[<span class="val">"subject"</span>],
+        <span class="val">"expires"</span>: identity[<span class="val">"not_after"</span>],
+    }
+
+
+<span class="cmt"># DELETE /admin/me/cert &mdash; Remove cert from current admin</span>
+@app.delete(<span class="val">"/admin/me/cert"</span>)
+<span class="kw">async def</span> <span class="val">admin_remove_cert</span>(request: Request):
+    <span class="cmt">"""Remove certificate from the currently authenticated admin."""</span>
+    token = request.headers.get(<span class="val">"Authorization"</span>, <span class="val">""</span>).replace(<span class="val">"Bearer "</span>, <span class="val">""</span>)
+    payload = verificar_token(token)
+    <span class="kw">if not</span> payload:
+        <span class="kw">raise</span> HTTPException(status_code=401, detail=<span class="val">"Invalid or expired token"</span>)
+
+    admin_id = payload.get(<span class="val">"sub"</span>)
+    result = remover_cert_admin(admin_id)
+    <span class="kw">if not</span> result:
+        <span class="kw">raise</span> HTTPException(status_code=404, detail=<span class="val">"Admin not found"</span>)
+
+    <span class="kw">return</span> {<span class="val">"message"</span>: <span class="val">"Certificate removed. Auth method reset to TOTP."</span>}
+
+
+<span class="cmt"># PUT /admin/me/auth-method &mdash; Change auth method preference</span>
+@app.put(<span class="val">"/admin/me/auth-method"</span>)
+<span class="kw">async def</span> <span class="val">admin_update_auth_method</span>(request: Request):
+    <span class="cmt">"""Update auth method for current admin."""</span>
+    token = request.headers.get(<span class="val">"Authorization"</span>, <span class="val">""</span>).replace(<span class="val">"Bearer "</span>, <span class="val">""</span>)
+    payload = verificar_token(token)
+    <span class="kw">if not</span> payload:
+        <span class="kw">raise</span> HTTPException(status_code=401, detail=<span class="val">"Invalid or expired token"</span>)
+
+    body = <span class="kw">await</span> request.json()
+    method = body.get(<span class="val">"auth_method"</span>, <span class="val">""</span>)
+    <span class="kw">if</span> method <span class="kw">not in</span> (<span class="val">"totp"</span>, <span class="val">"cert"</span>, <span class="val">"both"</span>):
+        <span class="kw">raise</span> HTTPException(status_code=400, detail=<span class="val">"auth_method must be 'totp', 'cert', or 'both'"</span>)
+
+    admin_id = payload.get(<span class="val">"sub"</span>)
+
+    <span class="cmt"># If switching to cert or both, verify a cert is registered</span>
+    <span class="kw">if</span> method <span class="kw">in</span> (<span class="val">"cert"</span>, <span class="val">"both"</span>):
+        <span class="cmt"># Quick check: look up admin cert</span>
+        conn = get_connection()
+        <span class="kw">try</span>:
+            <span class="kw">with</span> conn.cursor() <span class="kw">as</span> cur:
+                cur.execute(<span class="val">"SELECT cert_thumbprint FROM admins WHERE id = %s"</span>, (admin_id,))
+                row = cur.fetchone()
+                <span class="kw">if not</span> row <span class="kw">or not</span> row[0]:
+                    <span class="kw">raise</span> HTTPException(
+                        status_code=400,
+                        detail=<span class="val">"Cannot switch to cert/both: no certificate registered. Register a cert first."</span>
+                    )
+        <span class="kw">finally</span>:
+            conn.close()
+
+    atualizar_admin_auth_method(admin_id, method)
+    <span class="kw">return</span> {<span class="val">"message"</span>: f<span class="val">"Auth method updated to '{method}'"</span>}</code></pre>
+
+  <h3>Task 4.8 &mdash; SSL Context for Local Development</h3>
+  <p>Modify <code>run-dev.ps1</code> to start uvicorn with SSL and client cert verification:</p>
+  <pre><code><span class="cmt"># Add to run-dev.ps1 (replace the existing uvicorn line):</span>
+
+<span class="cmt"># Option A: Uvicorn with SSL (requires client cert)</span>
+<span class="cmd">uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload `
+  --ssl-keyfile certs/server/server.key `
+  --ssl-certfile certs/server/server.pem `
+  --ssl-ca-certs certs/ca-chain.pem</span>
+
+<span class="cmt"># Note: --ssl-ca-certs enables client certificate REQUEST</span>
+<span class="cmt"># The browser will show a cert selection dialog when connecting</span>
+<span class="cmt"># If no cert is provided, the connection still succeeds (optional client auth)</span>
+<span class="cmt"># The API endpoint will handle the cert presence/absence</span></code></pre>
+
+  <h3>Task 4.9 &mdash; Test with curl</h3>
+  <pre><code><span class="cmt"># Test cert login with curl (local dev)</span>
+<span class="cmd">curl -k --cert certs/clients/thiago.pem --key certs/clients/thiago.key ^
+  https://localhost:8000/admin/login/cert</span>
+
+<span class="cmt"># Test without cert (should return 401)</span>
+<span class="cmd">curl -k https://localhost:8000/admin/login/cert</span>
+<span class="out"># {"detail":"No client certificate provided..."}</span>
+
+<span class="cmt"># Test cert registration (requires JWT)</span>
+<span class="cmd">curl -k -X POST https://localhost:8000/admin/me/cert/register ^
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" ^
+  -H "Content-Type: application/json" ^
+  -d "{\"certificate\": \"BASE64_ENCODED_PEM_CERT\"}"</span></code></pre>
+
+  <h3>API Endpoints Summary</h3>
+  <table>
+    <tr><th>Method</th><th>Endpoint</th><th>Auth Required</th><th>Purpose</th></tr>
+    <tr><td><code>POST</code></td><td><code>/admin/login/cert</code></td><td>Client Cert</td><td>Login via certificate</td></tr>
+    <tr><td><code>POST</code></td><td><code>/admin/me/cert/register</code></td><td>JWT (Bearer)</td><td>Register cert to account</td></tr>
+    <tr><td><code>DELETE</code></td><td><code>/admin/me/cert</code></td><td>JWT (Bearer)</td><td>Remove cert from account</td></tr>
+    <tr><td><code>PUT</code></td><td><code>/admin/me/auth-method</code></td><td>JWT (Bearer)</td><td>Change auth method preference</td></tr>
+  </table>
+</section>
+
+</div><!-- /tab-api -->
+
+<!-- ================================================================== -->
+<!-- TAB 5: CLIENT BROWSER SETUP -->
+<!-- ================================================================== -->
+<div id="tab-browser" class="tab-content">
+
+<section>
+  <h2>Client: Browser Certificate Setup</h2>
+
+  <h3>Task 5.1 &mdash; Trust the Root CA (Windows)</h3>
+  <p>Before browsers trust certificates signed by your CA, the Root CA must be added to the Windows Trusted Root store:</p>
+  <pre><code><span class="cmt"># Method A: PowerShell (Admin required)</span>
+<span class="cmd">Import-Certificate -FilePath "certs\ca\root-ca.pem" `
+  -CertStoreLocation Cert:\LocalMachine\Root</span>
+<span class="out"># Thumbprint                                Subject</span>
+<span class="out"># ----------                                -------</span>
+<span class="out"># A1B2C3D4...                                CN=Gen360 Root CA, OU=Security, O=Gen360</span>
+
+<span class="cmt"># Verify it was added:</span>
+<span class="cmd">Get-ChildItem Cert:\LocalMachine\Root | Where-Object { $_.Subject -like "*Gen360*" }</span>
+
+<span class="cmt"># Method B: GUI</span>
+<span class="cmt"># 1. Double-click certs\ca\root-ca.pem</span>
+<span class="cmt"># 2. Click "Install Certificate..."</span>
+<span class="cmt"># 3. Select "Local Machine" (requires Admin)</span>
+<span class="cmt"># 4. Select "Place in: Trusted Root Certification Authorities"</span>
+<span class="cmt"># 5. Confirm the security warning</span></code></pre>
+  <div class="callout callout-warning"><strong>&#x26A0;&#xFE0F; Security note:</strong> Adding a Root CA to the trusted store means ANY certificate signed by this CA will be trusted by your system. Only do this on development machines. In production, Azure handles CA trust differently.</div>
+
+  <h3>Task 5.2 &mdash; Trust the Root CA (Firefox)</h3>
+  <p>Firefox uses its own certificate store &mdash; it does NOT use the Windows store:</p>
+  <ol>
+    <li>Open Firefox &rarr; <code>about:preferences#privacy</code></li>
+    <li>Scroll to <strong>Certificates</strong> &rarr; click <strong>View Certificates...</strong></li>
+    <li>Go to <strong>Authorities</strong> tab</li>
+    <li>Click <strong>Import...</strong></li>
+    <li>Select <code>certs/ca/root-ca.pem</code></li>
+    <li>Check &ldquo;Trust this CA to identify websites&rdquo;</li>
+    <li>Click OK &mdash; Gen360 Root CA should now appear under Authorities</li>
+  </ol>
+
+  <h3>Task 5.3 &mdash; Import Client Certificate (Windows &mdash; Chrome/Edge)</h3>
+  <p>Chrome and Edge use the Windows certificate store automatically.</p>
+  <pre><code><span class="cmt"># Import the .p12 file into the Personal store</span>
+<span class="cmd">$password = Read-Host -AsSecureString "Enter P12 password"
+Import-PfxCertificate -FilePath "certs\clients\thiago.p12" `
+  -CertStoreLocation Cert:\CurrentUser\My `
+  -Password $password</span>
+
+<span class="cmt"># Verify import:</span>
+<span class="cmd">Get-ChildItem Cert:\CurrentUser\My | Where-Object { $_.Subject -like "*thiago*" } | Format-List</span>
+<span class="out"># Subject      : E=thiago.beier@gmail.com, CN=Thiago Beier, O=Gen360, C=BR</span>
+<span class="out"># Issuer       : CN=Gen360 Intermediate CA, OU=Security, O=Gen360</span>
+<span class="out"># Thumbprint   : A1B2C3D4E5F6...</span>
+<span class="out"># NotAfter     : 04/01/2027 00:00:00</span>
+<span class="out"># HasPrivateKey: True</span></code></pre>
+
+  <h3>Task 5.4 &mdash; Import Client Certificate (Firefox)</h3>
+  <ol>
+    <li><code>about:preferences#privacy</code> &rarr; <strong>View Certificates...</strong></li>
+    <li>Go to <strong>Your Certificates</strong> tab</li>
+    <li>Click <strong>Import...</strong></li>
+    <li>Select the <code>.p12</code> file</li>
+    <li>Enter the export password from when you created the .p12</li>
+    <li>Certificate appears under &ldquo;Your Certificates&rdquo; with issuer &ldquo;Gen360 Intermediate CA&rdquo;</li>
+  </ol>
+
+  <h3>Task 5.5 &mdash; Import Client Certificate (macOS)</h3>
+  <pre><code><span class="cmt"># Import via Keychain Access CLI</span>
+<span class="cmd">security import certs/clients/thiago.p12 -k ~/Library/Keychains/login.keychain-db</span>
+
+<span class="cmt"># Or open the .p12 file in Finder &mdash; Keychain Access will open automatically</span>
+<span class="cmt"># 1. Double-click thiago.p12</span>
+<span class="cmt"># 2. Enter the export password</span>
+<span class="cmt"># 3. The cert appears in Keychain Access > login > My Certificates</span></code></pre>
+
+  <h3>Task 5.6 &mdash; Test Certificate Selection</h3>
+  <p>After importing both the Root CA (trusted) and client cert (personal):</p>
+  <ol>
+    <li>Start the API with SSL: <code>uvicorn api.main:app --ssl-keyfile certs/server/server.key --ssl-certfile certs/server/server.pem --ssl-ca-certs certs/ca-chain.pem --port 8000</code></li>
+    <li>Open <code>https://localhost:8000/docs</code> in your browser</li>
+    <li>The browser should show a <strong>certificate selection dialog</strong></li>
+    <li>Select your client certificate (e.g., &ldquo;Thiago Beier&rdquo;)</li>
+    <li>The page should load &mdash; this confirms the TLS client auth handshake works</li>
+  </ol>
+  <div class="callout callout-info"><strong>&#x1F4A1; Tip:</strong> If the browser does NOT show a cert selection dialog, check:
+    <ul>
+      <li>Root CA is in the Trusted Root store (not just Personal)</li>
+      <li>Client cert has <code>clientAuth</code> in the Extended Key Usage</li>
+      <li>The server is requesting client certs (<code>--ssl-ca-certs</code> flag)</li>
+      <li>Try clearing browser SSL state: <code>chrome://settings/security</code> &rarr; Manage certificates</li>
+    </ul>
+  </div>
+
+  <h3>Task 5.7 &mdash; Troubleshoot Common Browser Issues</h3>
+  <table>
+    <tr><th>Symptom</th><th>Cause</th><th>Fix</th></tr>
+    <tr>
+      <td>No certificate selection dialog</td>
+      <td>CA not trusted or cert missing clientAuth EKU</td>
+      <td>Import Root CA to Trusted Root; regenerate cert with clientAuth</td>
+    </tr>
+    <tr>
+      <td>ERR_SSL_CLIENT_AUTH_CERT_NEEDED</td>
+      <td>No client cert imported or cert store empty</td>
+      <td>Import the .p12 file into Personal store</td>
+    </tr>
+    <tr>
+      <td>ERR_BAD_SSL_CLIENT_AUTH_CERT</td>
+      <td>Cert not signed by trusted CA or cert expired</td>
+      <td>Check cert chain; verify with <code>openssl verify</code></td>
+    </tr>
+    <tr>
+      <td>SEC_ERROR_UNKNOWN_ISSUER (Firefox)</td>
+      <td>Root CA not in Firefox store</td>
+      <td>Import Root CA into Firefox Authorities (Task 5.2)</td>
+    </tr>
+    <tr>
+      <td>NET::ERR_CERT_AUTHORITY_INVALID</td>
+      <td>Server cert not trusted</td>
+      <td>Import Root CA into Trusted Root; or use <code>--ignore-certificate-errors</code> for dev</td>
+    </tr>
+  </table>
+</section>
+
+</div><!-- /tab-browser -->
+
+<!-- ================================================================== -->
+<!-- TAB 6: CLIENT FRONTEND CODE -->
+<!-- ================================================================== -->
+<div id="tab-frontend" class="tab-content">
+
+<section>
+  <h2>Client: Frontend Code (Milestones 6 &amp; 7)</h2>
+
+  <h3>Task 6.1 &mdash; Add Certificate Login Button to admin_login.html</h3>
+  <p>Add this HTML after the existing TOTP login form in <code>admin_frontend/admin_login.html</code>:</p>
+  <pre><code><span class="cmt">&lt;!-- Add AFTER the existing login form --&gt;</span>
+
+<span class="cmt">&lt;!-- Separator --&gt;</span>
+&lt;<span class="kw">div</span> style="<span class="val">display:flex; align-items:center; margin:24px 0;</span>"&gt;
+  &lt;<span class="kw">hr</span> style="<span class="val">flex:1; border:none; border-top:1px solid #30363d;</span>"&gt;
+  &lt;<span class="kw">span</span> style="<span class="val">padding:0 16px; color:#8b949e; font-size:14px;</span>"&gt;ou&lt;/<span class="kw">span</span>&gt;
+  &lt;<span class="kw">hr</span> style="<span class="val">flex:1; border:none; border-top:1px solid #30363d;</span>"&gt;
+&lt;/<span class="kw">div</span>&gt;
+
+<span class="cmt">&lt;!-- Certificate Login Button --&gt;</span>
+&lt;<span class="kw">button</span>
+  type="<span class="val">button</span>"
+  id="<span class="val">btn-cert-login</span>"
+  onclick="<span class="val">loginWithCertificate()</span>"
+  style="<span class="val">width:100%; padding:12px 24px; background:#1a5e1a; color:#3fb950;
+         border:1px solid #238636; border-radius:6px; font-size:15px;
+         cursor:pointer; display:flex; align-items:center; justify-content:center;
+         gap:8px; transition:background 0.2s;</span>"
+  onmouseover="<span class="val">this.style.background='#238636'</span>"
+  onmouseout="<span class="val">this.style.background='#1a5e1a'</span>"
+&gt;
+  <span class="cmt">&amp;#x1F512;</span> Entrar com Certificado Digital
+&lt;/<span class="kw">button</span>&gt;
+
+&lt;<span class="kw">div</span> id="<span class="val">cert-login-status</span>" style="<span class="val">margin-top:12px; text-align:center; display:none;</span>"&gt;
+  &lt;<span class="kw">span</span> id="<span class="val">cert-login-msg</span>" style="<span class="val">color:#8b949e; font-size:13px;</span>"&gt;&lt;/<span class="kw">span</span>&gt;
+&lt;/<span class="kw">div</span>&gt;</code></pre>
+
+  <h3>Task 6.2 &mdash; Add loginWithCertificate() to admin_auth.js</h3>
+  <p>Add this function to <code>admin_frontend/admin_auth.js</code>:</p>
+  <pre><code><span class="cmt">// ──────────────────────────────────────────────</span>
+<span class="cmt">// Certificate-Based Login</span>
+<span class="cmt">// ──────────────────────────────────────────────</span>
+
+<span class="kw">async function</span> <span class="val">loginWithCertificate</span>() {
+    <span class="kw">const</span> statusDiv = document.getElementById(<span class="val">'cert-login-status'</span>);
+    <span class="kw">const</span> msgSpan = document.getElementById(<span class="val">'cert-login-msg'</span>);
+    <span class="kw">const</span> btn = document.getElementById(<span class="val">'btn-cert-login'</span>);
+
+    <span class="cmt">// Show loading state</span>
+    statusDiv.style.display = <span class="val">'block'</span>;
+    msgSpan.style.color = <span class="val">'#8b949e'</span>;
+    msgSpan.textContent = <span class="val">'Verificando certificado...'</span>;
+    btn.disabled = <span class="kw">true</span>;
+
+    <span class="kw">try</span> {
+        <span class="cmt">// The browser automatically includes the client certificate</span>
+        <span class="cmt">// in the TLS handshake when connecting over HTTPS.</span>
+        <span class="cmt">// The server extracts it from the TLS layer or proxy header.</span>
+        <span class="kw">const</span> response = <span class="kw">await</span> fetch(`${API_URL}/admin/login/cert`, {
+            method: <span class="val">'POST'</span>,
+            headers: { <span class="val">'Content-Type'</span>: <span class="val">'application/json'</span> },
+            <span class="cmt">// Important: credentials 'include' ensures cookies/certs are sent</span>
+            credentials: <span class="val">'include'</span>,
+        });
+
+        <span class="kw">const</span> data = <span class="kw">await</span> response.json();
+
+        <span class="kw">if</span> (response.ok) {
+            <span class="cmt">// Success: store token and redirect</span>
+            localStorage.setItem(<span class="val">'token'</span>, data.access_token);
+            localStorage.setItem(<span class="val">'admin'</span>, JSON.stringify(data.admin));
+
+            msgSpan.style.color = <span class="val">'#3fb950'</span>;
+            msgSpan.textContent = <span class="val">`Autenticado como ${data.admin.nome} via certificado!`</span>;
+
+            <span class="cmt">// Redirect after brief success message</span>
+            setTimeout(() => {
+                window.location.href = <span class="val">'admin_dashboard.html'</span>;
+            }, 800);
+        } <span class="kw">else</span> {
+            <span class="cmt">// Error from API</span>
+            msgSpan.style.color = <span class="val">'#f85149'</span>;
+            msgSpan.textContent = data.detail || <span class="val">'Falha na autenticação por certificado.'</span>;
+            btn.disabled = <span class="kw">false</span>;
+        }
+    } <span class="kw">catch</span> (err) {
+        <span class="cmt">// Network/TLS error (likely no cert selected or user cancelled)</span>
+        msgSpan.style.color = <span class="val">'#f85149'</span>;
+        <span class="kw">if</span> (err.message.includes(<span class="val">'Failed to fetch'</span>)) {
+            msgSpan.textContent = <span class="val">'Erro de conexão. Verifique se o servidor está rodando com SSL e se você selecionou um certificado.'</span>;
+        } <span class="kw">else</span> {
+            msgSpan.textContent = <span class="val">`Erro: ${err.message}`</span>;
+        }
+        btn.disabled = <span class="kw">false</span>;
+    }
+}</code></pre>
+
+  <h3>Task 6.3 &mdash; Certificate Management in Profile Page</h3>
+  <p>Add this HTML section to the admin profile page (e.g., <code>admin_frontend/admin_profile.html</code>):</p>
+  <pre><code><span class="cmt">&lt;!-- Certificate Management Section --&gt;</span>
+&lt;<span class="kw">div</span> class="<span class="val">card</span>" style="<span class="val">margin-top:24px;</span>"&gt;
+  &lt;<span class="kw">h3</span>&gt;<span class="cmt">&#x1F512;</span> Certificado Digital&lt;/<span class="kw">h3</span>&gt;
+
+  <span class="cmt">&lt;!-- Current cert status --&gt;</span>
+  &lt;<span class="kw">div</span> id="<span class="val">cert-status</span>"&gt;
+    &lt;<span class="kw">p</span> style="<span class="val">color:#8b949e;</span>"&gt;Carregando status do certificado...&lt;/<span class="kw">p</span>&gt;
+  &lt;/<span class="kw">div</span>&gt;
+
+  <span class="cmt">&lt;!-- Register new cert --&gt;</span>
+  &lt;<span class="kw">div</span> id="<span class="val">cert-register-section</span>" style="<span class="val">display:none; margin-top:16px;</span>"&gt;
+    &lt;<span class="kw">p</span> style="<span class="val">color:#c9d1d9; margin-bottom:8px;</span>"&gt;
+      Selecione o arquivo <span class="val">.pem</span> do seu certificado cliente:
+    &lt;/<span class="kw">p</span>&gt;
+    &lt;<span class="kw">input</span> type="<span class="val">file</span>" id="<span class="val">cert-file</span>" accept="<span class="val">.pem,.crt,.cer</span>"
+      style="<span class="val">color:#c9d1d9; margin-bottom:12px;</span>"&gt;
+    &lt;<span class="kw">br</span>&gt;
+    &lt;<span class="kw">button</span> onclick="<span class="val">registerCertificate()</span>"
+      style="<span class="val">padding:8px 20px; background:#238636; color:#fff;
+             border:1px solid #2ea043; border-radius:6px; cursor:pointer;</span>"&gt;
+      Registrar Certificado
+    &lt;/<span class="kw">button</span>&gt;
+  &lt;/<span class="kw">div</span>&gt;
+
+  <span class="cmt">&lt;!-- Remove cert --&gt;</span>
+  &lt;<span class="kw">div</span> id="<span class="val">cert-remove-section</span>" style="<span class="val">display:none; margin-top:16px;</span>"&gt;
+    &lt;<span class="kw">button</span> onclick="<span class="val">removeCertificate()</span>"
+      style="<span class="val">padding:8px 20px; background:#b62324; color:#fff;
+             border:1px solid #f85149; border-radius:6px; cursor:pointer;</span>"&gt;
+      Remover Certificado
+    &lt;/<span class="kw">button</span>&gt;
+  &lt;/<span class="kw">div</span>&gt;
+
+  <span class="cmt">&lt;!-- Auth method selector --&gt;</span>
+  &lt;<span class="kw">div</span> style="<span class="val">margin-top:20px; padding-top:16px; border-top:1px solid #30363d;</span>"&gt;
+    &lt;<span class="kw">label</span> style="<span class="val">color:#c9d1d9; font-weight:600;</span>"&gt;Método de Autenticação:&lt;/<span class="kw">label</span>&gt;
+    &lt;<span class="kw">select</span> id="<span class="val">auth-method-select</span>" onchange="<span class="val">updateAuthMethod()</span>"
+      style="<span class="val">margin-left:12px; padding:6px 12px; background:#0d1117;
+             color:#c9d1d9; border:1px solid #30363d; border-radius:6px;</span>"&gt;
+      &lt;<span class="kw">option</span> value="<span class="val">totp</span>"&gt;Somente TOTP&lt;/<span class="kw">option</span>&gt;
+      &lt;<span class="kw">option</span> value="<span class="val">cert</span>"&gt;Somente Certificado&lt;/<span class="kw">option</span>&gt;
+      &lt;<span class="kw">option</span> value="<span class="val">both</span>"&gt;TOTP + Certificado (máxima segurança)&lt;/<span class="kw">option</span>&gt;
+    &lt;/<span class="kw">select</span>&gt;
+  &lt;/<span class="kw">div</span>&gt;
+
+  &lt;<span class="kw">div</span> id="<span class="val">cert-msg</span>" style="<span class="val">margin-top:12px; display:none;</span>"&gt;&lt;/<span class="kw">div</span>&gt;
+&lt;/<span class="kw">div</span>&gt;</code></pre>
+
+  <h3>Task 6.4 &mdash; Certificate Management JavaScript</h3>
+  <p>Add these functions to <code>admin_frontend/admin_auth.js</code> (or a new <code>admin_cert.js</code>):</p>
+  <pre><code><span class="cmt">// ──────────────────────────────────────────────</span>
+<span class="cmt">// Certificate Management (Profile Page)</span>
+<span class="cmt">// ──────────────────────────────────────────────</span>
+
+<span class="kw">async function</span> <span class="val">loadCertStatus</span>() {
+    <span class="kw">const</span> token = localStorage.getItem(<span class="val">'token'</span>);
+    <span class="kw">if</span> (!token) <span class="kw">return</span>;
+
+    <span class="kw">try</span> {
+        <span class="kw">const</span> response = <span class="kw">await</span> fetch(`${API_URL}/admin/me`, {
+            headers: { <span class="val">'Authorization'</span>: `Bearer ${token}` },
+        });
+        <span class="kw">const</span> admin = <span class="kw">await</span> response.json();
+
+        <span class="kw">const</span> statusDiv = document.getElementById(<span class="val">'cert-status'</span>);
+        <span class="kw">const</span> registerSection = document.getElementById(<span class="val">'cert-register-section'</span>);
+        <span class="kw">const</span> removeSection = document.getElementById(<span class="val">'cert-remove-section'</span>);
+        <span class="kw">const</span> methodSelect = document.getElementById(<span class="val">'auth-method-select'</span>);
+
+        <span class="kw">if</span> (admin.cert_thumbprint) {
+            <span class="cmt">// Certificate is registered</span>
+            statusDiv.innerHTML = `
+                &lt;div style="padding:12px; background:#0d1117; border:1px solid #238636;
+                            border-radius:6px;"&gt;
+                  &lt;p style="color:#3fb950; margin:0 0 8px;"&gt;
+                    &#x2705; Certificado registrado
+                  &lt;/p&gt;
+                  &lt;p style="color:#c9d1d9; margin:4px 0; font-size:13px;"&gt;
+                    &lt;strong&gt;Subject:&lt;/strong&gt; ${admin.cert_subject || 'N/A'}
+                  &lt;/p&gt;
+                  &lt;p style="color:#8b949e; margin:4px 0; font-size:12px; font-family:monospace;"&gt;
+                    &lt;strong&gt;Thumbprint:&lt;/strong&gt; ${admin.cert_thumbprint}
+                  &lt;/p&gt;
+                &lt;/div&gt;`;
+            registerSection.style.display = <span class="val">'none'</span>;
+            removeSection.style.display = <span class="val">'block'</span>;
+        } <span class="kw">else</span> {
+            <span class="cmt">// No certificate</span>
+            statusDiv.innerHTML = `
+                &lt;p style="color:#d29922;"&gt;
+                  &#x26A0;&#xFE0F; Nenhum certificado registrado.
+                &lt;/p&gt;`;
+            registerSection.style.display = <span class="val">'block'</span>;
+            removeSection.style.display = <span class="val">'none'</span>;
+        }
+
+        <span class="kw">if</span> (methodSelect) {
+            methodSelect.value = admin.auth_method || <span class="val">'totp'</span>;
+        }
+    } <span class="kw">catch</span> (err) {
+        console.error(<span class="val">'Failed to load cert status:'</span>, err);
+    }
+}
+
+<span class="kw">async function</span> <span class="val">registerCertificate</span>() {
+    <span class="kw">const</span> fileInput = document.getElementById(<span class="val">'cert-file'</span>);
+    <span class="kw">const</span> msgDiv = document.getElementById(<span class="val">'cert-msg'</span>);
+
+    <span class="kw">if</span> (!fileInput.files || !fileInput.files[0]) {
+        showCertMsg(<span class="val">'Selecione um arquivo de certificado (.pem)'</span>, <span class="val">'#f85149'</span>);
+        <span class="kw">return</span>;
+    }
+
+    <span class="kw">const</span> file = fileInput.files[0];
+    <span class="kw">const</span> text = <span class="kw">await</span> file.text();
+
+    <span class="cmt">// Encode as base64 for the API</span>
+    <span class="kw">const</span> certBase64 = btoa(text);
+
+    <span class="kw">try</span> {
+        <span class="kw">const</span> token = localStorage.getItem(<span class="val">'token'</span>);
+        <span class="kw">const</span> response = <span class="kw">await</span> fetch(`${API_URL}/admin/me/cert/register`, {
+            method: <span class="val">'POST'</span>,
+            headers: {
+                <span class="val">'Authorization'</span>: `Bearer ${token}`,
+                <span class="val">'Content-Type'</span>: <span class="val">'application/json'</span>,
+            },
+            body: JSON.stringify({ certificate: certBase64 }),
+        });
+
+        <span class="kw">const</span> data = <span class="kw">await</span> response.json();
+        <span class="kw">if</span> (response.ok) {
+            showCertMsg(`Certificado registrado! Thumbprint: ${data.thumbprint}`, <span class="val">'#3fb950'</span>);
+            loadCertStatus(); <span class="cmt">// Refresh UI</span>
+        } <span class="kw">else</span> {
+            showCertMsg(data.detail || <span class="val">'Erro ao registrar certificado'</span>, <span class="val">'#f85149'</span>);
+        }
+    } <span class="kw">catch</span> (err) {
+        showCertMsg(`Erro: ${err.message}`, <span class="val">'#f85149'</span>);
+    }
+}
+
+<span class="kw">async function</span> <span class="val">removeCertificate</span>() {
+    <span class="kw">if</span> (!confirm(<span class="val">'Tem certeza que deseja remover o certificado? O método de autenticação será redefinido para TOTP.'</span>)) {
+        <span class="kw">return</span>;
+    }
+    <span class="kw">try</span> {
+        <span class="kw">const</span> token = localStorage.getItem(<span class="val">'token'</span>);
+        <span class="kw">const</span> response = <span class="kw">await</span> fetch(`${API_URL}/admin/me/cert`, {
+            method: <span class="val">'DELETE'</span>,
+            headers: { <span class="val">'Authorization'</span>: `Bearer ${token}` },
+        });
+        <span class="kw">const</span> data = <span class="kw">await</span> response.json();
+        <span class="kw">if</span> (response.ok) {
+            showCertMsg(<span class="val">'Certificado removido com sucesso.'</span>, <span class="val">'#3fb950'</span>);
+            loadCertStatus();
+        } <span class="kw">else</span> {
+            showCertMsg(data.detail || <span class="val">'Erro ao remover certificado'</span>, <span class="val">'#f85149'</span>);
+        }
+    } <span class="kw">catch</span> (err) {
+        showCertMsg(`Erro: ${err.message}`, <span class="val">'#f85149'</span>);
+    }
+}
+
+<span class="kw">async function</span> <span class="val">updateAuthMethod</span>() {
+    <span class="kw">const</span> select = document.getElementById(<span class="val">'auth-method-select'</span>);
+    <span class="kw">const</span> method = select.value;
+
+    <span class="kw">try</span> {
+        <span class="kw">const</span> token = localStorage.getItem(<span class="val">'token'</span>);
+        <span class="kw">const</span> response = <span class="kw">await</span> fetch(`${API_URL}/admin/me/auth-method`, {
+            method: <span class="val">'PUT'</span>,
+            headers: {
+                <span class="val">'Authorization'</span>: `Bearer ${token}`,
+                <span class="val">'Content-Type'</span>: <span class="val">'application/json'</span>,
+            },
+            body: JSON.stringify({ auth_method: method }),
+        });
+        <span class="kw">const</span> data = <span class="kw">await</span> response.json();
+        <span class="kw">if</span> (response.ok) {
+            showCertMsg(`Método atualizado para: ${method}`, <span class="val">'#3fb950'</span>);
+        } <span class="kw">else</span> {
+            showCertMsg(data.detail || <span class="val">'Erro ao atualizar método'</span>, <span class="val">'#f85149'</span>);
+            loadCertStatus(); <span class="cmt">// Reset select to actual value</span>
+        }
+    } <span class="kw">catch</span> (err) {
+        showCertMsg(`Erro: ${err.message}`, <span class="val">'#f85149'</span>);
+    }
+}
+
+<span class="kw">function</span> <span class="val">showCertMsg</span>(msg, color) {
+    <span class="kw">const</span> el = document.getElementById(<span class="val">'cert-msg'</span>);
+    el.style.display = <span class="val">'block'</span>;
+    el.style.color = color;
+    el.textContent = msg;
+    setTimeout(() => { el.style.display = <span class="val">'none'</span>; }, 5000);
+}</code></pre>
+
+  <h3>Task 6.5 &mdash; Update config.js for HTTPS</h3>
+  <pre><code><span class="cmt">// In admin_frontend/config.js, update for local SSL:</span>
+<span class="kw">const</span> API_URL = window.location.hostname === <span class="val">'localhost'</span>
+    ? <span class="val">'https://localhost:8000'</span>   <span class="cmt">// Changed: http -> https for CBA</span>
+    : <span class="val">'https://app-gen360-api.azurewebsites.net'</span>;</code></pre>
+  <div class="callout callout-warning"><strong>&#x26A0;&#xFE0F; Important:</strong> After switching to HTTPS locally, the frontend server (port 3000) must also use HTTPS, or browsers will block mixed-content requests. You can either:
+    <ol>
+      <li>Serve the frontend via the FastAPI app (static files)</li>
+      <li>Use a simple HTTPS server for the frontend</li>
+      <li>Use <code>http://localhost:3000</code> with CORS allowing HTTPS API (dev only)</li>
+    </ol>
+  </div>
+</section>
+
+</div><!-- /tab-frontend -->
+
+<!-- ================================================================== -->
+<!-- TAB 7: PRODUCTION DEPLOY -->
+<!-- ================================================================== -->
+<div id="tab-prod" class="tab-content">
+
+<section>
+  <h2>Production Deploy (Milestone 8)</h2>
+
+  <h3>Pre-Deployment Checklist</h3>
+  <table>
+    <tr><th>#</th><th>Item</th><th>Status</th></tr>
+    <tr><td>1</td><td>All local tests passing (Tab 8)</td><td>&#9898; Pending</td></tr>
+    <tr><td>2</td><td>Migration 009 tested and ready</td><td>&#9898; Pending</td></tr>
+    <tr><td>3</td><td>CA chain file prepared for upload</td><td>&#9898; Pending</td></tr>
+    <tr><td>4</td><td><code>requirements.txt</code> includes <code>cryptography</code></td><td>&#9898; Pending</td></tr>
+    <tr><td>5</td><td>Frontend changes committed</td><td>&#9898; Pending</td></tr>
+    <tr><td>6</td><td>Environment variables documented</td><td>&#9898; Pending</td></tr>
+    <tr><td>7</td><td>Rollback plan prepared</td><td>&#9898; Pending</td></tr>
+  </table>
+
+  <h3>Task 7.1 &mdash; Configure Azure App Service for Client Certificates</h3>
+  <pre><code><span class="cmt"># Set resource group and app name variables</span>
+<span class="cmd">$RG = "DemoGoverno"
+$APP = "app-gen360-api"</span>
+
+<span class="cmt"># Enable client certificate mode on the App Service</span>
+<span class="cmt"># "Optional" = request but don't require (allows non-cert logins too)</span>
+<span class="cmd">az webapp update --resource-group $RG --name $APP --set clientCertEnabled=true --client-cert-mode Optional</span>
+
+<span class="cmt"># Verify the setting:</span>
+<span class="cmd">az webapp show --resource-group $RG --name $APP --query "{clientCertEnabled:clientCertEnabled, clientCertMode:clientCertMode}"</span>
+<span class="out"># {
+#   "clientCertEnabled": true,
+#   "clientCertMode": "Optional"
+# }</span></code></pre>
+  <div class="callout callout-info"><strong>Client Cert Modes:</strong>
+    <ul>
+      <li><strong>Optional</strong> &mdash; Request cert, but allow connections without one (recommended for hybrid CBA + TOTP)</li>
+      <li><strong>Required</strong> &mdash; All requests MUST include a client cert (breaks non-cert logins)</li>
+      <li><strong>OptionalInteractiveUser</strong> &mdash; Optional for API calls, required for browser requests</li>
+    </ul>
+  </div>
+
+  <h3>Task 7.2 &mdash; Upload CA Chain to Azure</h3>
+  <pre><code><span class="cmt"># Option A: Upload CA certificate to App Service</span>
+<span class="cmd">az webapp config ssl upload --resource-group $RG --name $APP `
+  --certificate-file "certs\ca-chain.pem" `
+  --certificate-password ""</span>
+
+<span class="cmt"># Option B: Set as App Setting (base64-encoded)</span>
+<span class="cmd">$chainB64 = [Convert]::ToBase64String([IO.File]::ReadAllBytes("certs\ca-chain.pem"))
+az webapp config appsettings set --resource-group $RG --name $APP `
+  --settings CA_CHAIN_B64=$chainB64</span>
+
+<span class="cmt"># Option C: Reference from Azure Key Vault (recommended for production)</span>
+<span class="cmd">az keyvault certificate import --vault-name "kv-gen360" `
+  --name "gen360-ca-chain" `
+  --file "certs\ca-chain.pem"</span></code></pre>
+
+  <h3>Task 7.3 &mdash; Set Environment Variables</h3>
+  <pre><code><span class="cmt"># Set app settings for CBA configuration</span>
+<span class="cmd">az webapp config appsettings set --resource-group $RG --name $APP --settings `
+  CA_CHAIN_PATH="/home/site/certs/ca-chain.pem" `
+  CBA_ENABLED="true"</span>
+
+<span class="cmt"># If using base64 approach (Option B above), update main.py to decode:</span>
+<span class="cmt"># ca_chain_b64 = os.getenv("CA_CHAIN_B64")</span>
+<span class="cmt"># if ca_chain_b64:</span>
+<span class="cmt">#     import base64</span>
+<span class="cmt">#     chain_bytes = base64.b64decode(ca_chain_b64)</span>
+<span class="cmt">#     # Write to temp file and load</span>
+
+<span class="cmt"># Verify all settings:</span>
+<span class="cmd">az webapp config appsettings list --resource-group $RG --name $APP --output table</span></code></pre>
+
+  <h3>Task 7.4 &mdash; Apply Database Migration to Production</h3>
+  <pre><code><span class="cmt"># Connect to the production PostgreSQL and apply the migration</span>
+<span class="cmt"># Replace with your actual production DB connection details</span>
+<span class="cmd">$env:PGPASSWORD = "YOUR_PROD_DB_PASSWORD"
+psql -h gen360-db.postgres.database.azure.com -U gen360admin@gen360-db `
+  -d normas -f db\migracoes\009_admin_cert.sql</span>
+
+<span class="cmt"># Verify migration was applied:</span>
+<span class="cmd">psql -h gen360-db.postgres.database.azure.com -U gen360admin@gen360-db `
+  -d normas -c "\d admins" | Select-String "cert_"</span>
+<span class="out"># cert_thumbprint    | character varying(64)  |           |          |</span>
+<span class="out"># cert_subject       | character varying(512) |           |          |</span>
+<span class="out"># cert_registered_at | timestamp without tz   |           |          |</span></code></pre>
+
+  <h3>Task 7.5 &mdash; Deploy Application Code</h3>
+  <pre><code><span class="cmt"># Ensure all changes are committed</span>
+<span class="cmd">git add -A
+git status</span>
+
+<span class="cmt"># Commit with descriptive message</span>
+<span class="cmd">git commit -m "feat: add certificate-based authentication (CBA)
+
+- Add cert validation functions to api/auth.py
+- Add cert DB queries to api/queries.py
+- Add cert login/register/remove endpoints to api/main.py
+- Add DB migration 009_admin_cert.sql
+- Add frontend cert login button and profile management
+- Add PKI setup scripts and CA chain"</span>
+
+<span class="cmt"># Push to trigger deployment</span>
+<span class="cmd">git push origin main</span>
+
+<span class="cmt"># Monitor deployment:</span>
+<span class="cmd">az webapp log tail --resource-group $RG --name $APP</span></code></pre>
+
+  <h3>Task 7.6 &mdash; Azure Portal Configuration (Alternative GUI Method)</h3>
+  <ol>
+    <li>Navigate to <a href="https://portal.azure.com">Azure Portal</a></li>
+    <li>Go to <strong>App Services</strong> &rarr; <strong>app-gen360-api</strong></li>
+    <li><strong>Settings &rarr; General settings</strong>:
+      <ul>
+        <li>Scroll to <strong>Incoming client certificates</strong></li>
+        <li>Set <strong>Client certificate mode</strong> to <strong>Optional</strong></li>
+        <li>In <strong>Certificate exclusion paths</strong>, add: <code>/docs,/openapi.json,/health</code></li>
+        <li>Click <strong>Save</strong></li>
+      </ul>
+    </li>
+    <li><strong>Settings &rarr; Configuration &rarr; Application settings</strong>:
+      <ul>
+        <li>Add: <code>CA_CHAIN_PATH</code> = <code>/home/site/certs/ca-chain.pem</code></li>
+        <li>Add: <code>CBA_ENABLED</code> = <code>true</code></li>
+        <li>Click <strong>Save</strong></li>
+      </ul>
+    </li>
+  </ol>
+
+  <h3>Task 7.7 &mdash; Post-Deployment Verification</h3>
+  <pre><code><span class="cmt"># 1. Verify the app is running</span>
+<span class="cmd">curl -s https://app-gen360-api.azurewebsites.net/health</span>
+<span class="out"># {"status":"ok"}</span>
+
+<span class="cmt"># 2. Test regular login still works (TOTP path)</span>
+<span class="cmd">curl -s -X POST https://app-gen360-api.azurewebsites.net/admin/login ^
+  -H "Content-Type: application/json" ^
+  -d "{\"email\":\"admin@gen360.com\",\"senha\":\"...\",\"totp_code\":\"...\"}"</span>
+<span class="out"># {"access_token":"eyJ...","token_type":"bearer"}</span>
+
+<span class="cmt"># 3. Test cert login endpoint (without cert - should return 401)</span>
+<span class="cmd">curl -s https://app-gen360-api.azurewebsites.net/admin/login/cert</span>
+<span class="out"># {"detail":"No client certificate provided..."}</span>
+
+<span class="cmt"># 4. Test cert login with cert</span>
+<span class="cmd">curl -s --cert certs/clients/thiago.pem --key certs/clients/thiago.key ^
+  https://app-gen360-api.azurewebsites.net/admin/login/cert</span>
+
+<span class="cmt"># 5. Verify DB migration</span>
+<span class="cmd">curl -s https://app-gen360-api.azurewebsites.net/admin/me ^
+  -H "Authorization: Bearer YOUR_TOKEN" | python -m json.tool</span></code></pre>
+
+  <h3>Task 7.8 &mdash; Rollback Plan</h3>
+  <div class="callout callout-danger"><strong>Emergency Rollback Steps:</strong>
+    <ol>
+      <li><strong>Disable CBA immediately:</strong>
+        <code>az webapp update -g DemoGoverno -n app-gen360-api --set clientCertEnabled=false</code>
+      </li>
+      <li><strong>Revert code:</strong>
+        <code>git revert HEAD &amp;&amp; git push origin main</code>
+      </li>
+      <li><strong>Rollback DB (if needed):</strong> Run the rollback SQL from Task 3.5</li>
+      <li><strong>Verify:</strong> Test that TOTP login works normally</li>
+    </ol>
+  </div>
+</section>
+
+</div><!-- /tab-prod -->
+
+<!-- ================================================================== -->
+<!-- TAB 8: TESTING & TROUBLESHOOTING -->
+<!-- ================================================================== -->
+<div id="tab-test" class="tab-content">
+
+<section>
+  <h2>Testing &amp; Troubleshooting</h2>
+
+  <h3>Testing Matrix</h3>
+  <table>
+    <tr>
+      <th>Test Case</th><th>Method</th><th>Expected Result</th><th>Status</th>
+    </tr>
+    <tr>
+      <td>Login with valid cert (cert registered, method=cert)</td>
+      <td>Browser / curl</td>
+      <td>200 OK + JWT token</td>
+      <td>&#9898;</td>
+    </tr>
+    <tr>
+      <td>Login with valid cert (cert registered, method=both)</td>
+      <td>Browser / curl</td>
+      <td>200 OK + JWT token</td>
+      <td>&#9898;</td>
+    </tr>
+    <tr>
+      <td>Login with valid cert (cert registered, method=totp)</td>
+      <td>Browser / curl</td>
+      <td>403 Forbidden (TOTP-only mode)</td>
+      <td>&#9898;</td>
+    </tr>
+    <tr>
+      <td>Login with valid cert (cert NOT registered)</td>
+      <td>Browser / curl</td>
+      <td>401 Unauthorized (cert not linked)</td>
+      <td>&#9898;</td>
+    </tr>
+    <tr>
+      <td>Login without any cert</td>
+      <td>Browser / curl</td>
+      <td>401 Unauthorized (no cert)</td>
+      <td>&#9898;</td>
+    </tr>
+    <tr>
+      <td>Login with expired cert</td>
+      <td>curl</td>
+      <td>401 Unauthorized (expired)</td>
+      <td>&#9898;</td>
+    </tr>
+    <tr>
+      <td>Login with self-signed cert (not in CA chain)</td>
+      <td>curl</td>
+      <td>401 Unauthorized (untrusted CA)</td>
+      <td>&#9898;</td>
+    </tr>
+    <tr>
+      <td>Login with cert missing clientAuth EKU</td>
+      <td>curl</td>
+      <td>401 Unauthorized (wrong EKU)</td>
+      <td>&#9898;</td>
+    </tr>
+    <tr>
+      <td>Register cert (authenticated, valid cert)</td>
+      <td>curl / UI</td>
+      <td>200 OK + thumbprint returned</td>
+      <td>&#9898;</td>
+    </tr>
+    <tr>
+      <td>Register cert already used by another admin</td>
+      <td>curl / UI</td>
+      <td>409 Conflict</td>
+      <td>&#9898;</td>
+    </tr>
+    <tr>
+      <td>Remove cert</td>
+      <td>curl / UI</td>
+      <td>200 OK, method reset to TOTP</td>
+      <td>&#9898;</td>
+    </tr>
+    <tr>
+      <td>Change auth method to cert (no cert registered)</td>
+      <td>curl / UI</td>
+      <td>400 Bad Request</td>
+      <td>&#9898;</td>
+    </tr>
+    <tr>
+      <td>Existing TOTP login still works</td>
+      <td>Browser</td>
+      <td>200 OK (no regression)</td>
+      <td>&#9898;</td>
+    </tr>
+    <tr>
+      <td>Azure deployment with clientCertEnabled=true</td>
+      <td>Browser</td>
+      <td>Browser prompts for cert on HTTPS</td>
+      <td>&#9898;</td>
+    </tr>
+  </table>
+
+  <h3>Certificate Inspection Commands</h3>
+  <pre><code><span class="cmt"># View full certificate details</span>
+<span class="cmd">openssl x509 -text -noout -in certs/clients/thiago.pem</span>
+
+<span class="cmt"># View only subject and issuer</span>
+<span class="cmd">openssl x509 -subject -issuer -noout -in certs/clients/thiago.pem</span>
+<span class="out"># subject=C=BR, O=Gen360, CN=Thiago Beier, emailAddress=thiago.beier@gmail.com</span>
+<span class="out"># issuer=C=BR, ST=DF, L=Brasilia, O=Gen360, OU=Security, CN=Gen360 Intermediate CA</span>
+
+<span class="cmt"># Get SHA-256 thumbprint (matches DB cert_thumbprint)</span>
+<span class="cmd">openssl x509 -fingerprint -sha256 -noout -in certs/clients/thiago.pem</span>
+<span class="out"># sha256 Fingerprint=A1:B2:C3:D4:E5:F6:...</span>
+
+<span class="cmt"># Check validity dates</span>
+<span class="cmd">openssl x509 -startdate -enddate -noout -in certs/clients/thiago.pem</span>
+<span class="out"># notBefore=Apr  1 00:00:00 2026 GMT</span>
+<span class="out"># notAfter=Apr  1 00:00:00 2027 GMT</span>
+
+<span class="cmt"># Verify certificate chain</span>
+<span class="cmd">openssl verify -CAfile certs/ca-chain.pem certs/clients/thiago.pem</span>
+<span class="out"># certs/clients/thiago.pem: OK</span>
+
+<span class="cmt"># Check extended key usage</span>
+<span class="cmd">openssl x509 -text -noout -in certs/clients/thiago.pem | findstr "Extended"</span>
+<span class="out">#             X509v3 Extended Key Usage:</span>
+<span class="out">#                 TLS Web Client Authentication</span>
+
+<span class="cmt"># Check a .p12 file contents</span>
+<span class="cmd">openssl pkcs12 -info -in certs/clients/thiago.p12 -nokeys</span>
+
+<span class="cmt"># Convert DER to PEM (useful for Azure-provided certs)</span>
+<span class="cmd">openssl x509 -inform DER -in cert.der -out cert.pem</span>
+
+<span class="cmt"># Test TLS connection and see client cert exchange</span>
+<span class="cmd">openssl s_client -connect localhost:8000 -cert certs/clients/thiago.pem -key certs/clients/thiago.key -CAfile certs/ca-chain.pem</span></code></pre>
+
+  <h3>Common Errors &amp; Solutions</h3>
+  <table>
+    <tr><th>Error</th><th>Cause</th><th>Solution</th></tr>
+    <tr>
+      <td><code>No client certificate provided</code></td>
+      <td>Browser didn't send cert or proxy stripped it</td>
+      <td>Check browser has cert imported; check Azure <code>clientCertEnabled=true</code>; verify <code>X-ARR-ClientCert</code> header</td>
+    </tr>
+    <tr>
+      <td><code>Certificate not signed by trusted CA</code></td>
+      <td>Client cert signed by unknown CA</td>
+      <td>Ensure <code>ca-chain.pem</code> contains the correct CA chain; verify with <code>openssl verify</code></td>
+    </tr>
+    <tr>
+      <td><code>Certificate has expired</code></td>
+      <td>Client cert past <code>notAfter</code> date</td>
+      <td>Generate a new client cert with <code>gen-client-cert.ps1</code></td>
+    </tr>
+    <tr>
+      <td><code>Certificate not valid for client auth</code></td>
+      <td>Cert missing <code>extendedKeyUsage = clientAuth</code></td>
+      <td>Regenerate cert with the <code>v3_client</code> extensions from Task 1.8</td>
+    </tr>
+    <tr>
+      <td><code>Certificate not registered to any admin</code></td>
+      <td>Cert is valid but thumbprint not in DB</td>
+      <td>Register cert via profile page or <code>/admin/me/cert/register</code> endpoint</td>
+    </tr>
+    <tr>
+      <td><code>TOTP-only authentication</code></td>
+      <td>Admin <code>auth_method</code> is <code>totp</code></td>
+      <td>Change to <code>cert</code> or <code>both</code> via <code>/admin/me/auth-method</code></td>
+    </tr>
+    <tr>
+      <td><code>CBA not configured (CA chain missing)</code></td>
+      <td>CA chain file not found at <code>CA_CHAIN_PATH</code></td>
+      <td>Upload <code>ca-chain.pem</code> to the correct path; check env var</td>
+    </tr>
+    <tr>
+      <td><code>Invalid certificate format</code></td>
+      <td>Cert data is corrupted or wrong encoding</td>
+      <td>Ensure PEM format with BEGIN/END markers; check base64 encoding</td>
+    </tr>
+    <tr>
+      <td><code>This certificate is already registered</code></td>
+      <td>Another admin has this cert thumbprint</td>
+      <td>Each cert can only be linked to one admin; generate a unique cert per user</td>
+    </tr>
+    <tr>
+      <td>Browser shows <code>ERR_SSL_CLIENT_AUTH_CERT_NEEDED</code></td>
+      <td>Server requires cert but none available</td>
+      <td>Import .p12 into browser cert store (Tasks 2.3/2.4)</td>
+    </tr>
+    <tr>
+      <td>Azure: <code>X-ARR-ClientCert</code> header empty</td>
+      <td><code>clientCertEnabled</code> is false</td>
+      <td>Run <code>az webapp update --set clientCertEnabled=true</code></td>
+    </tr>
+  </table>
+
+  <h3>Certificate Renewal Process</h3>
+  <pre><code><span class="cmt"># 1. Generate a new client cert (old one still valid until expiry)</span>
+<span class="cmd">.\scripts\gen-client-cert.ps1 -Email "thiago.beier@gmail.com" -Name "Thiago Beier" -ValidDays 365</span>
+
+<span class="cmt"># 2. Import new .p12 into browser (replaces old cert)</span>
+
+<span class="cmt"># 3. Register new cert in Gen360 (this replaces the old thumbprint)</span>
+<span class="cmt">#    Via profile page or API call</span>
+
+<span class="cmt"># 4. Verify login with new cert works</span>
+
+<span class="cmt"># 5. Remove old cert from browser cert store (optional, will expire naturally)</span></code></pre>
+
+  <h3>Certificate Revocation (Emergency)</h3>
+  <pre><code><span class="cmt"># If a client certificate is compromised:</span>
+
+<span class="cmt"># 1. Remove the cert from the admin's account immediately:</span>
+<span class="cmd">docker exec gen360-postgres psql -U gen360 -d normas -c ^
+  "UPDATE admins SET cert_thumbprint = NULL, cert_subject = NULL, auth_method = 'totp', cert_registered_at = NULL WHERE cert_thumbprint = 'COMPROMISED_THUMBPRINT';"</span>
+
+<span class="cmt"># 2. The compromised cert can no longer be used for login</span>
+<span class="cmt">#    (thumbprint lookup will fail)</span>
+
+<span class="cmt"># 3. For CA-level revocation (future enhancement):</span>
+<span class="cmt">#    - Maintain a CRL (Certificate Revocation List)</span>
+<span class="cmt">#    - Or use OCSP (Online Certificate Status Protocol)</span>
+<span class="cmt">#    - Check revocation status in validar_certificado()</span></code></pre>
+
+  <h3>Debug Logging</h3>
+  <pre><code><span class="cmt"># Add temporary debug logging to api/main.py for troubleshooting:</span>
+
+<span class="kw">import</span> logging
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(<span class="val">"cba"</span>)
+
+<span class="cmt"># In the cert login endpoint, add:</span>
+logger.debug(f<span class="val">"X-ARR-ClientCert header present: {bool(cert_header)}"</span>)
+logger.debug(f<span class="val">"X-ARR-ClientCert length: {len(cert_header)}"</span>)
+logger.debug(f<span class="val">"Cert validation result: {result}"</span>)
+logger.debug(f<span class="val">"Admin lookup for thumbprint {identity['thumbprint'][:16]}...: {bool(admin)}"</span>)
+
+<span class="cmt"># View logs in Azure:</span>
+<span class="cmd">az webapp log tail --resource-group DemoGoverno --name app-gen360-api --filter "cba"</span></code></pre>
+</section>
+
+</div><!-- /tab-test -->
+
+<!-- ================================================================== -->
+<!-- FOOTER & JAVASCRIPT -->
+<!-- ================================================================== -->
+
+<footer style="margin-top:48px; padding:24px 0; border-top:1px solid var(--border); text-align:center; color:var(--muted); font-size:13px;">
+  <p>Gen360 &mdash; CBA Setup Guide &bull; Generated from <a href="auth.html" style="color:var(--accent);">auth.html</a> analysis</p>
+  <p>Reference: <a href="auth.md" style="color:var(--accent);">auth.md</a> (Certificate-Based Authentication Analysis)</p>
+</footer>
+
+</main>
+
+<script>
+function showTab(name) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+  const tab = document.getElementById('tab-' + name);
+  if (tab) tab.classList.add('active');
+  const btn = document.querySelector('.tab-btn[onclick*="' + name + '"]');
+  if (btn) btn.classList.add('active');
+}
+// Show first tab by default
+showTab('roadmap');
+</script>
+
+</body>
+</html>

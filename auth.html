@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gen360 — Certificate-Based Authentication (CBA) Analysis</title>
+  <style>
+    :root {
+      --bg: #0d1117; --surface: #161b22; --border: #30363d;
+      --text: #c9d1d9; --muted: #8b949e; --accent: #58a6ff;
+      --green: #3fb950; --red: #f85149; --orange: #d29922; --purple: #bc8cff;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; padding: 0 0 80px; }
+
+    header { background: linear-gradient(135deg, #1a2332 0%, #0d1117 100%); border-bottom: 1px solid var(--border); padding: 44px 0 36px; text-align: center; }
+    header h1 { font-size: 2.3em; font-weight: 700; color: #fff; letter-spacing: -0.02em; }
+    header h1 span { color: var(--accent); }
+    header p { color: var(--muted); margin-top: 6px; font-size: 1.05em; }
+
+    .container { max-width: 1020px; margin: 0 auto; padding: 0 24px; }
+
+    /* Tab nav */
+    .tabs { display: flex; gap: 0; margin: 32px 0 0; border-bottom: 2px solid var(--border); flex-wrap: wrap; }
+    .tab-btn { background: none; border: none; color: var(--muted); font-size: 1em; font-weight: 600; padding: 12px 28px; cursor: pointer; border-bottom: 3px solid transparent; margin-bottom: -2px; transition: all 0.15s; }
+    .tab-btn:hover { color: var(--text); }
+    .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    section { margin-top: 36px; }
+    section h2 { font-size: 1.5em; color: #fff; padding-bottom: 6px; border-bottom: 2px solid var(--accent); margin-bottom: 16px; }
+    section h3 { font-size: 1.15em; color: var(--accent); margin: 24px 0 8px; }
+    section h4 { font-size: 1em; color: var(--orange); margin: 16px 0 6px; }
+    p, li { color: var(--text); }
+    ul, ol { padding-left: 22px; margin: 8px 0; }
+    li { margin: 4px 0; }
+
+    pre { background: #010409; border: 1px solid var(--border); border-radius: 6px; padding: 14px 18px; overflow-x: auto; font-size: 0.87em; line-height: 1.55; margin: 10px 0; }
+    code { font-family: 'Cascadia Code', 'Fira Code', Consolas, monospace; color: var(--green); }
+    pre code { color: var(--text); }
+    .cmd  { color: var(--green); }
+    .cmt  { color: var(--muted); }
+    .val  { color: var(--orange); }
+    .out  { color: var(--muted); font-style: italic; }
+
+    table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 0.9em; }
+    th, td { text-align: left; padding: 9px 14px; border: 1px solid var(--border); }
+    th { background: var(--surface); color: var(--accent); font-weight: 600; white-space: nowrap; }
+    td { background: var(--bg); }
+    td code { color: var(--orange); font-size: 0.95em; }
+
+    .callout { border-radius: 6px; padding: 14px 18px; margin: 14px 0; border-left: 4px solid; font-size: 0.93em; }
+    .callout-info    { background: #0c2d6b33; border-color: var(--accent); }
+    .callout-warning { background: #3d2e0033; border-color: var(--orange); }
+    .callout-success { background: #12361e33; border-color: var(--green); }
+    .callout-danger  { background: #3d111133; border-color: var(--red); }
+    .callout strong  { color: #fff; }
+
+    .env-tag { display: inline-block; font-size: 0.75em; padding: 2px 10px; border-radius: 12px; font-weight: 700; margin-left: 8px; vertical-align: middle; }
+    .env-local { background: #12361e; color: var(--green); }
+    .env-prod  { background: #0c2d6b; color: var(--accent); }
+    .env-both  { background: #2d1b4e; color: var(--purple); }
+
+    .arch { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 24px; margin: 14px 0; text-align: center; font-family: monospace; white-space: pre; line-height: 1.35; font-size: 0.82em; overflow-x: auto; color: var(--muted); }
+
+    .compare-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 16px 0; }
+    .compare-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 20px; }
+    .compare-card h4 { margin-top: 0; }
+    @media (max-width: 700px) { .compare-grid { grid-template-columns: 1fr; } .tabs { gap: 0; } .tab-btn { padding: 10px 14px; font-size: 0.9em; } }
+
+    .step-num { display: inline-block; width: 26px; height: 26px; line-height: 26px; text-align: center; border-radius: 50%; background: var(--accent); color: var(--bg); font-weight: 700; font-size: 0.82em; margin-right: 6px; }
+    footer { text-align: center; padding: 32px 0; color: var(--muted); font-size: 0.85em; border-top: 1px solid var(--border); margin-top: 56px; }
+
+    /* Collapsible sections */
+    details { margin: 12px 0; }
+    details summary { cursor: pointer; font-weight: 600; color: var(--accent); padding: 8px 0; user-select: none; list-style: none; }
+    details summary::before { content: "▸ "; color: var(--muted); }
+    details[open] summary::before { content: "▾ "; }
+    details summary:hover { color: #79c0ff; }
+
+    /* Prominent comparison matrix */
+    .matrix-table { border: 2px solid var(--accent); border-radius: 8px; overflow: hidden; }
+    .matrix-table th { background: #0c2d6b; color: #fff; }
+    .matrix-table td { font-size: 0.88em; }
+
+    /* Option cards */
+    .option-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 20px 24px; margin: 16px 0; }
+    .option-card h3 { margin-top: 0; }
+    .option-card .badge { display: inline-block; font-size: 0.72em; padding: 2px 10px; border-radius: 12px; font-weight: 700; margin-left: 8px; vertical-align: middle; }
+    .badge-free { background: #12361e; color: var(--green); }
+    .badge-paid { background: #3d2e00; color: var(--orange); }
+    .badge-rec  { background: #0c2d6b; color: var(--accent); }
+    .badge-effort-med { background: #2d1b4e; color: var(--purple); }
+    .badge-effort-high { background: #3d1111; color: var(--red); }
+
+    /* Phase timeline */
+    .phase { background: var(--surface); border-left: 3px solid var(--accent); padding: 14px 20px; margin: 12px 0; border-radius: 0 8px 8px 0; }
+    .phase h4 { margin-top: 0; color: var(--accent); }
+
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1><span>Gen360</span> — CBA Analysis</h1>
+  <p>Evaluating Certificate-Based Authentication to replace TOTP-based MFA</p>
+</header>
+
+<div class="container">
+
+<!-- TABS -->
+<div class="tabs">
+  <button class="tab-btn active" onclick="showTab('overview')">📋 Overview</button>
+  <button class="tab-btn" onclick="showTab('options')">🔐 CBA Options</button>
+  <button class="tab-btn" onclick="showTab('certs')">📜 Certificates &amp; PKI</button>
+  <button class="tab-btn" onclick="showTab('costs')">💰 Costs &amp; Hardware</button>
+  <button class="tab-btn" onclick="showTab('recommend')">🏆 Recommendation</button>
+  <button class="tab-btn" onclick="showTab('security')">🛡️ Security</button>
+</div>
+
+<!-- ================================================================== -->
+<!-- TAB 1: OVERVIEW -->
+<!-- ================================================================== -->
+<div id="tab-overview" class="tab-content active">
+
+<section>
+  <h2>Executive Summary</h2>
+  <p>This document evaluates replacing the existing <strong>TOTP-based MFA</strong> (Time-based One-Time Password) with <strong>Certificate-Based Authentication (CBA)</strong> in the Gen360 admin panel. It covers options, costs, hardware requirements, certificate types, private PKI support, and implementation approaches specific to our FastAPI + PostgreSQL + vanilla JS stack.</p>
+  <div class="callout callout-info">
+    <strong>💡 TL;DR:</strong> We recommend <strong>Option E (Hybrid)</strong> with <strong>Option A (App-Level mTLS)</strong> as the base — zero cost, zero disruption, phishing-resistant, and works locally.
+  </div>
+</section>
+
+<section>
+  <h2>Current Authentication Architecture</h2>
+  <h3>What We Have Today</h3>
+  <table>
+    <tr><th>Component</th><th>Implementation</th></tr>
+    <tr><td><strong>Login</strong></td><td>Email + password → JWT (HS256)</td></tr>
+    <tr><td><strong>MFA</strong></td><td>TOTP (6-digit code, 30s period, ±1 window)</td></tr>
+    <tr><td><strong>Token</strong></td><td>JWT stored in <code>localStorage</code>, 60-min expiry</td></tr>
+    <tr><td><strong>Password hash</strong></td><td>PBKDF2-SHA256, 200k iterations</td></tr>
+    <tr><td><strong>Route protection</strong></td><td>FastAPI HTTP middleware + <code>require_admin()</code> dependency</td></tr>
+    <tr><td><strong>Frontend</strong></td><td>Vanilla JS, QRious library for QR code generation</td></tr>
+    <tr><td><strong>Auth library</strong></td><td>Fully custom (no PyJWT, no pyotp, no bcrypt)</td></tr>
+  </table>
+
+  <details>
+    <summary>Files Involved</summary>
+    <h4>Backend</h4>
+    <ul>
+      <li><code>api/auth.py</code> — JWT generation/verification, PBKDF2 hashing, TOTP logic</li>
+      <li><code>api/main.py</code> — Middleware, login/register/MFA endpoints</li>
+      <li><code>api/queries.py</code> — DB queries for admin CRUD</li>
+      <li><code>db/models.sql</code> — Admins table schema</li>
+      <li><code>db/migracoes/003_admin_mfa.sql</code> — MFA columns migration</li>
+    </ul>
+    <h4>Frontend</h4>
+    <ul>
+      <li><code>admin_frontend/admin_auth.js</code> — Login/register logic</li>
+      <li><code>admin_frontend/admin_session.js</code> — Token/session management</li>
+      <li><code>admin_frontend/admin_profile.js</code> — MFA setup/disable UI</li>
+      <li><code>admin_frontend/config.js</code> — API URL configuration</li>
+    </ul>
+  </details>
+
+  <h3>Current Flow</h3>
+  <div class="arch">
+User → Email + Password → Server validates → MFA required?
+  → Yes → User enters 6-digit TOTP from authenticator app → Server validates → JWT issued
+  → No  → JWT issued
+→ JWT stored in localStorage → Sent as Bearer token on every request</div>
+</section>
+
+<section>
+  <h2>What Is Certificate-Based Authentication (CBA)?</h2>
+  <p>CBA uses <strong>X.509 digital certificates</strong> instead of (or in addition to) passwords and OTP codes. The client presents a cryptographic certificate during TLS handshake (mutual TLS / mTLS), proving identity through public-key cryptography rather than shared secrets.</p>
+
+  <h3>How It Works</h3>
+  <div class="arch">
+Client (browser/device) has:
+  ├── Private Key (never leaves device)
+  └── X.509 Certificate (signed by trusted CA)
+
+Server has:
+  └── Trusted CA certificate(s)
+
+TLS Handshake:
+  1. Client connects to server
+  2. Server requests client certificate
+  3. Client presents certificate
+  4. Server validates: signature chain → CA trust → expiration → revocation
+  5. If valid → identity extracted from certificate subject/SAN
+  6. Authentication complete — no password or OTP needed</div>
+</section>
+
+</div><!-- /tab-overview -->
+
+<!-- ================================================================== -->
+<!-- TAB 2: CBA OPTIONS -->
+<!-- ================================================================== -->
+<div id="tab-options" class="tab-content">
+
+<section>
+  <h2>CBA Options for Gen360</h2>
+
+  <!-- Option A -->
+  <div class="option-card">
+    <h3>Option A: Application-Level mTLS (FastAPI + Uvicorn) <span class="badge badge-free">FREE</span> <span class="badge badge-effort-med">EFFORT: MED-HIGH</span></h3>
+    <p>Configure Uvicorn to require client certificates directly. The FastAPI app validates certificates and extracts identity.</p>
+    <details>
+      <summary>How It Works</summary>
+      <ul>
+        <li>Uvicorn starts with an SSL context requiring client certificates</li>
+        <li>Python's <code>ssl</code> module validates against trusted CA</li>
+        <li>FastAPI middleware extracts certificate subject (email, CN) from the TLS connection</li>
+        <li>Maps certificate identity to admin record in database</li>
+      </ul>
+    </details>
+    <div class="compare-grid">
+      <div class="compare-card">
+        <h4>✅ Pros</h4>
+        <ul>
+          <li>Full control over certificate validation logic</li>
+          <li>No external services required</li>
+          <li>Works in local dev and production</li>
+          <li>Free (no cloud service costs)</li>
+        </ul>
+      </div>
+      <div class="compare-card">
+        <h4>❌ Cons</h4>
+        <ul>
+          <li>Must manage certificate distribution to users manually</li>
+          <li>Browser certificate selection UX can be confusing</li>
+          <li>Certificate revocation (CRL/OCSP) must be implemented manually</li>
+          <li>More complex deployment (TLS termination at app level vs. reverse proxy)</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Option B -->
+  <div class="option-card">
+    <h3>Option B: Reverse Proxy mTLS (NGINX / Traefik) <span class="badge badge-free">FREE</span> <span class="badge badge-effort-med">EFFORT: MEDIUM</span></h3>
+    <p>NGINX or Traefik terminates mTLS, validates client certificates, and forwards verified identity to FastAPI via HTTP headers.</p>
+    <details>
+      <summary>How It Works</summary>
+      <ul>
+        <li>NGINX/Traefik configured with <code>ssl_client_certificate</code> and <code>ssl_verify_client on</code></li>
+        <li>On successful mTLS, forwards <code>X-Client-Cert-DN</code> or <code>X-Client-Cert-Subject</code> header</li>
+        <li>FastAPI reads the header and maps to admin identity</li>
+        <li>No TLS handling needed in the Python app</li>
+      </ul>
+    </details>
+    <div class="compare-grid">
+      <div class="compare-card">
+        <h4>✅ Pros</h4>
+        <ul>
+          <li>Clean separation: proxy handles TLS, app handles business logic</li>
+          <li>NGINX/Traefik are battle-tested for TLS</li>
+          <li>Easier certificate revocation (NGINX supports CRL files)</li>
+          <li>Works well with Docker/Kubernetes</li>
+        </ul>
+      </div>
+      <div class="compare-card">
+        <h4>❌ Cons</h4>
+        <ul>
+          <li>Additional infrastructure component (NGINX container)</li>
+          <li>Must trust the proxy (header injection protection needed)</li>
+          <li>Not applicable to Azure App Service directly</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Option C -->
+  <div class="option-card">
+    <h3>Option C: Azure App Service Client Certificates <span class="badge badge-paid">~$13/MO</span> <span class="badge badge-effort-med">EFFORT: MEDIUM</span></h3>
+    <p>Azure App Service natively supports requiring client certificates. The certificate is forwarded to the app via the <code>X-ARR-ClientCert</code> header.</p>
+    <details>
+      <summary>How It Works</summary>
+      <ul>
+        <li>Enable "Client certificate mode" in Azure App Service settings (Required or Optional)</li>
+        <li>Azure terminates TLS and forwards the Base64-encoded client certificate in <code>X-ARR-ClientCert</code> header</li>
+        <li>FastAPI reads and validates the certificate from the header</li>
+        <li>Maps certificate subject to admin record</li>
+      </ul>
+    </details>
+    <div class="compare-grid">
+      <div class="compare-card">
+        <h4>✅ Pros</h4>
+        <ul>
+          <li>Native Azure integration, no extra infrastructure</li>
+          <li>Azure handles TLS termination</li>
+          <li>Works with existing deployment pipeline</li>
+          <li>Supports certificate thumbprint/subject validation</li>
+        </ul>
+      </div>
+      <div class="compare-card">
+        <h4>❌ Cons</h4>
+        <ul>
+          <li><strong>Requires Basic tier or higher</strong> (not available on Free/Shared)</li>
+          <li>Azure doesn't validate the certificate against a CA — your app must do it</li>
+          <li>Certificate distribution still manual</li>
+          <li>Browser cert selection UX varies</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Option D -->
+  <div class="option-card">
+    <h3>Option D: Microsoft Entra ID CBA (Azure AD) <span class="badge badge-paid">~$6-9/USER/MO</span> <span class="badge badge-effort-high">EFFORT: HIGH</span></h3>
+    <p>Delegate authentication to Microsoft Entra ID (formerly Azure AD) with CBA enabled. Users authenticate via Entra with their certificates, and Gen360 trusts the Entra tokens.</p>
+    <details>
+      <summary>How It Works</summary>
+      <ul>
+        <li>Configure Entra ID CBA authentication policy</li>
+        <li>Upload trusted CA certificates to Entra</li>
+        <li>Gen360 becomes an Entra-registered application</li>
+        <li>Users sign in via Entra (certificate prompt in browser)</li>
+        <li>Gen360 receives OAuth2/OIDC tokens from Entra</li>
+        <li>Major refactor: replace custom JWT with MSAL/OIDC flow</li>
+      </ul>
+    </details>
+    <div class="compare-grid">
+      <div class="compare-card">
+        <h4>✅ Pros</h4>
+        <ul>
+          <li>Enterprise-grade, Microsoft-managed</li>
+          <li>Supports smart cards, YubiKeys, TPM-backed certificates</li>
+          <li>Centralized user management and audit logs</li>
+          <li>Phishing-resistant (FIDO2-level assurance)</li>
+          <li>CRL/OCSP handled by Entra</li>
+        </ul>
+      </div>
+      <div class="compare-card">
+        <h4>❌ Cons</h4>
+        <ul>
+          <li><strong>Requires Entra ID P1 or P2 license</strong> for full CBA features</li>
+          <li>Significant refactor: must replace entire custom auth with OIDC/OAuth2</li>
+          <li>Adds Microsoft dependency</li>
+          <li>More complex for a small admin panel</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Option E -->
+  <div class="option-card" style="border-color: var(--accent); border-width: 2px;">
+    <h3>Option E: Hybrid — CBA + Existing Password/MFA <span class="badge badge-rec">⭐ RECOMMENDED</span> <span class="badge badge-effort-med">EFFORT: MEDIUM</span></h3>
+    <p>Add CBA as an additional authentication method alongside existing password+TOTP. Admins can choose either method.</p>
+    <details>
+      <summary>How It Works</summary>
+      <ul>
+        <li>Implement Option A, B, or C for CBA</li>
+        <li>Keep existing login flow as fallback</li>
+        <li>Admin record in DB tracks <code>auth_method</code> preference (<code>totp</code>, <code>certificate</code>, or <code>both</code>)</li>
+        <li>Login page offers "Sign in with certificate" button alongside password form</li>
+        <li>Gradually migrate users to CBA</li>
+      </ul>
+    </details>
+    <div class="compare-grid">
+      <div class="compare-card">
+        <h4>✅ Pros</h4>
+        <ul>
+          <li>Zero disruption — existing auth continues working</li>
+          <li>Graceful migration path</li>
+          <li>Users can fall back to TOTP if certificate issues arise</li>
+          <li>Test CBA with a subset of admins first</li>
+        </ul>
+      </div>
+      <div class="compare-card">
+        <h4>❌ Cons</h4>
+        <ul>
+          <li>More code to maintain (two auth paths)</li>
+          <li>Must manage both TOTP secrets and certificate mappings</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Comparison Matrix</h2>
+  <div style="overflow-x:auto;">
+  <table class="matrix-table">
+    <tr>
+      <th>Criteria</th>
+      <th>Option A<br><small>App mTLS</small></th>
+      <th>Option B<br><small>Proxy mTLS</small></th>
+      <th>Option C<br><small>Azure App Svc</small></th>
+      <th>Option D<br><small>Entra ID</small></th>
+      <th>Option E<br><small>Hybrid ⭐</small></th>
+    </tr>
+    <tr>
+      <td><strong>Cost</strong></td>
+      <td>Free</td>
+      <td>Free</td>
+      <td>~$13/mo</td>
+      <td>~$6-9/user/mo</td>
+      <td>Varies by base</td>
+    </tr>
+    <tr>
+      <td><strong>Hardware needed</strong></td>
+      <td>No (soft certs)</td>
+      <td>No</td>
+      <td>No</td>
+      <td>Optional (smart cards)</td>
+      <td>No</td>
+    </tr>
+    <tr>
+      <td><strong>Private PKI</strong></td>
+      <td>✅ Yes</td>
+      <td>✅ Yes</td>
+      <td>✅ Yes</td>
+      <td>✅ Yes</td>
+      <td>✅ Yes</td>
+    </tr>
+    <tr>
+      <td><strong>Implementation effort</strong></td>
+      <td>Medium-High</td>
+      <td>Medium</td>
+      <td>Medium</td>
+      <td>High</td>
+      <td>Medium</td>
+    </tr>
+    <tr>
+      <td><strong>Code changes</strong></td>
+      <td>Moderate</td>
+      <td>Moderate</td>
+      <td>Moderate</td>
+      <td>Major refactor</td>
+      <td>Additive</td>
+    </tr>
+    <tr>
+      <td><strong>Phishing resistance</strong></td>
+      <td>✅ Strong</td>
+      <td>✅ Strong</td>
+      <td>✅ Strong</td>
+      <td>✅ Strongest</td>
+      <td>✅ Strong</td>
+    </tr>
+    <tr>
+      <td><strong>Works locally</strong></td>
+      <td>✅ Yes</td>
+      <td>✅ Yes (Docker)</td>
+      <td>❌ Azure only</td>
+      <td>❌ Azure only</td>
+      <td>✅ Yes</td>
+    </tr>
+    <tr>
+      <td><strong>Production ready</strong></td>
+      <td>⚠️ Manual ops</td>
+      <td>✅ Yes</td>
+      <td>✅ Yes</td>
+      <td>✅ Enterprise</td>
+      <td>✅ Yes</td>
+    </tr>
+    <tr>
+      <td><strong>User experience</strong></td>
+      <td>Browser cert picker</td>
+      <td>Browser cert picker</td>
+      <td>Browser cert picker</td>
+      <td>Entra login + cert</td>
+      <td>Choice of methods</td>
+    </tr>
+    <tr>
+      <td><strong>Disruption</strong></td>
+      <td>Full replacement</td>
+      <td>Full replacement</td>
+      <td>Full replacement</td>
+      <td>Full replacement</td>
+      <td>Zero disruption</td>
+    </tr>
+  </table>
+  </div>
+</section>
+
+</div><!-- /tab-options -->
+
+<!-- ================================================================== -->
+<!-- TAB 3: CERTIFICATES & PKI -->
+<!-- ================================================================== -->
+<div id="tab-certs" class="tab-content">
+
+<section>
+  <h2>Certificate Types Supported</h2>
+
+  <h3>X.509 Client Certificates (Standard)</h3>
+  <p>All CBA options use <strong>X.509 v3</strong> certificates. These support:</p>
+  <table>
+    <tr><th>Algorithm</th><th>Key Size</th><th>Recommended</th><th>Notes</th></tr>
+    <tr><td><strong>RSA</strong></td><td>2048-bit</td><td>✅ Yes</td><td>Most compatible, widely supported</td></tr>
+    <tr><td><strong>RSA</strong></td><td>4096-bit</td><td>✅ Yes</td><td>Higher security, slightly slower</td></tr>
+    <tr><td><strong>ECDSA</strong></td><td>P-256</td><td>✅ Yes</td><td>Smaller keys, faster, modern</td></tr>
+    <tr><td><strong>ECDSA</strong></td><td>P-384</td><td>✅ Yes</td><td>Higher security elliptic curve</td></tr>
+    <tr><td><strong>Ed25519</strong></td><td>256-bit</td><td>⚠️ Limited</td><td>Not supported by all browsers</td></tr>
+  </table>
+
+  <h3>Certificate Fields Used for Authentication</h3>
+  <div class="arch">
+Subject:
+  CN = Admin Full Name
+  E  = admin@example.com          ← Primary identity mapping
+  O  = Organization Name
+  OU = Department
+
+Subject Alternative Name (SAN):
+  email: admin@example.com         ← Preferred identity field
+  URI:   urn:gen360:admin:&lt;uuid&gt;   ← Optional: direct admin ID mapping
+
+Key Usage:
+  Digital Signature                ← Required for client auth
+  Key Encipherment                 ← Required for TLS
+
+Extended Key Usage:
+  Client Authentication (1.3.6.1.5.5.7.3.2)  ← Required</div>
+
+  <h3>Certificate Storage Options</h3>
+  <table>
+    <tr><th>Storage</th><th>Security Level</th><th>Hardware Required</th><th>Notes</th></tr>
+    <tr><td><strong>OS Certificate Store</strong></td><td>Medium</td><td>No</td><td>Windows, macOS, Linux built-in</td></tr>
+    <tr><td><strong>Browser Certificate Store</strong></td><td>Medium</td><td>No</td><td>Firefox has its own store</td></tr>
+    <tr><td><strong>Smart Card (PIV)</strong></td><td>High</td><td>Yes (~$30-100)</td><td>YubiKey, Thales, SafeNet</td></tr>
+    <tr><td><strong>USB Security Key</strong></td><td>High</td><td>Yes (~$25-70)</td><td>YubiKey 5 NFC, Feitian</td></tr>
+    <tr><td><strong>TPM</strong></td><td>High</td><td>No (built into most PCs)</td><td>Trusted Platform Module</td></tr>
+    <tr><td><strong>PKCS#12 (.p12/.pfx) file</strong></td><td>Low-Medium</td><td>No</td><td>Password-protected file</td></tr>
+  </table>
+</section>
+
+<section>
+  <h2>Private PKI Support</h2>
+  <div class="callout callout-success">
+    <strong>✅ Yes, all options support private PKI.</strong> You do NOT need to purchase certificates from a public CA (like DigiCert, Let's Encrypt, etc.) for client authentication.
+  </div>
+
+  <h3>Setting Up a Private PKI with OpenSSL (Free)</h3>
+  <pre><code><span class="cmt"># 1. Create Root CA</span>
+<span class="cmd">openssl genrsa -out ca-key.pem 4096</span>
+<span class="cmd">openssl req -new -x509 -key ca-key.pem -out ca-cert.pem -days 3650 \
+  -subj "/C=BR/O=Gen360/CN=Gen360 Root CA"</span>
+
+<span class="cmt"># 2. Create Intermediate CA (recommended for production)</span>
+<span class="cmd">openssl genrsa -out intermediate-key.pem 4096</span>
+<span class="cmd">openssl req -new -key intermediate-key.pem -out intermediate.csr \
+  -subj "/C=BR/O=Gen360/CN=Gen360 Intermediate CA"</span>
+<span class="cmd">openssl x509 -req -in intermediate.csr -CA ca-cert.pem -CAkey ca-key.pem \
+  -CAcreateserial -out intermediate-cert.pem -days 1825</span>
+
+<span class="cmt"># 3. Issue Client Certificate for an Admin</span>
+<span class="cmd">openssl genrsa -out admin-key.pem 2048</span>
+<span class="cmd">openssl req -new -key admin-key.pem -out admin.csr \
+  -subj "/C=BR/O=Gen360/CN=Thiago Beier/emailAddress=thiago.beier@gmail.com"</span>
+<span class="cmd">openssl x509 -req -in admin.csr -CA intermediate-cert.pem -CAkey intermediate-key.pem \
+  -CAcreateserial -out admin-cert.pem -days 365</span>
+
+<span class="cmt"># 4. Package for browser import (PKCS#12)</span>
+<span class="cmd">openssl pkcs12 -export -out admin.p12 \
+  -inkey admin-key.pem -in admin-cert.pem -certfile intermediate-cert.pem \
+  -name "Gen360 Admin - Thiago Beier"</span></code></pre>
+
+  <h3>Private PKI Options Comparison</h3>
+  <table>
+    <tr><th>PKI Solution</th><th>Cost</th><th>Complexity</th><th>Best For</th></tr>
+    <tr><td><strong>OpenSSL (manual)</strong></td><td>Free</td><td>Low (few users)</td><td>Small teams, dev/test</td></tr>
+    <tr><td><strong>step-ca (Smallstep)</strong></td><td>Free (open source)</td><td>Medium</td><td>Automated cert lifecycle</td></tr>
+    <tr><td><strong>EJBCA Community</strong></td><td>Free (open source)</td><td>High</td><td>Enterprise, compliance</td></tr>
+    <tr><td><strong>HashiCorp Vault PKI</strong></td><td>Free (open source)</td><td>Medium</td><td>DevOps/cloud-native</td></tr>
+    <tr><td><strong>Microsoft AD CS</strong></td><td>Windows Server license</td><td>High</td><td>Windows-centric orgs</td></tr>
+    <tr><td><strong>Microsoft Cloud PKI</strong></td><td>Intune license req.</td><td>Medium</td><td>Azure/Entra integrated</td></tr>
+    <tr><td><strong>AWS Private CA</strong></td><td>~$400/mo per CA</td><td>Low</td><td>AWS-centric orgs</td></tr>
+  </table>
+</section>
+
+</div><!-- /tab-certs -->
+
+<!-- ================================================================== -->
+<!-- TAB 4: COSTS & HARDWARE -->
+<!-- ================================================================== -->
+<div id="tab-costs" class="tab-content">
+
+<section>
+  <h2>Cost Analysis</h2>
+
+  <h3>Option A/B: Self-Managed mTLS <span class="env-tag env-local">RECOMMENDED</span></h3>
+  <table>
+    <tr><th>Item</th><th>One-Time Cost</th><th>Monthly Cost</th></tr>
+    <tr><td>OpenSSL PKI setup</td><td>$0 (free)</td><td>$0</td></tr>
+    <tr><td>Certificate generation</td><td>$0 (free)</td><td>$0</td></tr>
+    <tr><td>NGINX (if Option B)</td><td>$0 (free)</td><td>$0</td></tr>
+    <tr><td>Code implementation</td><td>Developer time</td><td>$0</td></tr>
+    <tr><td><strong>Total</strong></td><td><strong>$0</strong></td><td><strong>$0</strong></td></tr>
+  </table>
+
+  <h3>Option C: Azure App Service CBA</h3>
+  <table>
+    <tr><th>Item</th><th>One-Time Cost</th><th>Monthly Cost</th></tr>
+    <tr><td>App Service Basic plan</td><td>$0</td><td>~$13/mo (if upgrading from Free)</td></tr>
+    <tr><td>Certificate generation</td><td>$0 (private PKI)</td><td>$0</td></tr>
+    <tr><td>Code implementation</td><td>Developer time</td><td>$0</td></tr>
+    <tr><td><strong>Total</strong></td><td><strong>$0</strong></td><td><strong>~$13/mo</strong></td></tr>
+  </table>
+
+  <h3>Option D: Microsoft Entra ID CBA</h3>
+  <table>
+    <tr><th>Item</th><th>One-Time Cost</th><th>Monthly Cost</th></tr>
+    <tr><td>Entra ID P1 license</td><td>$0</td><td>~$6/user/mo</td></tr>
+    <tr><td>App registration</td><td>$0</td><td>$0</td></tr>
+    <tr><td>MSAL library integration</td><td>Developer time</td><td>$0</td></tr>
+    <tr><td>Code refactor</td><td>Developer time (significant)</td><td>$0</td></tr>
+    <tr><td><strong>Total</strong></td><td><strong>$0</strong></td><td><strong>~$6/user/mo</strong></td></tr>
+  </table>
+
+  <h3>Optional Hardware Add-On (Any Option)</h3>
+  <table>
+    <tr><th>Item</th><th>One-Time Cost</th><th>Monthly Cost</th></tr>
+    <tr><td>YubiKey 5 NFC (per admin)</td><td>~$50/key</td><td>$0</td></tr>
+    <tr><td>Smart Card + Reader</td><td>~$30/set</td><td>$0</td></tr>
+  </table>
+</section>
+
+<section>
+  <h2>Hardware Requirements</h2>
+
+  <div class="callout callout-info">
+    <strong>💡 Is Hardware Required?</strong> <strong>No.</strong> CBA can work entirely with software-based certificates (stored in OS certificate stores or .p12 files). Hardware is optional but recommended for highest security.
+  </div>
+
+  <h3>Hardware Options (If Desired)</h3>
+  <table>
+    <tr><th>Device</th><th>Price</th><th>Features</th><th>Notes</th></tr>
+    <tr><td><strong>YubiKey 5 NFC</strong></td><td>~$50</td><td>USB-A/NFC, PIV, FIDO2</td><td>Most popular, cross-platform</td></tr>
+    <tr><td><strong>YubiKey 5C NFC</strong></td><td>~$55</td><td>USB-C/NFC, PIV, FIDO2</td><td>For modern laptops</td></tr>
+    <tr><td><strong>YubiKey 5 Nano</strong></td><td>~$50</td><td>USB-A, always inserted</td><td>For desktop workstations</td></tr>
+    <tr><td><strong>Feitian ePass</strong></td><td>~$25</td><td>USB-A, PIV</td><td>Budget option</td></tr>
+    <tr><td><strong>Thales SafeNet</strong></td><td>~$50-100</td><td>USB, smart card</td><td>Enterprise standard</td></tr>
+    <tr><td><strong>Smart Card + Reader</strong></td><td>~$15 card + $15 reader</td><td>Traditional PIV</td><td>Government/military</td></tr>
+  </table>
+
+  <div class="compare-grid">
+    <div class="compare-card">
+      <h4>🔒 When Hardware Is Recommended</h4>
+      <ul>
+        <li>Admins accessing sensitive government data (Gen360 handles DODF/legal norms)</li>
+        <li>Compliance requirements (FIPS 140-2, Common Criteria)</li>
+        <li>Protection against key theft (private key never leaves hardware)</li>
+        <li>Remote/untrusted device scenarios</li>
+      </ul>
+    </div>
+    <div class="compare-card">
+      <h4>💾 When Software Certs Are Sufficient</h4>
+      <ul>
+        <li>Small admin team (currently 1 admin)</li>
+        <li>Internal/trusted network</li>
+        <li>Dev/test environments</li>
+        <li>Cost-sensitive deployments</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+</div><!-- /tab-costs -->
+
+<!-- ================================================================== -->
+<!-- TAB 5: RECOMMENDATION -->
+<!-- ================================================================== -->
+<div id="tab-recommend" class="tab-content">
+
+<section>
+  <h2>🏆 Recommended: Option E (Hybrid) with Option A (App-Level mTLS)</h2>
+  <div class="callout callout-success">
+    <strong>Why this combination is ideal for Gen360:</strong>
+  </div>
+  <ol>
+    <li><strong>Zero cost</strong> — Private PKI with OpenSSL, no cloud service fees</li>
+    <li><strong>Zero disruption</strong> — Existing TOTP auth continues working during migration</li>
+    <li><strong>Works locally</strong> — Full dev/test without Azure dependency</li>
+    <li><strong>Small team</strong> — Only 1 admin currently; manual cert management is trivial</li>
+    <li><strong>Full control</strong> — Custom implementation matches existing codebase style</li>
+    <li><strong>Phishing-resistant</strong> — Certificates cannot be phished like TOTP codes</li>
+    <li><strong>Gradual migration</strong> — Test CBA thoroughly before removing TOTP</li>
+  </ol>
+</section>
+
+<section>
+  <h2>Implementation Phases</h2>
+
+  <div class="phase">
+    <h4><span class="step-num">1</span> Phase 1: Infrastructure (Private PKI + Certificate Generation)</h4>
+    <ul>
+      <li>Set up OpenSSL CA (root + intermediate)</li>
+      <li>Generate admin client certificate</li>
+      <li>Create certificate management scripts</li>
+    </ul>
+  </div>
+
+  <div class="phase">
+    <h4><span class="step-num">2</span> Phase 2: Backend (FastAPI mTLS Support)</h4>
+    <ul>
+      <li>Add certificate validation middleware</li>
+      <li>Add <code>cert_thumbprint</code> and <code>cert_subject</code> columns to admins table</li>
+      <li>Create certificate-based authentication endpoint</li>
+      <li>Keep existing JWT issuance (certificate auth → JWT → existing session flow)</li>
+    </ul>
+  </div>
+
+  <div class="phase">
+    <h4><span class="step-num">3</span> Phase 3: Frontend (Certificate Login Option)</h4>
+    <ul>
+      <li>Add "Sign in with Certificate" button on login page</li>
+      <li>Handle browser certificate selection prompt</li>
+      <li>Graceful fallback to password+TOTP</li>
+    </ul>
+  </div>
+
+  <div class="phase">
+    <h4><span class="step-num">4</span> Phase 4: Production (Azure App Service Integration)</h4>
+    <ul>
+      <li>Enable client certificates on Azure App Service</li>
+      <li>Upload CA certificate</li>
+      <li>Test with production admin(s)</li>
+    </ul>
+  </div>
+
+  <div class="phase">
+    <h4><span class="step-num">5</span> Phase 5: Migration (Optional — Remove TOTP)</h4>
+    <ul>
+      <li>Once all admins have certificates → make CBA mandatory</li>
+      <li>Remove TOTP columns and code (or keep as emergency fallback)</li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <h2>Quick-Start Guide: What You Need to Begin</h2>
+
+  <h3>Prerequisites (All Free)</h3>
+  <ul>
+    <li>✅ OpenSSL (comes with Git for Windows)</li>
+    <li>✅ Python 3.10+ (already have)</li>
+    <li>✅ FastAPI (already have)</li>
+    <li>⬜ <code>cryptography</code> Python package — <code>pip install cryptography</code></li>
+  </ul>
+
+  <h3>First Steps</h3>
+  <ol>
+    <li><span class="step-num">1</span> <strong>Generate a test CA and client certificate</strong> (30 minutes)</li>
+    <li><span class="step-num">2</span> <strong>Add certificate auth endpoint to FastAPI</strong> (2-4 hours)</li>
+    <li><span class="step-num">3</span> <strong>Test locally with browser</strong> (1 hour)</li>
+    <li><span class="step-num">4</span> <strong>Add "Sign in with Certificate" to frontend</strong> (2-3 hours)</li>
+  </ol>
+
+  <h3>Files That Need Changes</h3>
+  <table>
+    <tr><th>File</th><th>Changes</th></tr>
+    <tr><td><code>api/auth.py</code></td><td>Add <code>validar_certificado()</code>, <code>extrair_identidade_cert()</code></td></tr>
+    <tr><td><code>api/main.py</code></td><td>Add <code>/admin/login/cert</code> endpoint, update middleware</td></tr>
+    <tr><td><code>api/queries.py</code></td><td>Add <code>obter_admin_por_cert_thumbprint()</code>, <code>atualizar_admin_cert()</code></td></tr>
+    <tr><td><code>db/migracoes/005_admin_cert.sql</code></td><td>Add <code>cert_thumbprint</code>, <code>cert_subject</code>, <code>auth_method</code> columns</td></tr>
+    <tr><td><code>admin_frontend/admin_login.html</code></td><td>Add certificate login button</td></tr>
+    <tr><td><code>admin_frontend/admin_auth.js</code></td><td>Add certificate login handler</td></tr>
+    <tr><td><code>admin_frontend/admin_profile.js</code></td><td>Add certificate management UI</td></tr>
+    <tr><td><code>requirements.txt</code></td><td>Add <code>cryptography</code></td></tr>
+    <tr><td><strong>New:</strong> <code>scripts/gen_certs.sh</code></td><td>PKI setup and cert generation scripts</td></tr>
+    <tr><td><strong>New:</strong> <code>certs/</code> directory</td><td>CA cert, CRL (NOT private keys)</td></tr>
+  </table>
+</section>
+
+</div><!-- /tab-recommend -->
+
+<!-- ================================================================== -->
+<!-- TAB 6: SECURITY -->
+<!-- ================================================================== -->
+<div id="tab-security" class="tab-content">
+
+<section>
+  <h2>Security Comparison: CBA vs Current TOTP</h2>
+  <div style="overflow-x:auto;">
+  <table class="matrix-table">
+    <tr>
+      <th>Attack Vector</th>
+      <th>TOTP (Current)</th>
+      <th>CBA (Proposed)</th>
+    </tr>
+    <tr>
+      <td><strong>Phishing</strong></td>
+      <td>⚠️ Vulnerable (code can be relayed)</td>
+      <td>✅ Immune (private key never transmitted)</td>
+    </tr>
+    <tr>
+      <td><strong>Credential stuffing</strong></td>
+      <td>⚠️ Password still needed</td>
+      <td>✅ No password to stuff</td>
+    </tr>
+    <tr>
+      <td><strong>Man-in-the-middle</strong></td>
+      <td>⚠️ TOTP can be intercepted in real-time</td>
+      <td>✅ TLS mutual auth prevents MITM</td>
+    </tr>
+    <tr>
+      <td><strong>Key theft (software)</strong></td>
+      <td>⚠️ TOTP secret in DB plaintext</td>
+      <td>⚠️ Private key on disk (mitigated with hardware)</td>
+    </tr>
+    <tr>
+      <td><strong>Key theft (hardware)</strong></td>
+      <td>N/A</td>
+      <td>✅ Private key locked in hardware token</td>
+    </tr>
+    <tr>
+      <td><strong>Social engineering</strong></td>
+      <td>⚠️ User can be tricked to share code</td>
+      <td>✅ Certificate can't be "shared" verbally</td>
+    </tr>
+    <tr>
+      <td><strong>Replay attacks</strong></td>
+      <td>✅ TOTP expires in 30s</td>
+      <td>✅ TLS challenge-response prevents replay</td>
+    </tr>
+    <tr>
+      <td><strong>Account recovery</strong></td>
+      <td>✅ Easy (reset TOTP)</td>
+      <td>⚠️ Must reissue certificate</td>
+    </tr>
+    <tr>
+      <td><strong>User convenience</strong></td>
+      <td>⚠️ Must open authenticator app</td>
+      <td>✅ Automatic (browser selects cert)</td>
+    </tr>
+  </table>
+  </div>
+</section>
+
+<section>
+  <h2>Glossary</h2>
+  <table>
+    <tr><th>Term</th><th>Definition</th></tr>
+    <tr><td><strong>CBA</strong></td><td>Certificate-Based Authentication</td></tr>
+    <tr><td><strong>mTLS</strong></td><td>Mutual TLS — both client and server present certificates</td></tr>
+    <tr><td><strong>PKI</strong></td><td>Public Key Infrastructure — system for managing certificates</td></tr>
+    <tr><td><strong>CA</strong></td><td>Certificate Authority — trusted entity that signs certificates</td></tr>
+    <tr><td><strong>X.509</strong></td><td>Standard format for digital certificates</td></tr>
+    <tr><td><strong>TOTP</strong></td><td>Time-based One-Time Password (current MFA method)</td></tr>
+    <tr><td><strong>CRL</strong></td><td>Certificate Revocation List — list of revoked certificates</td></tr>
+    <tr><td><strong>OCSP</strong></td><td>Online Certificate Status Protocol — real-time revocation check</td></tr>
+    <tr><td><strong>PKCS#12</strong></td><td>File format (.p12/.pfx) for bundling certificate + private key</td></tr>
+    <tr><td><strong>PIV</strong></td><td>Personal Identity Verification — smart card standard</td></tr>
+    <tr><td><strong>SAN</strong></td><td>Subject Alternative Name — certificate field for identities</td></tr>
+    <tr><td><strong>HSM</strong></td><td>Hardware Security Module — secure key storage device</td></tr>
+  </table>
+</section>
+
+<section>
+  <h2>References</h2>
+  <ul>
+    <li><a href="https://learn.microsoft.com/en-us/entra/identity/authentication/how-to-certificate-based-authentication">Microsoft Entra CBA Setup Guide</a></li>
+    <li><a href="https://learn.microsoft.com/en-us/azure/app-service/app-service-web-configure-tls-mutual-auth">Azure App Service mTLS Configuration</a></li>
+    <li><a href="https://github.com/sergioaz/FastAPI-mTLS">FastAPI mTLS with Self-Signed Certificates</a></li>
+    <li><a href="https://openssl-ca.readthedocs.io/">OpenSSL Certificate Authority Guide</a></li>
+    <li><a href="https://smallstep.com/docs/step-ca/">Smallstep step-ca (Automated PKI)</a></li>
+    <li><a href="https://pages.nist.gov/800-63-3/sp800-63b.html">NIST SP 800-63B (Digital Identity Guidelines)</a></li>
+    <li><a href="https://tools.ietf.org/html/rfc5280">RFC 5280 (X.509 PKI Certificates)</a></li>
+    <li><a href="https://tools.ietf.org/html/rfc6238">RFC 6238 (TOTP Algorithm)</a></li>
+  </ul>
+</section>
+
+</div><!-- /tab-security -->
+
+</div><!-- .container -->
+
+<footer>
+  Gen360 — Certificate-Based Authentication (CBA) Analysis &bull; Generated: April 2026 &bull; Project: Resolução de Normas DODF
+</footer>
+
+<script>
+function showTab(name) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  event.target.classList.add('active');
+}
+</script>
+
+</body>
+</html>
