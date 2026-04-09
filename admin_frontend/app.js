@@ -209,15 +209,12 @@ function renderAtos(data) {
     // Resoluções ANA (gov.br): Abrir leva ao site oficial; demais abrem o viewer interno
     const isAna = (item.origem || "").toLowerCase() === "govbr";
     const urlOficialAna = item.url_oficial && item.url_oficial.trim();
-    /* Abrir = só HTML no viewer (nopdf=1). Ver PDF = abre o PDF noutro separador. */
+    /* Abrir = viewer só HTML (por defeito). Ver PDF = PDF noutro separador. */
     const linkAbrir = isAna
       ? (urlOficialAna || (item.ano != null && item.numero != null
           ? "https://www.gov.br/ana/pt-br/legislacao/resolucoes/resolucoes-regulatorias/" + item.ano + "/" + item.numero
           : "https://www.gov.br/ana/pt-br/legislacao/resolucoes/resolucoes-regulatorias"))
-      : (window.APP_BASE_PATH || "") +
-          "conteudo_viewer.html?id=" +
-          encodeURIComponent(item.id) +
-          "&nopdf=1";
+      : (window.APP_BASE_PATH || "") + "conteudo_viewer.html?id=" + encodeURIComponent(item.id);
     const pdfUrl = `${API_BASE_URL}/public/atos/${item.id}/pdf`;
     row.innerHTML = `
       <td>${formatarDataBr(item.data_publicacao)}</td>

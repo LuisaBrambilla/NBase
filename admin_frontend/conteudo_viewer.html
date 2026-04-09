@@ -266,8 +266,9 @@
         const API_BASE = window.API_BASE_URL || '/api';
         const params = new URLSearchParams(window.location.search);
         const atoId = params.get('id');
-        /* Da consulta: Abrir envia nopdf=1 — mostra só HTML formatado; nunca iframe PDF (use "Ver PDF" na lista). */
-        const noPdfFallback = params.get('nopdf') === '1' || params.get('nopdf') === 'true';
+        /* Por defeito NUNCA mostrar PDF no iframe (evita confundir com HTML). Só com ?pdf=1 (testes). "Ver PDF" na lista abre o PDF noutro separador. */
+        const allowPdfInViewer = params.get('pdf') === '1' || params.get('pdf') === 'true';
+        const noPdfFallback = !allowPdfInViewer;
         const viewerLoading = document.getElementById('viewerLoading');
         const viewerError = document.getElementById('viewerError');
         const viewerNav = document.getElementById('viewerNav');
@@ -601,9 +602,9 @@
               }
               if (noPdfFallback) {
                 showError(
-                  'Não há versão HTML deste ato no servidor (ou o ficheiro não foi encontrado). ' +
-                  'Use «Ver PDF» na lista de consulta para o documento em PDF. ' +
-                  'Para passar a ter HTML, é preciso gerar o ficheiro (ex.: scripts de conversão PDF→HTML no projeto) e enviá-lo para data/html_conteudo ou data/html_completo no servidor.'
+                  'Não há HTML deste ato no servidor (pastas data/html_conteudo ou data/html_completo). ' +
+                  'Use «Ver PDF» na consulta para o documento original. ' +
+                  'Para gerar HTML a partir do PDF: na máquina de desenvolvimento, execute o script scripts/converter_pdf_para_html_arespcj.py (PDFs em data/pdf_arespcj), depois envie os .html para o servidor via FTPS.'
                 );
                 return;
               }
