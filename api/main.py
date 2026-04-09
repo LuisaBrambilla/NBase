@@ -11,7 +11,14 @@ from uuid import UUID
 from fastapi import Depends, FastAPI, Header, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.utils import get_openapi
-from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse, Response
+from fastapi.responses import (
+    FileResponse,
+    HTMLResponse,
+    JSONResponse,
+    RedirectResponse,
+    Response,
+    StreamingResponse,
+)
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
@@ -528,6 +535,31 @@ def _ficheiro_em_pasta(pasta: Path, nome_esperado: str) -> Path | None:
     return None
 
 
+def _variantes_sufixo_numero(numero: int) -> list[str]:
+    """Ficheiros no disco podem usar 540, 0540, 00540; a BD pode guardar só o inteiro."""
+    out: list[str] = [str(numero)]
+    for z in (3, 4, 5, 6):
+        p = str(numero).zfill(z)
+        if p not in out:
+            out.append(p)
+    return out
+
+
+def _orgao_indica_arespcj(ato: dict) -> bool:
+    """Resoluções ARES-PCJ por vezes têm origem errada na BD; orgao costuma mencionar ARES e PCJ."""
+    o = (ato.get("orgao") or "").upper()
+    return "ARES" in o and "PCJ" in o
+
+
+def _iter_pdf_bytes(caminho: Path):
+    with open(caminho, "rb") as f:
+        while True:
+            chunk = f.read(1024 * 512)
+            if not chunk:
+                break
+            yield chunk
+
+
 def _resolver_arquivo_html(caminho_html: str | None) -> Path | None:
     """Resolve o caminho do arquivo HTML (local ou servidor)."""
     if not caminho_html or not caminho_html.strip():
@@ -559,23 +591,31 @@ def _resolver_arquivo_html_de_ato(ato: dict) -> Path | None:
     ano, numero = pair
     raiz = _raiz_projeto()
     origem = (ato.get("origem") or "").strip().lower()
+    nums = _variantes_sufixo_numero(numero)
     nomes: list[str] = []
+
+    def append_pattern(prefix: str) -> None:
+        for n in nums:
+            nomes.append(f"{prefix}_{ano}_{n}.html")
+
     if origem == "arespcj":
-        nomes.append(f"arespcj_{ano}_{numero}.html")
+        append_pattern("arespcj")
     elif origem in ("govbr", "gov.br", "ana", ""):
-        nomes.append(f"ana_{ano}_{numero}.html")
+        if _orgao_indica_arespcj(ato):
+            append_pattern("arespcj")
+        append_pattern("ana")
     else:
-        # ocr, manual, dou, etc.: ficheiros no disco podem seguir convenção ARES ou ANA
-        nomes.extend(
-            [
-                f"arespcj_{ano}_{numero}.html",
-                f"ana_{ano}_{numero}.html",
-            ]
-        )
-    # Scripts ARES gravam também em html_completo; a API prioriza html_conteudo.
+        append_pattern("arespcj")
+        append_pattern("ana")
+
+    nomes_unicos: list[str] = []
+    for x in nomes:
+        if x not in nomes_unicos:
+            nomes_unicos.append(x)
+
     for sub in ("html_conteudo", "html_completo"):
         base = raiz / "data" / sub
-        for nome in nomes:
+        for nome in nomes_unicos:
             found = _ficheiro_em_pasta(base, nome)
             if found:
                 return found
@@ -640,27 +680,45 @@ def _resolver_arquivo_pdf(ato: dict) -> Path | None:
     origem = (ato.get("origem") or "").strip().lower()
     if pair:
         ano, numero = pair
-        if origem == "arespcj":
-            nome = f"arespcj_{ano}_{numero}.pdf"
-            for sub in ("pdf_arespcj", "pdf"):
-                found = _ficheiro_em_pasta(raiz / "data" / sub, nome)
-                if found:
-                    return found
-        elif origem in ("govbr", "gov.br", "ana", ""):
-            nome = f"ana_{ano}_{numero}.pdf"
-            for sub in ("pdf_govbr", "pdf_arespcj", "pdf"):
-                found = _ficheiro_em_pasta(raiz / "data" / sub, nome)
-                if found:
-                    return found
-        else:
-            for nome, subs in (
-                (f"arespcj_{ano}_{numero}.pdf", ("pdf_arespcj", "pdf")),
-                (f"ana_{ano}_{numero}.pdf", ("pdf_govbr", "pdf_arespcj", "pdf")),
-            ):
-                for sub in subs:
+        nums = _variantes_sufixo_numero(numero)
+
+        def _try_arespcj_pdf() -> Path | None:
+            for n in nums:
+                nome = f"arespcj_{ano}_{n}.pdf"
+                for sub in ("pdf_arespcj", "pdf"):
                     found = _ficheiro_em_pasta(raiz / "data" / sub, nome)
                     if found:
                         return found
+            return None
+
+        def _try_ana_pdf() -> Path | None:
+            for n in nums:
+                nome = f"ana_{ano}_{n}.pdf"
+                for sub in ("pdf_govbr", "pdf_arespcj", "pdf"):
+                    found = _ficheiro_em_pasta(raiz / "data" / sub, nome)
+                    if found:
+                        return found
+            return None
+
+        if origem == "arespcj":
+            r = _try_arespcj_pdf()
+            if r:
+                return r
+        elif origem in ("govbr", "gov.br", "ana", ""):
+            if _orgao_indica_arespcj(ato):
+                r = _try_arespcj_pdf()
+                if r:
+                    return r
+            r = _try_ana_pdf()
+            if r:
+                return r
+        else:
+            r = _try_arespcj_pdf()
+            if r:
+                return r
+            r = _try_ana_pdf()
+            if r:
+                return r
     return None
 
 
@@ -707,22 +765,31 @@ def obter_ato_pdf_head(ato_id: str, request: Request):
 def obter_ato_pdf(
     ato_id: str,
     request: Request,
-    download: bool = Query(
-        False,
-        description="Se true, Content-Disposition attachment (descarregar). Omisso = inline (ver no browser).",
+    download: Optional[str] = Query(
+        None,
+        description="Se 1/true, Content-Disposition attachment. Omisso = inline (ver no browser).",
     ),
 ):
-    """Devolve o PDF do ato. Por defeito inline (abre no separador/iframe); use ?download=1 para forçar download."""
+    """
+    Devolve o PDF. Usa StreamingResponse com Content-Disposition explícito — FileResponse por vezes
+    deixava attachment nalguns hosts (ex.: Azure). ?download=1 força descarga.
+    """
     caminho = _resolver_pdf_ato_ou_erro(ato_id, request)
     try:
-        return FileResponse(
-            path=str(caminho),
-            filename=caminho.name,
-            media_type="application/pdf",
-            content_disposition_type="attachment" if download else "inline",
-        )
+        stat = caminho.stat()
     except OSError:
-        raise HTTPException(status_code=404, detail="Arquivo nao acessivel.")
+        raise HTTPException(status_code=404, detail="Arquivo nao acessivel.") from None
+    force_dl = (download or "").strip().lower() in ("1", "true", "yes")
+    disp = "attachment" if force_dl else "inline"
+    safe_name = caminho.name.replace('"', "_")
+    return StreamingResponse(
+        _iter_pdf_bytes(caminho),
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'{disp}; filename="{safe_name}"',
+            "Content-Length": str(stat.st_size),
+        },
+    )
 
 
 @app.get("/public/atos/{ato_id}/docx")
