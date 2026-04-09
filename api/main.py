@@ -560,6 +560,20 @@ def _iter_pdf_bytes(caminho: Path):
             yield chunk
 
 
+def _header_http_seguro(valor: str, max_len: int = 200) -> str:
+    """
+    Cabeçalhos HTTP têm de ser compatíveis com latin-1; caracteres inválidos causam 500 no Uvicorn/Starlette.
+    """
+    if not valor:
+        return ""
+    s = valor[:max_len]
+    try:
+        s.encode("latin-1")
+        return s
+    except UnicodeEncodeError:
+        return s.encode("ascii", "replace").decode("ascii")
+
+
 def _resolver_arquivo_html(caminho_html: str | None) -> Path | None:
     """Resolve o caminho do arquivo HTML (local ou servidor)."""
     if not caminho_html or not caminho_html.strip():
@@ -645,12 +659,12 @@ def obter_ato_conteudo_html(ato_id: str, request: Request):
             raise OSError
     except OSError:
         raise HTTPException(status_code=404, detail="Arquivo nao acessivel.") from None
-    origem = (ato.get("origem") or "")[:200]
+    origem_hdr = _header_http_seguro(str(ato.get("origem") or ""))
     return FileResponse(
         path=str(caminho),
         media_type="text/html; charset=utf-8",
         content_disposition_type="inline",
-        headers={"X-Origem": origem},
+        headers={"X-Origem": origem_hdr},
     )
 
 
