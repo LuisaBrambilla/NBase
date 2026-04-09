@@ -266,6 +266,8 @@
         const API_BASE = window.API_BASE_URL || '/api';
         const params = new URLSearchParams(window.location.search);
         const atoId = params.get('id');
+        /* Da consulta: Abrir envia nopdf=1 — mostra só HTML formatado; nunca iframe PDF (use "Ver PDF" na lista). */
+        const noPdfFallback = params.get('nopdf') === '1' || params.get('nopdf') === 'true';
         const viewerLoading = document.getElementById('viewerLoading');
         const viewerError = document.getElementById('viewerError');
         const viewerNav = document.getElementById('viewerNav');
@@ -585,7 +587,7 @@
         if (!atoId) {
           showError('Identificador do ato não informado (use ?id=... na URL).');
         } else {
-          /* Preferir HTML (versão formatada: sem banner em cima, rodapé no fim); PDF só se não houver HTML */
+          /* Preferir HTML (versão formatada). Com nopdf=1 (link Abrir na consulta) não mostramos PDF aqui. */
           fetch(API_BASE + '/public/atos/' + encodeURIComponent(atoId) + '/conteudo', { method: 'GET', headers: Object.assign({ Accept: 'text/html' }, window.getApiHeaders ? window.getApiHeaders() : {}) })
             .then(function (r) {
               var origem = r.headers.get('X-Origem') || '';
@@ -595,6 +597,14 @@
             .then(function (result) {
               if (result.ok && result.text && result.text.trim()) {
                 initViewer(result.text, result.origem);
+                return;
+              }
+              if (noPdfFallback) {
+                showError(
+                  'Não há versão HTML deste ato no servidor (ou o ficheiro não foi encontrado). ' +
+                  'Use «Ver PDF» na lista de consulta para o documento em PDF. ' +
+                  'Para passar a ter HTML, é preciso gerar o ficheiro (ex.: scripts de conversão PDF→HTML no projeto) e enviá-lo para data/html_conteudo ou data/html_completo no servidor.'
+                );
                 return;
               }
               return fetch(API_BASE + '/public/atos/' + encodeURIComponent(atoId) + '/pdf', { method: 'HEAD', headers: window.getApiHeaders ? window.getApiHeaders() : {} })
