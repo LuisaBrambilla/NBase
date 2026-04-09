@@ -622,9 +622,12 @@ def _resolver_arquivo_html_de_ato(ato: dict) -> Path | None:
     return None
 
 
-@app.get("/public/atos/{ato_id}/conteudo", response_class=HTMLResponse)
+@app.get("/public/atos/{ato_id}/conteudo")
 def obter_ato_conteudo_html(ato_id: str, request: Request):
-    """Retorna o HTML convertido (ex.: PDF→HTML) quando existir arquivo local."""
+    """
+    Serve o HTML a partir do disco com FileResponse (streaming).
+    Evita carregar ficheiros muito grandes na memória — causava 502 no Azure.
+    """
     ato = queries.obter_ato(ato_id)
     if not ato:
         raise HTTPException(status_code=404, detail="Ato nao encontrado.")
@@ -638,11 +641,17 @@ def obter_ato_conteudo_html(ato_id: str, request: Request):
             detail="Conteudo HTML nao disponivel para este ato.",
         )
     try:
-        conteudo = caminho.read_text(encoding="utf-8", errors="replace")
+        if not caminho.is_file():
+            raise OSError
     except OSError:
-        raise HTTPException(status_code=404, detail="Arquivo nao acessivel.")
-    origem = ato.get("origem") or ""
-    return HTMLResponse(conteudo, status_code=200, headers={"X-Origem": origem})
+        raise HTTPException(status_code=404, detail="Arquivo nao acessivel.") from None
+    origem = (ato.get("origem") or "")[:200]
+    return FileResponse(
+        path=str(caminho),
+        media_type="text/html; charset=utf-8",
+        content_disposition_type="inline",
+        headers={"X-Origem": origem},
+    )
 
 
 def _resolver_arquivo_docx(caminho_docx: str | None) -> Path | None:

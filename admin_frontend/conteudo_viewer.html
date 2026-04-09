@@ -575,7 +575,9 @@
           viewerError.style.display = 'none';
           viewerViewport.style.display = 'none';
           viewerPdfWrap.style.display = 'block';
-          viewerPdfIframe.src = API_BASE + '/public/atos/' + encodeURIComponent(atoId) + '/pdf';
+          /* Fragmentos (#toolbar) são para o leitor PDF do browser (efeito variável). Só usamos PDF quando não há HTML. */
+          var pdfBase = API_BASE + '/public/atos/' + encodeURIComponent(atoId) + '/pdf';
+          viewerPdfIframe.src = pdfBase + '#toolbar=0&navpanes=0';
           viewerNav.style.display = 'none';
           if (viewerAnaBar) viewerAnaBar.style.display = 'none';
         }
