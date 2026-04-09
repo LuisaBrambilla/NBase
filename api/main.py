@@ -332,6 +332,11 @@ def require_admin(authorization: str | None = Header(default=None)) -> Dict[str,
     return admin
 
 
+@app.get("/")
+def root():
+    return RedirectResponse(url="/docs")
+
+
 @app.get("/health")
 def health() -> Dict[str, str]:
     return {"status": "ok"}

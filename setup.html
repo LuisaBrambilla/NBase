@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gen360 — Setup Guide (Local &amp; Production)</title>
+  <style>
+    :root {
+      --bg: #0d1117; --surface: #161b22; --border: #30363d;
+      --text: #c9d1d9; --muted: #8b949e; --accent: #58a6ff;
+      --green: #3fb950; --red: #f85149; --orange: #d29922; --purple: #bc8cff;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; padding: 0 0 80px; }
+
+    header { background: linear-gradient(135deg, #1a2332 0%, #0d1117 100%); border-bottom: 1px solid var(--border); padding: 44px 0 36px; text-align: center; }
+    header h1 { font-size: 2.3em; font-weight: 700; color: #fff; letter-spacing: -0.02em; }
+    header h1 span { color: var(--accent); }
+    header p { color: var(--muted); margin-top: 6px; font-size: 1.05em; }
+
+    .container { max-width: 1020px; margin: 0 auto; padding: 0 24px; }
+
+    /* Tab nav */
+    .tabs { display: flex; gap: 0; margin: 32px 0 0; border-bottom: 2px solid var(--border); }
+    .tab-btn { background: none; border: none; color: var(--muted); font-size: 1em; font-weight: 600; padding: 12px 28px; cursor: pointer; border-bottom: 3px solid transparent; margin-bottom: -2px; transition: all 0.15s; }
+    .tab-btn:hover { color: var(--text); }
+    .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    section { margin-top: 36px; }
+    section h2 { font-size: 1.5em; color: #fff; padding-bottom: 6px; border-bottom: 2px solid var(--accent); margin-bottom: 16px; }
+    section h3 { font-size: 1.15em; color: var(--accent); margin: 24px 0 8px; }
+    section h4 { font-size: 1em; color: var(--orange); margin: 16px 0 6px; }
+    p, li { color: var(--text); }
+    ul, ol { padding-left: 22px; margin: 8px 0; }
+    li { margin: 4px 0; }
+
+    pre { background: #010409; border: 1px solid var(--border); border-radius: 6px; padding: 14px 18px; overflow-x: auto; font-size: 0.87em; line-height: 1.55; margin: 10px 0; }
+    code { font-family: 'Cascadia Code', 'Fira Code', Consolas, monospace; color: var(--green); }
+    pre code { color: var(--text); }
+    .cmd  { color: var(--green); }
+    .cmt  { color: var(--muted); }
+    .val  { color: var(--orange); }
+    .out  { color: var(--muted); font-style: italic; }
+
+    table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 0.9em; }
+    th, td { text-align: left; padding: 9px 14px; border: 1px solid var(--border); }
+    th { background: var(--surface); color: var(--accent); font-weight: 600; white-space: nowrap; }
+    td { background: var(--bg); }
+    td code { color: var(--orange); font-size: 0.95em; }
+
+    .callout { border-radius: 6px; padding: 14px 18px; margin: 14px 0; border-left: 4px solid; font-size: 0.93em; }
+    .callout-info    { background: #0c2d6b33; border-color: var(--accent); }
+    .callout-warning { background: #3d2e0033; border-color: var(--orange); }
+    .callout-success { background: #12361e33; border-color: var(--green); }
+    .callout-danger  { background: #3d111133; border-color: var(--red); }
+    .callout strong  { color: #fff; }
+
+    .env-tag { display: inline-block; font-size: 0.75em; padding: 2px 10px; border-radius: 12px; font-weight: 700; margin-left: 8px; vertical-align: middle; }
+    .env-local { background: #12361e; color: var(--green); }
+    .env-prod  { background: #0c2d6b; color: var(--accent); }
+    .env-both  { background: #2d1b4e; color: var(--purple); }
+
+    .arch { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 24px; margin: 14px 0; text-align: center; font-family: monospace; white-space: pre; line-height: 1.35; font-size: 0.82em; overflow-x: auto; color: var(--muted); }
+
+    .compare-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 16px 0; }
+    .compare-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 20px; }
+    .compare-card h4 { margin-top: 0; }
+    @media (max-width: 700px) { .compare-grid { grid-template-columns: 1fr; } }
+
+    .step-num { display: inline-block; width: 26px; height: 26px; line-height: 26px; text-align: center; border-radius: 50%; background: var(--accent); color: var(--bg); font-weight: 700; font-size: 0.82em; margin-right: 6px; }
+    footer { text-align: center; padding: 32px 0; color: var(--muted); font-size: 0.85em; border-top: 1px solid var(--border); margin-top: 56px; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1><span>Gen360</span> — Setup Guide</h1>
+  <p>Docker &bull; Database &bull; Frontend &bull; API &bull; Local &amp; Production</p>
+</header>
+
+<div class="container">
+
+<!-- TABS -->
+<div class="tabs">
+  <button class="tab-btn active" onclick="showTab('local')">🖥️ Local / Dev</button>
+  <button class="tab-btn" onclick="showTab('prod')">☁️ Production (Azure)</button>
+  <button class="tab-btn" onclick="showTab('frontend')">🎨 Frontend</button>
+  <button class="tab-btn" onclick="showTab('db')">🗃️ Database</button>
+  <button class="tab-btn" onclick="showTab('trouble')">🔧 Troubleshooting</button>
+</div>
+
+<!-- ================================================================== -->
+<!-- LOCAL / DEV TAB -->
+<!-- ================================================================== -->
+<div id="tab-local" class="tab-content active">
+
+<section>
+  <h2>Architecture <span class="env-tag env-local">LOCAL</span></h2>
+  <div class="arch">
+┌───────────────────────────────────────────────────────────────────┐
+│                        LOCAL DEV SETUP                            │
+│                                                                   │
+│  ┌────────────────────┐   HTTP :8000    ┌───────────────────────┐ │
+│  │  Admin Frontend     │ ────────────▶  │  FastAPI (Uvicorn)     │ │
+│  │  http://localhost:  │ ◀──────────── │  --reload enabled      │ │
+│  │  3000               │   JSON APIs    │  api/main.py           │ │
+│  │  (python -m         │                │                        │ │
+│  │   http.server)      │                │  /docs   (Swagger)     │ │
+│  └────────────────────┘                │  /health (health check)│ │
+│                                         └────────┬──────────────┘ │
+│                                                   │ psycopg2       │
+│                                                   │ TCP :5432      │
+│                                         ┌─────────▼─────────────┐ │
+│                                         │  PostgreSQL 16         │ │
+│                                         │  Docker: gen360-postgres│ │
+│                                         │  DB: normas            │ │
+│                                         │  User: postgres        │ │
+│                                         └───────────────────────┘ │
+└───────────────────────────────────────────────────────────────────┘
+  </div>
+</section>
+
+<section>
+  <h2>Prerequisites</h2>
+  <table>
+    <tr><th>Tool</th><th>Version</th><th>Check</th><th>Install</th></tr>
+    <tr><td>Python</td><td><code>3.12+</code></td><td><code>python --version</code></td><td><a href="https://python.org/downloads/" style="color:var(--accent)">python.org</a></td></tr>
+    <tr><td>pip</td><td><code>23+</code></td><td><code>pip --version</code></td><td>Bundled with Python</td></tr>
+    <tr><td>Docker Desktop</td><td><code>24+</code></td><td><code>docker --version</code></td><td><a href="https://docker.com/products/docker-desktop/" style="color:var(--accent)">docker.com</a></td></tr>
+    <tr><td>Git</td><td><code>2.40+</code></td><td><code>git --version</code></td><td><a href="https://git-scm.com" style="color:var(--accent)">git-scm.com</a></td></tr>
+  </table>
+  <div class="callout callout-warning">
+    <strong>⚠️ Docker Desktop must be running!</strong> Launch it from the Start menu and wait ~10s.
+    Verify with <code>docker info</code>. If it fails, try <code>docker context use desktop-linux</code> (or <code>default</code>).
+  </div>
+</section>
+
+<section>
+  <h2>Quick Start (Copy-Paste)</h2>
+  <p>Open PowerShell in the <code>Gen360</code> project root:</p>
+  <pre><code><span class="cmt"># 1) Start PostgreSQL in Docker</span>
+<span class="cmd">docker run -d --name gen360-postgres `
+  -e POSTGRES_DB=normas `
+  -e POSTGRES_USER=postgres `
+  -e POSTGRES_PASSWORD=Newpr2026@ `
+  -p 5432:5432 `
+  postgres:16</span>
+
+<span class="cmt"># 2) Wait for readiness</span>
+<span class="cmd">Start-Sleep -Seconds 5
+docker exec gen360-postgres pg_isready -U postgres</span>
+
+<span class="cmt"># 3) Apply database schema + migrations</span>
+<span class="cmd">Get-Content db\models.sql -Raw | docker exec -i gen360-postgres psql -U postgres -d normas
+Get-Content db\migracoes\002_origem_dodf.sql -Raw | docker exec -i gen360-postgres psql -U postgres -d normas
+Get-Content db\migracoes\003_admin_mfa.sql -Raw | docker exec -i gen360-postgres psql -U postgres -d normas
+Get-Content db\migracoes\004_verificacao_normas.sql -Raw | docker exec -i gen360-postgres psql -U postgres -d normas</span>
+
+<span class="cmt"># 4) Install Python dependencies</span>
+<span class="cmd">pip install -r requirements.txt</span>
+
+<span class="cmt"># 5) Set environment variables</span>
+<span class="cmd">$env:DB_HOST="localhost"
+$env:DB_PORT="5432"
+$env:DB_NAME="normas"
+$env:DB_USER="postgres"
+$env:DB_PASSWORD="Newpr2026@"
+$env:JWT_SECRET="local-dev-secret"
+$env:CORS_ORIGINS="*"</span>
+
+<span class="cmt"># 6) Start API server (with hot-reload)</span>
+<span class="cmd">python -m uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload</span>
+
+<span class="cmt"># 7) In a NEW terminal — serve the frontend</span>
+<span class="cmd">python -m http.server 3000 --directory admin_frontend</span></code></pre>
+
+  <div class="callout callout-success">
+    <strong>✅ Done!</strong> API → <code>http://localhost:8000</code> &bull;
+    Frontend → <code>http://localhost:3000</code> &bull;
+    Swagger → <code>http://localhost:8000/docs</code>
+  </div>
+</section>
+
+<section>
+  <h2>Docker Container Details</h2>
+  <table>
+    <tr><th>Property</th><th>Value</th></tr>
+    <tr><td>Container Name</td><td><code>gen360-postgres</code></td></tr>
+    <tr><td>Image</td><td><code>postgres:16</code></td></tr>
+    <tr><td>Host Port</td><td><code>5432</code> → Container <code>5432</code></td></tr>
+    <tr><td>POSTGRES_DB</td><td><code>normas</code></td></tr>
+    <tr><td>POSTGRES_USER</td><td><code>postgres</code></td></tr>
+    <tr><td>POSTGRES_PASSWORD</td><td><code>Newpr2026@</code></td></tr>
+    <tr><td>Data Volume</td><td>Anonymous (lost on <code>docker rm</code>)</td></tr>
+  </table>
+
+  <h3>Container Lifecycle</h3>
+  <pre><code><span class="cmt"># Start (if stopped)</span>
+<span class="cmd">docker start gen360-postgres</span>
+
+<span class="cmt"># Stop</span>
+<span class="cmd">docker stop gen360-postgres</span>
+
+<span class="cmt"># Restart</span>
+<span class="cmd">docker restart gen360-postgres</span>
+
+<span class="cmt"># View logs</span>
+<span class="cmd">docker logs gen360-postgres --tail 50</span>
+
+<span class="cmt"># Check status</span>
+<span class="cmd">docker ps -a --filter name=gen360-postgres</span>
+
+<span class="cmt"># Destroy and recreate (loses all data)</span>
+<span class="cmd">docker rm -f gen360-postgres
+docker volume prune -f</span>
+<span class="cmt"># Then re-run the docker run command above</span></code></pre>
+
+  <h3>Persistent Data (optional)</h3>
+  <p>To keep data across container removal, add a named volume:</p>
+  <pre><code><span class="cmd">docker run -d --name gen360-postgres `
+  -e POSTGRES_DB=normas `
+  -e POSTGRES_USER=postgres `
+  -e POSTGRES_PASSWORD=Newpr2026@ `
+  -p 5432:5432 `
+  <span class="val">-v gen360-pgdata:/var/lib/postgresql/data</span> `
+  postgres:16</span></code></pre>
+</section>
+
+<section>
+  <h2>Environment Variables <span class="env-tag env-local">LOCAL</span></h2>
+  <table>
+    <tr><th>Variable</th><th>Local Value</th><th>Description</th></tr>
+    <tr><td><code>DB_HOST</code></td><td><code>localhost</code></td><td>PostgreSQL host</td></tr>
+    <tr><td><code>DB_PORT</code></td><td><code>5432</code></td><td>PostgreSQL port</td></tr>
+    <tr><td><code>DB_NAME</code></td><td><code>normas</code></td><td>Database name</td></tr>
+    <tr><td><code>DB_USER</code></td><td><code>postgres</code></td><td>Database user</td></tr>
+    <tr><td><code>DB_PASSWORD</code></td><td><code>Newpr2026@</code></td><td>Database password</td></tr>
+    <tr><td><code>JWT_SECRET</code></td><td><code>local-dev-secret</code></td><td>JWT signing key (any value for dev)</td></tr>
+    <tr><td><code>JWT_EXPIRE_MINUTES</code></td><td><code>60</code></td><td>Token TTL in minutes</td></tr>
+    <tr><td><code>MFA_ISSUER</code></td><td><code>ResolucoesAdmin</code></td><td>TOTP issuer label</td></tr>
+    <tr><td><code>CORS_ORIGINS</code></td><td><code>*</code></td><td>Allowed origins (wildcard for dev)</td></tr>
+  </table>
+  <div class="callout callout-info">
+    <strong>💡 Note:</strong> The app does <em>not</em> auto-load <code>.env</code> files. You must set
+    environment variables in your PowerShell session (as shown in Quick Start) or add
+    <code>load_dotenv()</code> to the code.
+  </div>
+</section>
+
+<section>
+  <h2>API Server Commands</h2>
+  <pre><code><span class="cmt"># Development with hot-reload</span>
+<span class="cmd">python -m uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload</span>
+
+<span class="cmt"># Test endpoints</span>
+<span class="cmd">Invoke-RestMethod http://localhost:8000/health</span>
+<span class="cmd">Invoke-RestMethod http://localhost:8000/health/db</span>
+<span class="cmd">Invoke-RestMethod "http://localhost:8000/public/atos?limit=5"</span>
+
+<span class="cmt"># Test DB connection with Python</span>
+<span class="cmd">python -c "from db.db import get_connection; c=get_connection(); print('OK'); c.close()"</span></code></pre>
+</section>
+
+<section>
+  <h2>Stopping Everything</h2>
+  <pre><code><span class="cmt"># Stop API server</span>
+<span class="cmd">Ctrl+C</span> <span class="cmt">(in the terminal running uvicorn)</span>
+
+<span class="cmt"># Stop frontend server</span>
+<span class="cmd">Ctrl+C</span> <span class="cmt">(in the terminal running http.server)</span>
+
+<span class="cmt"># Stop PostgreSQL container (data preserved)</span>
+<span class="cmd">docker stop gen360-postgres</span>
+
+<span class="cmt"># Full cleanup (destroys local DB data)</span>
+<span class="cmd">docker rm -f gen360-postgres
+docker volume prune -f</span></code></pre>
+</section>
+
+</div><!-- /tab-local -->
+
+<!-- ================================================================== -->
+<!-- PRODUCTION TAB -->
+<!-- ================================================================== -->
+<div id="tab-prod" class="tab-content">
+
+<section>
+  <h2>Architecture <span class="env-tag env-prod">PRODUCTION</span></h2>
+  <div class="arch">
+┌──────────────────────────────────────────────────────────────────────┐
+│                     AZURE PRODUCTION (DemoGoverno)                    │
+│                                                                      │
+│  ┌─────────────────────────┐          ┌────────────────────────────┐ │
+│  │  Azure Static Website    │  HTTPS   │  Azure App Service (Linux) │ │
+│  │  stgen360frontend        │ ──────▶  │  app-gen360-api            │ │
+│  │  *.z15.web.core.         │ ◀────── │  Python 3.12 + Gunicorn    │ │
+│  │  windows.net             │          │  4 workers, timeout 600s   │ │
+│  └─────────────────────────┘          └────────────┬───────────────┘ │
+│                                                     │ TCP :5432       │
+│                                                     │                 │
+│                                        ┌────────────▼───────────────┐ │
+│                                        │  PostgreSQL 14 VM          │ │
+│                                        │  postgresql-vm             │ │
+│                                        │  20.226.39.175             │ │
+│                                        │  Ubuntu 22.04              │ │
+│                                        │  Standard_E2s_v3           │ │
+│                                        └────────────────────────────┘ │
+└──────────────────────────────────────────────────────────────────────┘
+  </div>
+</section>
+
+<section>
+  <h2>Azure Resources</h2>
+  <table>
+    <tr><th>Resource</th><th>Name</th><th>Details</th></tr>
+    <tr><td>Subscription</td><td><code>618a82e3-0571-4142-b50d-c8d2c34060ae</code></td><td>—</td></tr>
+    <tr><td>Tenant</td><td><code>6b1db0da-c53f-48bf-b271-9297590ad872</code></td><td>—</td></tr>
+    <tr><td>Resource Group</td><td><code>DemoGoverno</code></td><td>Brazil South</td></tr>
+    <tr><td>App Service Plan</td><td><code>asp-gen360</code></td><td>B1 Linux (~$13/mo)</td></tr>
+    <tr><td>Web App (API)</td><td><code>app-gen360-api</code></td><td>Python 3.12</td></tr>
+    <tr><td>Storage (Frontend)</td><td><code>stgen360frontend</code></td><td>Static Website (~$1/mo)</td></tr>
+    <tr><td>PostgreSQL VM</td><td><code>postgresql-vm</code></td><td>Standard_E2s_v3, Ubuntu 22.04</td></tr>
+  </table>
+</section>
+
+<section>
+  <h2>Production URLs</h2>
+  <table>
+    <tr><th>Service</th><th>URL</th></tr>
+    <tr><td>API</td><td><code><a href="https://app-gen360-api.azurewebsites.net" style="color:var(--accent)">https://app-gen360-api.azurewebsites.net</a></code></td></tr>
+    <tr><td>API Health</td><td><code><a href="https://app-gen360-api.azurewebsites.net/health" style="color:var(--accent)">https://app-gen360-api.azurewebsites.net/health</a></code></td></tr>
+    <tr><td>API Docs (Swagger)</td><td><code><a href="https://app-gen360-api.azurewebsites.net/docs" style="color:var(--accent)">https://app-gen360-api.azurewebsites.net/docs</a></code></td></tr>
+    <tr><td>Frontend</td><td><code><a href="https://stgen360frontend.z15.web.core.windows.net" style="color:var(--accent)">https://stgen360frontend.z15.web.core.windows.net</a></code></td></tr>
+  </table>
+</section>
+
+<section>
+  <h2>Production Database</h2>
+  <table>
+    <tr><th>Property</th><th>Value</th></tr>
+    <tr><td>Host</td><td><code>20.226.39.175</code></td></tr>
+    <tr><td>Port</td><td><code>5432</code></td></tr>
+    <tr><td>Database</td><td><code>normas</code></td></tr>
+    <tr><td>User</td><td><code>linuxuser</code></td></tr>
+    <tr><td>PostgreSQL Version</td><td>14.20 (Ubuntu)</td></tr>
+    <tr><td>VM Size</td><td>Standard_E2s_v3 (2 vCPUs, 16 GB RAM)</td></tr>
+    <tr><td>OS</td><td>Ubuntu Server 22.04 (Jammy)</td></tr>
+    <tr><td>NSG Rules</td><td>SSH (22), PostgreSQL (5432) open</td></tr>
+  </table>
+</section>
+
+<section>
+  <h2>Environment Variables <span class="env-tag env-prod">PRODUCTION</span></h2>
+  <table>
+    <tr><th>Variable</th><th>Production Value</th></tr>
+    <tr><td><code>DB_HOST</code></td><td><code>20.226.39.175</code></td></tr>
+    <tr><td><code>DB_PORT</code></td><td><code>5432</code></td></tr>
+    <tr><td><code>DB_NAME</code></td><td><code>normas</code></td></tr>
+    <tr><td><code>DB_USER</code></td><td><code>linuxuser</code></td></tr>
+    <tr><td><code>JWT_SECRET</code></td><td><em>(auto-generated 64-char random key)</em></td></tr>
+    <tr><td><code>JWT_EXPIRE_MINUTES</code></td><td><code>60</code></td></tr>
+    <tr><td><code>MFA_ISSUER</code></td><td><code>Gen360Admin</code></td></tr>
+    <tr><td><code>CORS_ORIGINS</code></td><td><code>https://app-gen360-api.azurewebsites.net,https://stgen360frontend.z15.web.core.windows.net</code></td></tr>
+    <tr><td><code>SCM_DO_BUILD_DURING_DEPLOYMENT</code></td><td><code>true</code></td></tr>
+  </table>
+</section>
+
+<section>
+  <h2>Deployment</h2>
+
+  <h3>Automated (recommended)</h3>
+  <pre><code><span class="cmd">cd setup
+.\deploy_azure.ps1 -PostgreSQLHost "20.226.39.175"</span></code></pre>
+
+  <h3>Manual — Deploy API</h3>
+  <pre><code><span class="cmt"># Login</span>
+<span class="cmd">az login --tenant 6b1db0da-c53f-48bf-b271-9297590ad872
+az account set --subscription "618a82e3-0571-4142-b50d-c8d2c34060ae"</span>
+
+<span class="cmt"># Create ZIP package</span>
+<span class="cmd">$tmp = "$env:TEMP\gen360_deploy"
+New-Item -ItemType Directory -Path $tmp -Force
+Copy-Item api, db -Destination $tmp -Recurse
+Copy-Item requirements.txt, runtime.txt -Destination $tmp
+Compress-Archive "$tmp\*" "$env:TEMP\gen360.zip" -Force</span>
+
+<span class="cmt"># Deploy</span>
+<span class="cmd">az webapp deployment source config-zip `
+  --resource-group DemoGoverno `
+  --name app-gen360-api `
+  --src "$env:TEMP\gen360.zip"</span>
+
+<span class="cmt"># Clean up</span>
+<span class="cmd">Remove-Item $tmp -Recurse -Force
+Remove-Item "$env:TEMP\gen360.zip" -Force</span></code></pre>
+
+  <h3>Manual — Deploy Frontend</h3>
+  <pre><code><span class="cmd">$key = az storage account keys list --account-name stgen360frontend `
+  --resource-group DemoGoverno --query "[0].value" -o tsv
+
+az storage blob upload-batch `
+  --account-name stgen360frontend `
+  --account-key $key `
+  --destination '$web' `
+  --source admin_frontend `
+  --overwrite</span></code></pre>
+
+  <h3>View Production Logs</h3>
+  <pre><code><span class="cmd">az webapp log tail --name app-gen360-api --resource-group DemoGoverno</span></code></pre>
+
+  <h3>Startup Command</h3>
+  <pre><code><span class="cmd">gunicorn -w 4 -k uvicorn.workers.UvicornWorker api.main:app --bind=0.0.0.0:8000 --timeout 600</span></code></pre>
+</section>
+
+<section>
+  <h2>Local vs Production Comparison</h2>
+  <div class="compare-grid">
+    <div class="compare-card">
+      <h4 style="color:var(--green)">🖥️ Local</h4>
+      <ul>
+        <li>PostgreSQL 16 in Docker</li>
+        <li>User: <code>postgres</code></li>
+        <li>Uvicorn with <code>--reload</code></li>
+        <li>Single process</li>
+        <li>CORS: <code>*</code></li>
+        <li>JWT secret: any string</li>
+        <li>Frontend: <code>python -m http.server</code></li>
+      </ul>
+    </div>
+    <div class="compare-card">
+      <h4 style="color:var(--accent)">☁️ Production</h4>
+      <ul>
+        <li>PostgreSQL 14 on Ubuntu VM</li>
+        <li>User: <code>linuxuser</code></li>
+        <li>Gunicorn + 4 Uvicorn workers</li>
+        <li>Azure App Service B1</li>
+        <li>CORS: specific origins only</li>
+        <li>JWT secret: 64-char random</li>
+        <li>Frontend: Azure Static Website</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+</div><!-- /tab-prod -->
+
+<!-- ================================================================== -->
+<!-- FRONTEND TAB -->
+<!-- ================================================================== -->
+<div id="tab-frontend" class="tab-content">
+
+<section>
+  <h2>Frontend Overview</h2>
+  <p>Static HTML/JS/CSS — no build step, no npm, no framework. Just files served over HTTP.</p>
+  <table>
+    <tr><th>Page</th><th>File</th><th>Auth Required</th></tr>
+    <tr><td>Public Search</td><td><code>index.html</code></td><td>No</td></tr>
+    <tr><td>Organizations</td><td><code>orgaos.html</code></td><td>No</td></tr>
+    <tr><td>Admin Login</td><td><code>admin_login.html</code></td><td>No</td></tr>
+    <tr><td>Admin Register</td><td><code>admin_register.html</code></td><td>No</td></tr>
+    <tr><td>Admin Home</td><td><code>admin_home.html</code></td><td>Yes (JWT)</td></tr>
+    <tr><td>Admin Dashboard</td><td><code>admin_dashboard.html</code></td><td>Yes (JWT)</td></tr>
+    <tr><td>Statistics</td><td><code>admin_stats.html</code></td><td>Yes (JWT)</td></tr>
+    <tr><td>Profile</td><td><code>admin_profile.html</code></td><td>Yes (JWT)</td></tr>
+    <tr><td>Norma Verification</td><td><code>admin_resolucao.html</code></td><td>Yes (JWT)</td></tr>
+  </table>
+</section>
+
+<section>
+  <h2>Serving the Frontend</h2>
+
+  <h3>Local Development <span class="env-tag env-local">LOCAL</span></h3>
+  <pre><code><span class="cmt"># Option A: Python HTTP server (recommended)</span>
+<span class="cmd">python -m http.server 3000 --directory admin_frontend</span>
+<span class="cmt"># → http://localhost:3000</span>
+
+<span class="cmt"># Option B: Open file directly (may have CORS issues)</span>
+<span class="cmd">start admin_frontend\index.html</span>
+
+<span class="cmt"># Option C: VS Code Live Server extension</span>
+<span class="cmt"># Right-click admin_frontend/index.html → "Open with Live Server"</span></code></pre>
+
+  <h3>Production <span class="env-tag env-prod">PRODUCTION</span></h3>
+  <p>Hosted on Azure Storage Static Website:</p>
+  <pre><code><span class="cmd">https://stgen360frontend.z15.web.core.windows.net</span></code></pre>
+</section>
+
+<section>
+  <h2>API URL Resolution</h2>
+  <p>The frontend uses <code>config.js</code> to auto-detect the environment:</p>
+
+  <table>
+    <tr><th>Condition</th><th>API URL Used</th></tr>
+    <tr><td>Hostname is <code>localhost</code>, <code>127.0.0.1</code>, or <code>::1</code></td><td><code>http://localhost:8000</code></td></tr>
+    <tr><td>Protocol is <code>file://</code></td><td><code>http://localhost:8000</code></td></tr>
+    <tr><td>Hostname matches <code>*.web.core.windows.net</code></td><td><code>https://app-gen360-api.azurewebsites.net</code></td></tr>
+    <tr><td>Anything else</td><td><code>https://app-gen360-api.azurewebsites.net</code></td></tr>
+  </table>
+
+  <div class="callout callout-warning">
+    <strong>⚠️ Important:</strong> Every HTML page that calls the API <em>must</em> include
+    <code>&lt;script src="./config.js"&gt;&lt;/script&gt;</code> <strong>before</strong> any other JS files.
+    Without it, the JS files fall back to the hardcoded Azure production URL.
+  </div>
+
+  <h3>Script Load Order (required)</h3>
+  <pre><code>&lt;script src="./config.js"&gt;&lt;/script&gt;     <span class="cmt">&lt;!-- MUST be first: sets window.API_BASE_URL --&gt;</span>
+&lt;script src="./theme.js"&gt;&lt;/script&gt;
+&lt;script src="./admin_session.js"&gt;&lt;/script&gt; <span class="cmt">&lt;!-- or admin_auth.js, app.js, etc. --&gt;</span></code></pre>
+
+  <h3>JS Files &amp; Their API Variable</h3>
+  <table>
+    <tr><th>File</th><th>Variable</th><th>Fallback</th></tr>
+    <tr><td><code>config.js</code></td><td>Sets <code>window.API_BASE_URL</code></td><td>auto-detected</td></tr>
+    <tr><td><code>app.js</code></td><td><code>API_BASE_URL</code></td><td><code>window.API_BASE_URL || azure</code></td></tr>
+    <tr><td><code>admin_auth.js</code></td><td><code>API_BASE</code></td><td><code>window.API_BASE_URL || azure</code></td></tr>
+    <tr><td><code>admin_dashboard.js</code></td><td><code>API_BASE</code></td><td><code>window.API_BASE_URL || azure</code></td></tr>
+    <tr><td><code>admin_stats.js</code></td><td><code>API_BASE</code></td><td><code>window.API_BASE_URL || azure</code></td></tr>
+    <tr><td><code>admin_profile.js</code></td><td><code>API_BASE</code></td><td><code>window.API_BASE_URL || azure</code></td></tr>
+    <tr><td><code>admin_resolucao.js</code></td><td><code>API_BASE</code></td><td><code>window.API_BASE_URL || azure</code></td></tr>
+    <tr><td><code>orgaos.js</code></td><td><code>API_BASE_URL</code></td><td><code>window.API_BASE_URL || azure</code></td></tr>
+  </table>
+</section>
+
+<section>
+  <h2>Frontend Local URLs</h2>
+  <p>When serving with <code>python -m http.server 3000 --directory admin_frontend</code>:</p>
+  <table>
+    <tr><th>Page</th><th>URL</th></tr>
+    <tr><td>Public Search</td><td><code><a href="http://localhost:3000" style="color:var(--accent)">http://localhost:3000</a></code></td></tr>
+    <tr><td>Organizations</td><td><code><a href="http://localhost:3000/orgaos.html" style="color:var(--accent)">http://localhost:3000/orgaos.html</a></code></td></tr>
+    <tr><td>Admin Login</td><td><code><a href="http://localhost:3000/admin_login.html" style="color:var(--accent)">http://localhost:3000/admin_login.html</a></code></td></tr>
+    <tr><td>Admin Register</td><td><code><a href="http://localhost:3000/admin_register.html" style="color:var(--accent)">http://localhost:3000/admin_register.html</a></code></td></tr>
+    <tr><td>Admin Home</td><td><code><a href="http://localhost:3000/admin_home.html" style="color:var(--accent)">http://localhost:3000/admin_home.html</a></code></td></tr>
+    <tr><td>Dashboard</td><td><code><a href="http://localhost:3000/admin_dashboard.html" style="color:var(--accent)">http://localhost:3000/admin_dashboard.html</a></code></td></tr>
+    <tr><td>Statistics</td><td><code><a href="http://localhost:3000/admin_stats.html" style="color:var(--accent)">http://localhost:3000/admin_stats.html</a></code></td></tr>
+    <tr><td>Profile</td><td><code><a href="http://localhost:3000/admin_profile.html" style="color:var(--accent)">http://localhost:3000/admin_profile.html</a></code></td></tr>
+    <tr><td>Verification</td><td><code><a href="http://localhost:3000/admin_resolucao.html" style="color:var(--accent)">http://localhost:3000/admin_resolucao.html</a></code></td></tr>
+  </table>
+</section>
+
+</div><!-- /tab-frontend -->
+
+<!-- ================================================================== -->
+<!-- DATABASE TAB -->
+<!-- ================================================================== -->
+<div id="tab-db" class="tab-content">
+
+<section>
+  <h2>Database Connection</h2>
+  <div class="compare-grid">
+    <div class="compare-card">
+      <h4 style="color:var(--green)">🖥️ Local (Docker)</h4>
+      <table>
+        <tr><td>Host</td><td><code>localhost</code></td></tr>
+        <tr><td>Port</td><td><code>5432</code></td></tr>
+        <tr><td>Database</td><td><code>normas</code></td></tr>
+        <tr><td>User</td><td><code>postgres</code></td></tr>
+        <tr><td>Password</td><td><code>Newpr2026@</code></td></tr>
+        <tr><td>Engine</td><td>PostgreSQL 16</td></tr>
+      </table>
+    </div>
+    <div class="compare-card">
+      <h4 style="color:var(--accent)">☁️ Production (Azure VM)</h4>
+      <table>
+        <tr><td>Host</td><td><code>20.226.39.175</code></td></tr>
+        <tr><td>Port</td><td><code>5432</code></td></tr>
+        <tr><td>Database</td><td><code>normas</code></td></tr>
+        <tr><td>User</td><td><code>linuxuser</code></td></tr>
+        <tr><td>Engine</td><td>PostgreSQL 14.20</td></tr>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Schema</h2>
+
+  <h3>Table: <code>norma</code> — Legal acts &amp; resolutions</h3>
+  <table>
+    <tr><th>#</th><th>Column</th><th>Type</th><th>Nullable</th><th>Default</th></tr>
+    <tr><td>1</td><td><code>id</code></td><td>uuid</td><td>NOT NULL</td><td><code>uuid_generate_v4()</code></td></tr>
+    <tr><td>2</td><td><code>orgao</code></td><td>text</td><td>NOT NULL</td><td><code>'ANA'</code></td></tr>
+    <tr><td>3</td><td><code>tipo</code></td><td>text</td><td>NOT NULL</td><td><code>'Resolução'</code></td></tr>
+    <tr><td>4</td><td><code>numero</code></td><td>integer</td><td>NOT NULL</td><td>—</td></tr>
+    <tr><td>5</td><td><code>ano</code></td><td>integer</td><td>NOT NULL</td><td>—</td></tr>
+    <tr><td>6</td><td><code>data_publicacao</code></td><td>date</td><td>NULL</td><td>—</td></tr>
+    <tr><td>7</td><td><code>titulo</code></td><td>text</td><td>NULL</td><td>—</td></tr>
+    <tr><td>8</td><td><code>ementa</code></td><td>text</td><td>NULL</td><td>—</td></tr>
+    <tr><td>9</td><td><code>assunto</code></td><td>text</td><td>NULL</td><td>—</td></tr>
+    <tr><td>10</td><td><code>origem</code></td><td>text</td><td>NOT NULL</td><td>—</td></tr>
+    <tr><td>11</td><td><code>status</code></td><td>text</td><td>NOT NULL</td><td><code>'vigente'</code></td></tr>
+    <tr><td>12</td><td><code>consolidado</code></td><td>boolean</td><td>NOT NULL</td><td><code>false</code></td></tr>
+    <tr><td>13</td><td><code>ignorar_estatisticas</code></td><td>boolean</td><td>NOT NULL</td><td><code>false</code></td></tr>
+    <tr><td>14</td><td><code>url_oficial</code></td><td>text</td><td>NULL</td><td>—</td></tr>
+    <tr><td>15</td><td><code>caminho_html</code></td><td>text</td><td>NULL</td><td>—</td></tr>
+    <tr><td>16</td><td><code>caminho_html_bruto</code></td><td>text</td><td>NULL</td><td>—</td></tr>
+    <tr><td>17</td><td><code>caminho_pdf</code></td><td>text</td><td>NULL</td><td>—</td></tr>
+    <tr><td>18</td><td><code>texto_busca</code></td><td>text</td><td>NULL</td><td>—</td></tr>
+    <tr><td>19</td><td><code>criado_em</code></td><td>timestamp</td><td>NULL</td><td><code>now()</code></td></tr>
+    <tr><td>20</td><td><code>atualizado_em</code></td><td>timestamp</td><td>NULL</td><td><code>now()</code></td></tr>
+    <tr><td>21</td><td><code>verificacao_status</code></td><td>text</td><td>NULL</td><td>—</td></tr>
+    <tr><td>22</td><td><code>verificacao_descricao</code></td><td>text</td><td>NULL</td><td>—</td></tr>
+    <tr><td>23</td><td><code>verificacao_em</code></td><td>timestamp</td><td>NULL</td><td>—</td></tr>
+    <tr><td>24</td><td><code>verificacao_admin_id</code></td><td>uuid</td><td>NULL</td><td>—</td></tr>
+  </table>
+
+  <h4>Check Constraints</h4>
+  <ul>
+    <li><code>origem</code> IN (<code>govbr</code>, <code>ocr</code>, <code>dou</code>, <code>dodf</code>, <code>manual</code>)</li>
+    <li><code>status</code> IN (<code>vigente</code>, <code>nao_vigente</code>, <code>vigente_alterado</code>)</li>
+  </ul>
+  <h4>Unique Constraint</h4>
+  <p><code>(orgao, tipo, ano, numero, origem)</code></p>
+
+  <h3>Table: <code>admins</code> — Admin users with MFA</h3>
+  <table>
+    <tr><th>#</th><th>Column</th><th>Type</th><th>Nullable</th><th>Default</th></tr>
+    <tr><td>1</td><td><code>id</code></td><td>uuid</td><td>NOT NULL</td><td><code>uuid_generate_v4()</code></td></tr>
+    <tr><td>2</td><td><code>nome</code></td><td>text</td><td>NULL</td><td>—</td></tr>
+    <tr><td>3</td><td><code>email</code></td><td>text</td><td>NOT NULL</td><td>—</td></tr>
+    <tr><td>4</td><td><code>senha_hash</code></td><td>text</td><td>NOT NULL</td><td>—</td></tr>
+    <tr><td>5</td><td><code>mfa_secret</code></td><td>text</td><td>NULL</td><td>—</td></tr>
+    <tr><td>6</td><td><code>mfa_enabled</code></td><td>boolean</td><td>NOT NULL</td><td><code>true</code></td></tr>
+    <tr><td>7</td><td><code>ativo</code></td><td>boolean</td><td>NOT NULL</td><td><code>true</code></td></tr>
+    <tr><td>8</td><td><code>criado_em</code></td><td>timestamp</td><td>NULL</td><td><code>now()</code></td></tr>
+    <tr><td>9</td><td><code>atualizado_em</code></td><td>timestamp</td><td>NULL</td><td><code>now()</code></td></tr>
+  </table>
+  <h4>Unique Constraint</h4>
+  <p><code>(email)</code></p>
+</section>
+
+<section>
+  <h2>Indexes (11 total)</h2>
+  <table>
+    <tr><th>Name</th><th>Table</th><th>Type</th></tr>
+    <tr><td><code>admins_pkey</code></td><td>admins</td><td>btree (id) — PK</td></tr>
+    <tr><td><code>admins_email_unico</code></td><td>admins</td><td>btree (email) — UNIQUE</td></tr>
+    <tr><td><code>idx_admins_email</code></td><td>admins</td><td>btree (email)</td></tr>
+    <tr><td><code>norma_pkey</code></td><td>norma</td><td>btree (id) — PK</td></tr>
+    <tr><td><code>norma_unica</code></td><td>norma</td><td>btree (orgao, tipo, ano, numero, origem) — UNIQUE</td></tr>
+    <tr><td><code>idx_norma_numero_ano</code></td><td>norma</td><td>btree (ano, numero)</td></tr>
+    <tr><td><code>idx_norma_data_publicacao</code></td><td>norma</td><td>btree (data_publicacao)</td></tr>
+    <tr><td><code>idx_norma_status</code></td><td>norma</td><td>btree (status)</td></tr>
+    <tr><td><code>idx_norma_assunto</code></td><td>norma</td><td>btree (assunto)</td></tr>
+    <tr><td><code>idx_norma_texto_busca</code></td><td>norma</td><td>GIN (texto_busca gin_trgm_ops)</td></tr>
+    <tr><td><code>idx_norma_verificacao_status</code></td><td>norma</td><td>btree (verificacao_status)</td></tr>
+  </table>
+</section>
+
+<section>
+  <h2>Extensions</h2>
+  <table>
+    <tr><th>Name</th><th>Purpose</th></tr>
+    <tr><td><code>uuid-ossp</code></td><td>UUID generation (<code>uuid_generate_v4()</code>)</td></tr>
+    <tr><td><code>pg_trgm</code></td><td>Trigram full-text search on <code>texto_busca</code></td></tr>
+  </table>
+</section>
+
+<section>
+  <h2>Migrations</h2>
+  <p>Apply in order after <code>db/models.sql</code>:</p>
+  <table>
+    <tr><th>File</th><th>Description</th></tr>
+    <tr><td><code>db/models.sql</code></td><td>Base schema: tables, indexes, extensions, trigger</td></tr>
+    <tr><td><code>db/migracoes/002_origem_dodf.sql</code></td><td>Add <code>dodf</code> to origem CHECK constraint</td></tr>
+    <tr><td><code>db/migracoes/003_admin_mfa.sql</code></td><td>Add <code>mfa_secret</code>, <code>mfa_enabled</code> to admins</td></tr>
+    <tr><td><code>db/migracoes/004_verificacao_normas.sql</code></td><td>Add verification columns to norma</td></tr>
+  </table>
+</section>
+
+<section>
+  <h2>Useful psql Commands</h2>
+  <pre><code><span class="cmt"># Open psql shell (local Docker)</span>
+<span class="cmd">docker exec -it gen360-postgres psql -U postgres -d normas</span>
+
+<span class="cmt"># Quick queries</span>
+<span class="cmd">\dt</span>                          <span class="cmt">-- list tables</span>
+<span class="cmd">\d norma</span>                    <span class="cmt">-- describe norma</span>
+<span class="cmd">\d admins</span>                   <span class="cmt">-- describe admins</span>
+<span class="cmd">\di</span>                          <span class="cmt">-- list indexes</span>
+<span class="cmd">SELECT count(*) FROM norma;</span>
+<span class="cmd">SELECT id, nome, email, ativo FROM admins;</span>
+<span class="cmd">\q</span>                           <span class="cmt">-- quit</span>
+
+<span class="cmt"># Backup</span>
+<span class="cmd">docker exec gen360-postgres pg_dump -U postgres normas > backup.sql</span>
+
+<span class="cmt"># Restore</span>
+<span class="cmd">Get-Content backup.sql | docker exec -i gen360-postgres psql -U postgres -d normas</span></code></pre>
+</section>
+
+</div><!-- /tab-db -->
+
+<!-- ================================================================== -->
+<!-- TROUBLESHOOTING TAB -->
+<!-- ================================================================== -->
+<div id="tab-trouble" class="tab-content">
+
+<section>
+  <h2>Docker Issues</h2>
+
+  <h3>🔴 "failed to connect to the docker API"</h3>
+  <div class="callout callout-danger"><strong>Cause:</strong> Docker Desktop engine is not running.</div>
+  <pre><code><span class="cmd">Start-Process "C:\Program Files\Docker\Docker\Docker Desktop.exe"</span>
+<span class="cmt"># Wait 10–15s, then:</span>
+<span class="cmd">docker info | Select-String "Server Version"</span>
+
+<span class="cmt"># If still failing, switch context:</span>
+<span class="cmd">docker context ls</span>
+<span class="cmd">docker context use desktop-linux</span>   <span class="cmt"># or "default"</span></code></pre>
+
+  <h3>🔴 Port 5432 already in use</h3>
+  <pre><code><span class="cmd">netstat -ano | findstr :5432</span>
+
+<span class="cmt"># Remove old container and recreate</span>
+<span class="cmd">docker rm -f gen360-postgres</span>
+<span class="cmt"># Re-run the docker run command</span>
+
+<span class="cmt"># Or use a different port</span>
+<span class="cmd">docker run -d --name gen360-postgres -p <span class="val">5433</span>:5432 ...</span>
+<span class="cmt"># Then set $env:DB_PORT="5433"</span></code></pre>
+
+  <h3>🔴 Container exists but stopped</h3>
+  <pre><code><span class="cmd">docker ps -a --filter name=gen360-postgres</span>
+<span class="cmd">docker start gen360-postgres</span>
+<span class="cmd">docker exec gen360-postgres pg_isready -U postgres</span></code></pre>
+</section>
+
+<section>
+  <h2>Database Issues</h2>
+
+  <h3>🔴 "password authentication failed"</h3>
+  <div class="callout callout-danger"><strong>Cause:</strong> Password mismatch between env vars and container.</div>
+  <pre><code><span class="cmt"># Verify container accepts connections</span>
+<span class="cmd">docker exec gen360-postgres psql -U postgres -c "SELECT 1"</span>
+
+<span class="cmt"># If password changed, recreate container (destroys data):</span>
+<span class="cmd">docker rm -f gen360-postgres
+docker volume prune -f</span>
+<span class="cmt"># Re-run docker run command</span></code></pre>
+
+  <h3>🔴 "relation 'norma' does not exist"</h3>
+  <div class="callout callout-danger"><strong>Cause:</strong> Schema not applied.</div>
+  <pre><code><span class="cmd">Get-Content db\models.sql -Raw | docker exec -i gen360-postgres psql -U postgres -d normas
+Get-Content db\migracoes\002_origem_dodf.sql -Raw | docker exec -i gen360-postgres psql -U postgres -d normas
+Get-Content db\migracoes\003_admin_mfa.sql -Raw | docker exec -i gen360-postgres psql -U postgres -d normas
+Get-Content db\migracoes\004_verificacao_normas.sql -Raw | docker exec -i gen360-postgres psql -U postgres -d normas</span></code></pre>
+
+  <h3>🔴 API starts but DB queries fail</h3>
+  <pre><code><span class="cmt"># Check env vars are set</span>
+<span class="cmd">Write-Host "DB_HOST=$env:DB_HOST DB_PORT=$env:DB_PORT DB_NAME=$env:DB_NAME DB_USER=$env:DB_USER"</span>
+
+<span class="cmt"># Test connection directly</span>
+<span class="cmd">python -c "from db.db import get_connection; c=get_connection(); print('OK'); c.close()"</span></code></pre>
+</section>
+
+<section>
+  <h2>Python / API Issues</h2>
+
+  <h3>🔴 "ModuleNotFoundError: No module named 'fastapi'"</h3>
+  <pre><code><span class="cmd">pip install -r requirements.txt</span>
+
+<span class="cmt"># If using a venv:</span>
+<span class="cmd">python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt</span></code></pre>
+
+  <h3>🔴 Uvicorn won't start / port 8000 in use</h3>
+  <pre><code><span class="cmd">netstat -ano | findstr :8000</span>
+<span class="cmt"># Kill the PID shown, or use a different port:</span>
+<span class="cmd">python -m uvicorn api.main:app --port 8001 --reload</span></code></pre>
+</section>
+
+<section>
+  <h2>Frontend Issues</h2>
+
+  <h3>🔴 CORS errors in browser console</h3>
+  <pre><code><span class="cmt"># Ensure CORS_ORIGINS is set</span>
+<span class="cmd">$env:CORS_ORIGINS="*"</span>
+
+<span class="cmt"># If serving frontend from a specific port:</span>
+<span class="cmd">$env:CORS_ORIGINS="http://localhost:3000,http://localhost:5500"</span></code></pre>
+
+  <h3>🔴 Frontend calls Azure prod API instead of localhost</h3>
+  <div class="callout callout-danger">
+    <strong>Cause:</strong> The HTML page is missing <code>&lt;script src="./config.js"&gt;</code>.
+    Without it, JS files fall back to the hardcoded Azure URL.
+  </div>
+  <p>Ensure every HTML page loads <code>config.js</code> before other JS files:</p>
+  <pre><code>&lt;script src="./config.js"&gt;&lt;/script&gt;     <span class="cmt">&lt;!-- FIRST --&gt;</span>
+&lt;script src="./theme.js"&gt;&lt;/script&gt;
+&lt;script src="./admin_auth.js"&gt;&lt;/script&gt;</code></pre>
+
+  <h3>🔴 "Erro ao conectar" / Network Error</h3>
+  <ol>
+    <li>Confirm API is running: <code>curl http://localhost:8000/health</code></li>
+    <li>Check browser DevTools → Network tab</li>
+    <li>Open DevTools Console — check <code>API_BASE_URL</code> value</li>
+    <li>If using <code>file://</code> protocol, switch to <code>python -m http.server</code></li>
+  </ol>
+
+  <h3>🔴 "Tracking Prevention blocked access to storage" (QR code library)</h3>
+  <div class="callout callout-warning">
+    <strong>Cause:</strong> Browser tracking protection blocking CDN. This only affects the QR code
+    on the registration page. The registration itself still works — you just won't see the QR image.
+    Use the <code>otpauth_uri</code> from the API response to manually add to your authenticator app.
+  </div>
+</section>
+
+<section>
+  <h2>Full Reset (Nuclear Option)</h2>
+  <pre><code><span class="cmt"># Stop everything</span>
+<span class="cmd">docker rm -f gen360-postgres
+docker volume prune -f</span>
+
+<span class="cmt"># Remove env vars</span>
+<span class="cmd">Remove-Item Env:DB_HOST, Env:DB_PORT, Env:DB_NAME, Env:DB_USER, Env:DB_PASSWORD, Env:JWT_SECRET, Env:CORS_ORIGINS -ErrorAction SilentlyContinue</span>
+
+<span class="cmt"># Then follow Quick Start from scratch</span></code></pre>
+</section>
+
+</div><!-- /tab-trouble -->
+
+</div><!-- .container -->
+
+<footer>
+  Gen360 Setup Guide &bull; Last updated: April 2026
+</footer>
+
+<script>
+function showTab(name) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  event.target.classList.add('active');
+}
+</script>
+
+</body>
+</html>
