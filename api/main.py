@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Any, Dict, Optional
 from uuid import UUID
 
-from fastapi import Depends, FastAPI, Header, HTTPException, Request
+from fastapi import Depends, FastAPI, Header, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.utils import get_openapi
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse, Response
@@ -562,8 +562,16 @@ def _resolver_arquivo_html_de_ato(ato: dict) -> Path | None:
     nomes: list[str] = []
     if origem == "arespcj":
         nomes.append(f"arespcj_{ano}_{numero}.html")
-    if origem in ("govbr", "gov.br", "ana", ""):
+    elif origem in ("govbr", "gov.br", "ana", ""):
         nomes.append(f"ana_{ano}_{numero}.html")
+    else:
+        # ocr, manual, dou, etc.: ficheiros no disco podem seguir convenção ARES ou ANA
+        nomes.extend(
+            [
+                f"arespcj_{ano}_{numero}.html",
+                f"ana_{ano}_{numero}.html",
+            ]
+        )
     # Scripts ARES gravam também em html_completo; a API prioriza html_conteudo.
     for sub in ("html_conteudo", "html_completo"):
         base = raiz / "data" / sub
@@ -638,12 +646,21 @@ def _resolver_arquivo_pdf(ato: dict) -> Path | None:
                 found = _ficheiro_em_pasta(raiz / "data" / sub, nome)
                 if found:
                     return found
-        if origem in ("govbr", "gov.br", "ana", ""):
+        elif origem in ("govbr", "gov.br", "ana", ""):
             nome = f"ana_{ano}_{numero}.pdf"
             for sub in ("pdf_govbr", "pdf_arespcj", "pdf"):
                 found = _ficheiro_em_pasta(raiz / "data" / sub, nome)
                 if found:
                     return found
+        else:
+            for nome, subs in (
+                (f"arespcj_{ano}_{numero}.pdf", ("pdf_arespcj", "pdf")),
+                (f"ana_{ano}_{numero}.pdf", ("pdf_govbr", "pdf_arespcj", "pdf")),
+            ):
+                for sub in subs:
+                    found = _ficheiro_em_pasta(raiz / "data" / sub, nome)
+                    if found:
+                        return found
     return None
 
 
@@ -687,14 +704,22 @@ def obter_ato_pdf_head(ato_id: str, request: Request):
 
 
 @app.get("/public/atos/{ato_id}/pdf")
-def obter_ato_pdf(ato_id: str, request: Request):
-    """Devolve o PDF do ato quando existir (mesma apresentação que o original)."""
+def obter_ato_pdf(
+    ato_id: str,
+    request: Request,
+    download: bool = Query(
+        False,
+        description="Se true, Content-Disposition attachment (descarregar). Omisso = inline (ver no browser).",
+    ),
+):
+    """Devolve o PDF do ato. Por defeito inline (abre no separador/iframe); use ?download=1 para forçar download."""
     caminho = _resolver_pdf_ato_ou_erro(ato_id, request)
     try:
         return FileResponse(
             path=str(caminho),
             filename=caminho.name,
             media_type="application/pdf",
+            content_disposition_type="attachment" if download else "inline",
         )
     except OSError:
         raise HTTPException(status_code=404, detail="Arquivo nao acessivel.")

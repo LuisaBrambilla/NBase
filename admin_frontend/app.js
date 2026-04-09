@@ -215,6 +215,7 @@ function renderAtos(data) {
           : "https://www.gov.br/ana/pt-br/legislacao/resolucoes/resolucoes-regulatorias"))
       : (window.APP_BASE_PATH || "") + "conteudo_viewer.html?id=" + encodeURIComponent(item.id);
     const pdfUrl = `${API_BASE_URL}/public/atos/${item.id}/pdf`;
+    const pdfDownloadUrl = `${API_BASE_URL}/public/atos/${item.id}/pdf?download=1`;
     row.innerHTML = `
       <td>${formatarDataBr(item.data_publicacao)}</td>
       <td>${item.ano ?? "—"}</td>
@@ -224,7 +225,8 @@ function renderAtos(data) {
       <td>${formatarStatus(item.status)}</td>
       <td>
         <a class="table-link" href="${linkAbrir}" target="_blank" rel="noopener">Abrir</a>
-        <a class="table-link" href="${pdfUrl}" target="_blank" rel="noopener">PDF</a>
+        <a class="table-link" href="${pdfUrl}" target="_blank" rel="noopener">Ver PDF</a>
+        <a class="table-link" href="${pdfDownloadUrl}" target="_blank" rel="noopener">Descarregar</a>
       </td>
     `;
     tabela.appendChild(row);
