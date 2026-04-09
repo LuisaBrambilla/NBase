@@ -598,6 +598,7 @@
               return fetch(API_BASE + '/public/atos/' + encodeURIComponent(atoId) + '/pdf', { method: 'HEAD', headers: window.getApiHeaders ? window.getApiHeaders() : {} })
                 .then(function (r) {
                   if (r.ok) showPdf();
+                  else if (r.status === 405) showPdf();
                   else showError('Conteúdo não disponível para este ato.');
                 });
             })

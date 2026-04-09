@@ -11,7 +11,7 @@ from uuid import UUID
 from fastapi import Depends, FastAPI, Header, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.utils import get_openapi
-from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
@@ -647,9 +647,8 @@ def _resolver_arquivo_pdf(ato: dict) -> Path | None:
     return None
 
 
-@app.get("/public/atos/{ato_id}/pdf")
-def obter_ato_pdf(ato_id: str, request: Request):
-    """Devolve o PDF do ato quando existir (mesma apresentação que o original)."""
+def _resolver_pdf_ato_ou_erro(ato_id: str, request: Request) -> Path:
+    """Validações comuns a GET/HEAD do PDF."""
     ato = queries.obter_ato(ato_id)
     if not ato:
         raise HTTPException(status_code=404, detail="Ato nao encontrado.")
@@ -662,6 +661,35 @@ def obter_ato_pdf(ato_id: str, request: Request):
             status_code=404,
             detail="PDF nao disponivel para este ato.",
         )
+    return caminho
+
+
+@app.head("/public/atos/{ato_id}/pdf")
+def obter_ato_pdf_head(ato_id: str, request: Request):
+    """
+    O conteudo_viewer.html usa HEAD para saber se existe PDF antes de pôr o iframe.
+    Sem esta rota, alguns ambientes respondem 405 e o utilizador vê 'conteúdo não disponível'
+    mesmo com GET /pdf a funcionar.
+    """
+    caminho = _resolver_pdf_ato_ou_erro(ato_id, request)
+    try:
+        size = caminho.stat().st_size
+    except OSError:
+        raise HTTPException(status_code=404, detail="Arquivo nao acessivel.") from None
+    return Response(
+        status_code=200,
+        media_type="application/pdf",
+        headers={
+            "Content-Length": str(size),
+            "Content-Disposition": f'inline; filename="{caminho.name}"',
+        },
+    )
+
+
+@app.get("/public/atos/{ato_id}/pdf")
+def obter_ato_pdf(ato_id: str, request: Request):
+    """Devolve o PDF do ato quando existir (mesma apresentação que o original)."""
+    caminho = _resolver_pdf_ato_ou_erro(ato_id, request)
     try:
         return FileResponse(
             path=str(caminho),
