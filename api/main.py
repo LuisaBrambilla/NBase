@@ -137,7 +137,7 @@ def _deve_registar_acesso_http(request: Request) -> bool:
         if pl.endswith(ext):
             return False
     if os.getenv("ACCESS_LOG_SKIP_HEALTH", "1").strip().lower() not in ("0", "false", "no"):
-        if pl in ("/api/health", "/api/health/db"):
+        if pl in ("/api/health", "/api/health/db", "/api/health/data-layout"):
             return False
     if pl in ("/docs", "/openapi.json", "/redoc"):
         return False
@@ -356,6 +356,43 @@ def health_db() -> Dict[str, Any]:
             conn.close()
     except Exception as e:
         return {"database_connected": False, "error": str(e)}
+
+
+@app.get("/health/data-layout")
+def health_data_layout() -> Dict[str, Any]:
+    """
+    Diagnóstico: confirma onde a API resolve PROJECT_ROOT e se as pastas data/* existem e são legíveis.
+    Ative só temporariamente na Azure: DIAG_DATA_LAYOUT=1 (Application settings). Depois remova.
+    """
+    if os.getenv("DIAG_DATA_LAYOUT", "").strip().lower() not in ("1", "true", "yes"):
+        raise HTTPException(status_code=404, detail="Not found.")
+    raiz = _raiz_projeto()
+    out: Dict[str, Any] = {
+        "project_root_env": (os.getenv("PROJECT_ROOT") or "").strip() or None,
+        "project_root_resolved": str(raiz),
+        "folders": {},
+    }
+    for sub in ("html_conteudo", "html_completo", "pdf_govbr", "pdf_arespcj", "pdf"):
+        p = raiz / "data" / sub
+        legivel = False
+        if p.is_dir():
+            try:
+                legivel = os.access(p, os.R_OK) and os.access(p, os.X_OK)
+            except OSError:
+                legivel = False
+        n_ficheiros = 0
+        if p.is_dir() and legivel:
+            try:
+                n_ficheiros = sum(1 for x in p.iterdir() if x.is_file())
+            except OSError:
+                n_ficheiros = -1
+        out["folders"][sub] = {
+            "path": str(p),
+            "exists": p.is_dir(),
+            "readable": legivel,
+            "file_count": n_ficheiros,
+        }
+    return out
 
 
 @app.get("/site-config")
